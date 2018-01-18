@@ -11,10 +11,23 @@ set(EXTENSION_DESCRIPTION "This extension provides support for procedures with Z
 set(EXTENSION_ICONURL "")
 set(EXTENSION_SCREENSHOTURLS "")
 set(EXTENSION_DEPENDS "")
+set(EXTENSION_BUILD_SUBDIRECTORY inner-build)
 #-----------------------------------------------------------------------------
+
+set(SUPERBUILD_TOPLEVEL_PROJECT inner)
+
 # Extension dependencies
 find_package(Slicer REQUIRED)
 include(${Slicer_USE_FILE})
+
+#-----------------------------------------------------------------------------
+# SuperBuild setup
+option(OpenIGTLinkIF_SUPERBUILD "Build OpenIGTLinkIF and the projects it depends on." ON)
+mark_as_advanced(OpenIGTLinkIF_SUPERBUILD)
+if(OpenIGTLinkIF_SUPERBUILD)
+  include("${CMAKE_CURRENT_SOURCE_DIR}/SuperBuild.cmake")
+  return()
+endif()
 
 #-----------------------------------------------------------------------------
 # Extension modules
