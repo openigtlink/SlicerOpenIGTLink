@@ -8,7 +8,7 @@ ELSE()
   
   SET (OpenIGTLinkIO_SRC_DIR "${CMAKE_BINARY_DIR}/Deps/OpenIGTLinkIO")
   SET (Slicer_OpenIGTLinkIO_DIR "${CMAKE_BINARY_DIR}/Deps/OpenIGTLinkIO-bin" CACHE INTERNAL "Path to store OpenIGTLinkIO binaries")
-  ExternalProject_Add( OpenIGTLinkIO
+  ExternalProject_Add( OpenIGTLinkIOLib
     PREFIX "${CMAKE_BINARY_DIR}/Deps/OpenIGTLinkIO-prefix"
     SOURCE_DIR "${OpenIGTLinkIO_SRC_DIR}"
     BINARY_DIR "${Slicer_OpenIGTLinkIO_DIR}"

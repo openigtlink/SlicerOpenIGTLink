@@ -12,6 +12,12 @@ set(ep_common_cxx_flags "${CMAKE_CXX_FLAGS_INIT} ${ADDITIONAL_CXX_FLAGS}")
 
 include(ExternalProject)
 
+INCLUDE(SuperBuild/External_OpenIGTLink.cmake)
+SET(OpenIGTLinkIO_DEPENDENCIES OpenIGTLinkLib)
+INCLUDE(SuperBuild/External_OpenIGTLinkIO.cmake)
+LIST(APPEND OpenIGTLinkIF_DEPENDENCIES OpenIGTLinkLib)
+LIST(APPEND OpenIGTLinkIF_DEPENDENCIES OpenIGTLinkIOLib)
+
 foreach(dep ${EXTENSION_DEPENDS})
   mark_as_superbuild(${dep}_DIR)
 endforeach()

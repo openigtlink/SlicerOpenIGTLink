@@ -1,32 +1,24 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(OpenIGTLinkIF)
-
 #-----------------------------------------------------------------------------
 # Extension meta-information
 set(EXTENSION_HOMEPAGE "https://github.com/openigtlink/OpenIGTLinkIF")
 set(EXTENSION_CATEGORY "IGT")
 set(EXTENSION_CONTRIBUTORS "Junichi Tokuda (SPL), Longquan Chen (SPL)")
 set(EXTENSION_DESCRIPTION "This extension provides support for procedures with ZFrame Registration")
-set(EXTENSION_ICONURL "")
-set(EXTENSION_SCREENSHOTURLS "")
+set(EXTENSION_ICONURL "https://github.com/openigtlink/SlicerOpenIGTLink/blob/master/OpenIGTLinkIF.png")
+set(EXTENSION_SCREENSHOTURLS "https://github.com/openigtlink/SlicerOpenIGTLink/blob/master/Screenshots/Overview.png")
 set(EXTENSION_DEPENDS "")
 set(EXTENSION_BUILD_SUBDIRECTORY inner-build)
 #-----------------------------------------------------------------------------
 
 set(SUPERBUILD_TOPLEVEL_PROJECT inner)
-
+project(OpenIGTLinkIF)
 # Extension dependencies
 find_package(Slicer REQUIRED)
 include(${Slicer_USE_FILE})
 
 INCLUDE(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
-
-INCLUDE(SuperBuild/External_OpenIGTLink.cmake)
-SET(OpenIGTLinkIO_DEPENDENCIES OpenIGTLink)
-INCLUDE(SuperBuild/External_OpenIGTLinkIO.cmake)
-LIST(APPEND OpenIGTLinkIF_DEPENDENCIES OpenIGTLink)
-LIST(APPEND OpenIGTLinkIF_DEPENDENCIES OpenIGTLinkIO)
 
 #-----------------------------------------------------------------------------
 # SuperBuild setup
@@ -44,4 +36,5 @@ add_subdirectory(OpenIGTLinkIF)
 
 #-----------------------------------------------------------------------------
 include(${Slicer_EXTENSION_GENERATE_CONFIG})
+set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${CMAKE_BINARY_DIR};OpenIGTLinkIF;ALL;/")
 include(${Slicer_EXTENSION_CPACK})

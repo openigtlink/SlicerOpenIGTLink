@@ -10,7 +10,7 @@ ELSE()
   # OpenIGTLink has not been built yet, so download and build it as an external project
   SET (OpenIGTLink_SRC_DIR "${CMAKE_BINARY_DIR}/Deps/OpenIGTLink")
   SET (Slicer_OpenIGTLink_DIR "${CMAKE_BINARY_DIR}/Deps/OpenIGTLink-bin" CACHE INTERNAL "Path to store OpenIGTLink binaries")
-  ExternalProject_Add( OpenIGTLink
+  ExternalProject_Add( OpenIGTLinkLib
     PREFIX "${CMAKE_BINARY_DIR}/Deps/OpenIGTLink-prefix"
     SOURCE_DIR "${OpenIGTLink_SRC_DIR}"
     BINARY_DIR "${Slicer_OpenIGTLink_DIR}"
@@ -33,7 +33,7 @@ ELSE()
       -DOpenIGTLink_SUPERBUILD:BOOL=OFF
       -DOpenIGTLink_PROTOCOL_VERSION_2:BOOL=OFF
       -DOpenIGTLink_PROTOCOL_VERSION_3:BOOL=ON
-      -DOpenIGTLink_USE_H264:BOOL=ON
+      -DOpenIGTLink_USE_VP9:BOOL=ON
       -DCMAKE_CXX_FLAGS:STRING=${CMAKE_CXX_FLAGS}
       -DCMAKE_C_FLAGS:STRING=${CMAKE_C_FLAGS}
     #--Build step-----------------
