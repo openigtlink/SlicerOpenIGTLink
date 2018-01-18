@@ -20,6 +20,14 @@ set(SUPERBUILD_TOPLEVEL_PROJECT inner)
 find_package(Slicer REQUIRED)
 include(${Slicer_USE_FILE})
 
+INCLUDE(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
+
+INCLUDE(SuperBuild/External_OpenIGTLink.cmake)
+SET(OpenIGTLinkIO_DEPENDENCIES OpenIGTLink)
+INCLUDE(SuperBuild/External_OpenIGTLinkIO.cmake)
+LIST(APPEND OpenIGTLinkIF_DEPENDENCIES OpenIGTLink)
+LIST(APPEND OpenIGTLinkIF_DEPENDENCIES OpenIGTLinkIO)
+
 #-----------------------------------------------------------------------------
 # SuperBuild setup
 option(OpenIGTLinkIF_SUPERBUILD "Build OpenIGTLinkIF and the projects it depends on." ON)

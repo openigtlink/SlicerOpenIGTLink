@@ -27,17 +27,9 @@ SET(OpenIGTLinkIF_VERSION_PATCH "0")
 
 #add_definitions(-DOpenIGTLinkIF_USE_VERSION_2)
 #add_definitions(-DOpenIGTLinkIF_LIBRARY_VERSION="${OpenIGTLink_VERSION_MAJOR}-${OpenIGTLink_VERSION_MINOR}-${OpenIGTLink_VERSION_PATCH} for protocol ver. 2")
+set(OpenIGTLinkIO_DIR "" CACHE PATH "OpenIGTLinkIO directory")
+find_package(OpenIGTLinkIO REQUIRED PATHS ${OpenIGTLinkIO_DIR})
 
-INCLUDE(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
-
-INCLUDE(SuperBuild/External_OpenIGTLink.cmake)
-SET(OpenIGTLinkIO_DEPENDENCIES OpenIGTLinkLib)
-INCLUDE(SuperBuild/External_OpenIGTLinkIO.cmake)
-if("${OpenIGTLink_VERSION_MAJOR}.${OpenIGTLink_VERSION_MINOR}.${OpenIGTLink_VERSION_PATCH}" LESS 3.1.0)
-    message(FATAL_ERROR "Version of OpenIGTLink should be at less 3.1.0.")
-endif()
-LIST(APPEND OpenIGTLinkIF_DEPENDENCIES OpenIGTLinkLib)
-LIST(APPEND OpenIGTLinkIF_DEPENDENCIES OpenIGTLinkIO)
 #-----------------------------------------------------------------------------
 add_subdirectory(MRML)
 add_subdirectory(Logic)
