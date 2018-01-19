@@ -27,7 +27,11 @@
 #include "vtkMRMLIGTLQueryNode.h"
 #include "vtkMRMLIGTLStatusNode.h"
 #include "vtkMRMLIGTLSensorNode.h"
-#include "vtkMRMLBitStreamNode.h"
+
+#if defined(OpenIGTLink_ENABLE_VIDEOSTREAMING)
+  #include "vtkMRMLBitStreamNode.h"
+#endif
+
 
 // OpenIGTLinkIF Logic includes
 #include "vtkSlicerOpenIGTLinkIFLogic.h"
@@ -110,8 +114,9 @@ void vtkSlicerOpenIGTLinkIFLogic::RegisterNodes()
   scene->RegisterNodeClass(vtkNew<vtkMRMLIGTLTrackingDataBundleNode>().GetPointer());
   scene->RegisterNodeClass(vtkNew<vtkMRMLIGTLStatusNode>().GetPointer());
   scene->RegisterNodeClass(vtkNew<vtkMRMLIGTLSensorNode>().GetPointer());
+#if defined(OpenIGTLink_ENABLE_VIDEOSTREAMING)
   scene->RegisterNodeClass(vtkNew<vtkMRMLBitStreamNode>().GetPointer());
-
+#endif
 }
 
 //---------------------------------------------------------------------------

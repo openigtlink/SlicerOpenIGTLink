@@ -1,24 +1,47 @@
-IF(OpenIGTLink_DIR)
-  # OpenIGTLink has been built already
-  FIND_PACKAGE(OpenIGTLink REQUIRED NO_MODULE)
-  if("${OpenIGTLink_VERSION_MAJOR}.${OpenIGTLink_VERSION_MINOR}.${OpenIGTLink_VERSION_PATCH}" LESS 3.1.0)
-    message(FATAL_ERROR "Version of OpenIGTLink should be at less 3.1.0.")
+set(proj OpenIGTLink)
+
+# Set dependency list
+set(${proj}_DEPENDENCIES "")
+
+if(${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
+  unset(OpenIGTLink_DIR CACHE)
+  find_package(OpenIGTLink REQUIRED NO_MODULE)
+endif()
+
+# Sanity checks
+if(DEFINED OpenIGTLink_DIR AND NOT EXISTS ${OpenIGTLink_DIR})
+  message(FATAL_ERROR "OpenIGTLink_DIR variable is defined but corresponds to nonexistent directory")
+endif()
+
+if(NOT DEFINED OpenIGTLink_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
+
+  set(CMAKE_PROJECT_INCLUDE_EXTERNAL_PROJECT_ARG)
+  if(CTEST_USE_LAUNCHERS)
+    set(CMAKE_PROJECT_INCLUDE_EXTERNAL_PROJECT_ARG
+      "-DCMAKE_PROJECT_OpenIGTLink_INCLUDE:FILEPATH=${CMAKE_ROOT}/Modules/CTestUseLaunchers.cmake")
   endif()
-  MESSAGE(STATUS "Using OpenIGTLink available at: ${OpenIGTLink_DIR}")
-  SET (Slicer_OpenIGTLink_DIR "${OpenIGTLink_DIR}")
-ELSE()
-  # OpenIGTLink has not been built yet, so download and build it as an external project
-  SET (OpenIGTLink_SRC_DIR "${CMAKE_BINARY_DIR}/Deps/OpenIGTLink")
-  SET (Slicer_OpenIGTLink_DIR "${CMAKE_BINARY_DIR}/Deps/OpenIGTLink-bin" CACHE INTERNAL "Path to store OpenIGTLink binaries")
-  ExternalProject_Add( OpenIGTLinkLib
-    PREFIX "${CMAKE_BINARY_DIR}/Deps/OpenIGTLink-prefix"
-    SOURCE_DIR "${OpenIGTLink_SRC_DIR}"
-    BINARY_DIR "${Slicer_OpenIGTLink_DIR}"
-    #--Download step--------------
-    GIT_REPOSITORY https://github.com/openigtlink/OpenIGTLink.git
-    GIT_TAG master
-    #--Configure step-------------
-    CMAKE_ARGS 
+
+  ExternalProject_SetIfNotDefined(
+    ${CMAKE_PROJECT_NAME}_${proj}_GIT_REPOSITORY
+    "https://github.com/openigtlink/OpenIGTLink.git"
+    QUIET
+    )
+
+  ExternalProject_SetIfNotDefined(
+    ${CMAKE_PROJECT_NAME}_${proj}_GIT_TAG
+    master
+    QUIET
+    )
+  get_filename_component(PARENT_Slicer_DIR ${Slicer_DIR} DIRECTORY)
+  set(EP_SOURCE_DIR ${CMAKE_BINARY_DIR}/Deps/${proj})
+  set(EP_BINARY_DIR ${CMAKE_BINARY_DIR}/Deps/${proj}-build)
+  ExternalProject_Add(${proj}
+    ${${proj}_EP_ARGS}
+    GIT_REPOSITORY "${${CMAKE_PROJECT_NAME}_${proj}_GIT_REPOSITORY}"
+    GIT_TAG "${${CMAKE_PROJECT_NAME}_${proj}_GIT_TAG}"
+    SOURCE_DIR ${EP_SOURCE_DIR}
+    BINARY_DIR ${EP_BINARY_DIR}
+    CMAKE_CACHE_ARGS
       -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
       -DCMAKE_CXX_FLAGS:STRING=${ep_common_cxx_flags}
       -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
@@ -27,19 +50,43 @@ ELSE()
       -DCMAKE_CXX_STANDARD_REQUIRED:BOOL=${CMAKE_CXX_STANDARD_REQUIRED}
       -DCMAKE_CXX_EXTENSIONS:BOOL=${CMAKE_CXX_EXTENSIONS}
       ${CMAKE_PROJECT_INCLUDE_EXTERNAL_PROJECT_ARG}
-      -DBUILD_SHARED_LIBS:BOOL=ON
-      -DBUILD_EXAMPLES:BOOL=OFF
       -DBUILD_TESTING:BOOL=OFF
+      -DBUILD_SHARED_LIBS:BOOL=ON
       -DOpenIGTLink_SUPERBUILD:BOOL=OFF
       -DOpenIGTLink_PROTOCOL_VERSION_2:BOOL=OFF
       -DOpenIGTLink_PROTOCOL_VERSION_3:BOOL=ON
       -DOpenIGTLink_USE_VP9:BOOL=ON
-      -DCMAKE_CXX_FLAGS:STRING=${CMAKE_CXX_FLAGS}
-      -DCMAKE_C_FLAGS:STRING=${CMAKE_C_FLAGS}
-    #--Build step-----------------
-    BUILD_ALWAYS 1
-    #--Install step-----------------
+      -DYASM_PYTHON_EXECUTABLE:STRING=${PARENT_Slicer_DIR}/python-install/bin/python
+      # macOS
+      -DCMAKE_MACOSX_RPATH:BOOL=0
     INSTALL_COMMAND ""
-    DEPENDS ${OpenIGTLink_DEPENDENCIES}
-    )  
-ENDIF()
+    DEPENDS
+      ${${proj}_DEPENDENCIES}
+    )
+
+  ExternalProject_GenerateProjectDescription_Step(${proj})
+
+  set(OpenIGTLink_DIR ${EP_BINARY_DIR})
+
+  #-----------------------------------------------------------------------------
+  # Launcher setting specific to build tree
+
+  set(${proj}_LIBRARY_PATHS_LAUNCHER_BUILD
+    ${OpenIGTLink_DIR}
+    ${OpenIGTLink_DIR}/bin/<CMAKE_CFG_INTDIR>
+    )
+
+  #-----------------------------------------------------------------------------
+  # Launcher setting specific to install tree
+
+  if(UNIX AND NOT APPLE)
+    set(${proj}_LIBRARY_PATHS_LAUNCHER_INSTALLED <APPLAUNCHER_DIR>/lib/igtl)
+    mark_as_superbuild(
+      VARS ${proj}_LIBRARY_PATHS_LAUNCHER_INSTALLED
+      LABELS "LIBRARY_PATHS_LAUNCHER_INSTALLED"
+      )
+  endif()
+
+else()
+  ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
+endif()

@@ -11,29 +11,27 @@ set(ep_common_cxx_flags "${CMAKE_CXX_FLAGS_INIT} ${ADDITIONAL_CXX_FLAGS}")
 #-----------------------------------------------------------------------------
 
 include(ExternalProject)
-
 INCLUDE(SuperBuild/External_OpenIGTLink.cmake)
-SET(OpenIGTLinkIO_DEPENDENCIES OpenIGTLinkLib)
+SET(OpenIGTLinkIO_DEPENDENCIES OpenIGTLink)
 INCLUDE(SuperBuild/External_OpenIGTLinkIO.cmake)
-LIST(APPEND OpenIGTLinkIF_DEPENDENCIES OpenIGTLinkLib)
+LIST(APPEND OpenIGTLinkIF_DEPENDENCIES OpenIGTLink)
 LIST(APPEND OpenIGTLinkIF_DEPENDENCIES OpenIGTLinkIOLib)
 
 foreach(dep ${EXTENSION_DEPENDS})
   mark_as_superbuild(${dep}_DIR)
 endforeach()
 
-set(proj ${SUPERBUILD_TOPLEVEL_PROJECT})
-
-ExternalProject_Include_Dependencies(${proj}
-  PROJECT_VAR proj
+set(projTop ${SUPERBUILD_TOPLEVEL_PROJECT})
+ExternalProject_Include_Dependencies(${projTop}
+  PROJECT_VAR projTop
   SUPERBUILD_VAR OpenIGTLinkIF_SUPERBUILD
   )
 
-ExternalProject_Add(${proj}
-  ${${proj}_EP_ARGS}
+ExternalProject_Add(${projTop}
+  ${${projTop}_EP_ARGS}
   DOWNLOAD_COMMAND ""
   INSTALL_COMMAND ""
-  SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/OpenIGTLinkIF
+  SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
   BINARY_DIR ${EXTENSION_BUILD_SUBDIRECTORY}
   CMAKE_CACHE_ARGS
     -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}

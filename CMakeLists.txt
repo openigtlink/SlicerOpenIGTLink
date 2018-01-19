@@ -2,10 +2,10 @@ cmake_minimum_required(VERSION 3.5)
 
 #-----------------------------------------------------------------------------
 # Extension meta-information
-set(EXTENSION_HOMEPAGE "https://github.com/openigtlink/OpenIGTLinkIF")
+set(EXTENSION_HOMEPAGE "https://github.com/openigtlink/SlicerOpenIGTLink")
 set(EXTENSION_CATEGORY "IGT")
 set(EXTENSION_CONTRIBUTORS "Junichi Tokuda (SPL), Longquan Chen (SPL)")
-set(EXTENSION_DESCRIPTION "This extension provides support for procedures with ZFrame Registration")
+set(EXTENSION_DESCRIPTION "This extension adds OpenIGTLink communication interface to 3D Slicer to exchange real-time imaging, tracking, and other data.")
 set(EXTENSION_ICONURL "https://github.com/openigtlink/SlicerOpenIGTLink/blob/master/OpenIGTLinkIF.png")
 set(EXTENSION_SCREENSHOTURLS "https://github.com/openigtlink/SlicerOpenIGTLink/blob/master/Screenshots/Overview.png")
 set(EXTENSION_DEPENDS "")

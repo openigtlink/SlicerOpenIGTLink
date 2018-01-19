@@ -20,8 +20,9 @@ Version:   $Revision: 1.2 $
 #include "igtlioStringDevice.h"
 #include "igtlOSUtil.h"
 
-#if OpenIGTLink_ENABLE_VIDEOSTREAMING
+#if defined(OpenIGTLink_ENABLE_VIDEOSTREAMING)
   #include "igtlioVideoDevice.h"
+  #include <vtkMRMLBitStreamNode.h>
 #endif
 // OpenIGTLinkIF MRML includes
 #include "vtkMRMLIGTLConnectorNode.h"
@@ -30,7 +31,6 @@ Version:   $Revision: 1.2 $
 #include <vtkMRMLScalarVolumeDisplayNode.h>
 #include <vtkMRMLVectorVolumeNode.h>
 #include <vtkMRMLVectorVolumeDisplayNode.h>
-#include <vtkMRMLBitStreamNode.h>
 #include <vtkMRMLModelNode.h>
 #include <vtkMRMLTextNode.h>
 #include <vtkMRMLIGTLStatusNode.h>
@@ -235,7 +235,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::GetOrAddMRMLNodeforDevice(igtlio::Device*
     this->RegisterIncomingMRMLNode(volumeNode);
     return volumeNode;
     }
-#if OpenIGTLink_ENABLE_VIDEOSTREAMING
+#if defined(OpenIGTLink_ENABLE_VIDEOSTREAMING)
   else if(strcmp(device->GetDeviceType().c_str(), "VIDEO")==0)
     {
     igtlio::VideoDevice* videoDevice = reinterpret_cast<igtlio::VideoDevice*>(device);
@@ -272,8 +272,8 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::GetOrAddMRMLNodeforDevice(igtlio::Device*
     bitStreamNode->SetAndObserveDisplayNodeID(displayNode->GetID());
     this->RegisterIncomingMRMLNode(bitStreamNode);
     return bitStreamNode;
-#endif
     }
+#endif
   else if(strcmp(device->GetDeviceType().c_str(),"STATUS")==0)
     {
     vtkMRMLIGTLStatusNode* statusNode;
@@ -372,7 +372,7 @@ void vtkMRMLIGTLConnectorNode::ProcessIncomingDeviceModifiedEvent(vtkObject *cal
         volumeNode->Modified();
         }
       }
-#if OpenIGTLink_ENABLE_VIDEOSTREAMING
+#if defined(OpenIGTLink_ENABLE_VIDEOSTREAMING)
     else if (strcmp(deviceType.c_str(), "VIDEO")==0)
       {
       // The BitstreamNode has its own handling of the device modified event
