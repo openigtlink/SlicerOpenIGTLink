@@ -1,0 +1,59 @@
+@PACKAGE_INIT@
+
+set(OpenIGTLinkIO_STATIC "@OpenIGTLinkIO_STATIC@")
+set_and_check(OpenIGTLinkIO_DIR "@OpenIGTLinkIO_DIR@")
+
+if(NOT OpenIGTLinkIO_FOUND)
+  set(OpenIGTLinkIO_DIR "@OpenIGTLinkIO_DIR@")
+  find_package(OpenIGTLinkIO REQUIRED NO_MODULE)
+endif()
+
+if(NOT SlicerOpenIGTLinkIF_FIND_QUIETLY)
+  message(STATUS "OpenIGTLinkIO_DIR set to ${OpenIGTLinkIO_DIR}")
+endif()
+
+
+#
+# This file makes available modules implemented in this extension to other extensions.
+#
+
+set(OpenIGTLinkIF_SOURCE_DIR "@OpenIGTLinkIF_SOURCE_DIR@")
+set(OpenIGTLinkIF_SOURCE_DIR_CONFIG "set(OpenIGTLinkIF_SOURCE_DIR \"@OpenIGTLinkIF_SOURCE_DIR@\")")
+# Variables that will be used for populating AdditionalLauncherSettings.ini.
+set(OpenIGTLinkIF_LIBRARY_PATHS_LAUNCHER_BUILD "@EXTENSION_LIBRARY_PATHS_BUILD@")
+set(OpenIGTLinkIF_PATHS_LAUNCHER_BUILD "@EXTENSION_PATHS_BUILD@")
+set(OpenIGTLinkIF_ENVVARS_LAUNCHER_BUILD "@EXTENSION_LAUNCHER_SETTINGS_ENVVARS@")
+set(OpenIGTLinkIF_PYTHONPATH_LAUNCHER_BUILD "@EXTENSION_PYTHONPATH_BUILD@")
+# --------------------------------------------------------------------------
+# Include directories
+
+# Extension include directories for module
+
+set(qSlicerOpenIGTLinkIFModule_INCLUDE_DIRS "@qSlicerOpenIGTLinkIFModule_INCLUDE_DIRS@")
+
+# Extension include directories for module logic
+
+set(vtkSlicerOpenIGTLinkIFModuleLogic_INCLUDE_DIRS "@vtkSlicerOpenIGTLinkIFModuleLogic_INCLUDE_DIRS@")
+# Extension include directories for module mrml
+
+set(vtkSlicerOpenIGTLinkIFModuleMRML_INCLUDE_DIRS "@vtkSlicerOpenIGTLinkIFModuleMRML_INCLUDE_DIRS@")
+
+# Extension Module logic include file directories.
+set(OpenIGTLinkIF_ModuleLogic_INCLUDE_DIRS "@vtkSlicerOpenIGTLinkIFModuleLogic_INCLUDE_DIRS@"
+  CACHE INTERNAL "Extension Module logic includes" FORCE)
+
+# Extension Module MRML include file directories.
+set(OpenIGTLinkIF_ModuleMRML_INCLUDE_DIRS "@vtkSlicerOpenIGTLinkIFModuleMRML_INCLUDE_DIRS@")
+
+# --------------------------------------------------------------------------
+# Target definitions
+
+set_and_check(SlicerOpenIGTLinkIF_TARGETS "@CMAKE_BINARY_DIR@/OpenIGTLinkIFTargets.cmake")
+
+@SlicerOpenIGTLinkIF_CONFIG_CODE@
+
+if(NOT SlicerOpenIGTLinkIF_TARGETS_IMPORTED)
+  set(SlicerOpenIGTLinkIF_TARGETS_IMPORTED 1)
+  include(${SlicerOpenIGTLinkIF_TARGETS})
+endif()
+

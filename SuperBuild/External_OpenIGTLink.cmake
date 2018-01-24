@@ -32,7 +32,7 @@ if(NOT DEFINED OpenIGTLink_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
     master
     QUIET
     )
-  get_filename_component(PARENT_Slicer_DIR ${Slicer_DIR} DIRECTORY)
+  #get_filename_component(PARENT_Slicer_DIR ${Slicer_DIR} DIRECTORY)
   set(EP_SOURCE_DIR ${CMAKE_BINARY_DIR}/Deps/${proj})
   set(EP_BINARY_DIR ${CMAKE_BINARY_DIR}/Deps/${proj}-build)
   ExternalProject_Add(${proj}
@@ -56,7 +56,7 @@ if(NOT DEFINED OpenIGTLink_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
       -DOpenIGTLink_PROTOCOL_VERSION_2:BOOL=OFF
       -DOpenIGTLink_PROTOCOL_VERSION_3:BOOL=ON
       -DOpenIGTLink_USE_VP9:BOOL=ON
-      -DYASM_PYTHON_EXECUTABLE:STRING=${PARENT_Slicer_DIR}/python-install/bin/python
+      -DYASM_PYTHON_EXECUTABLE:FILEPATH=${PYTHON_EXECUTABLE}
       # macOS
       -DCMAKE_MACOSX_RPATH:BOOL=0
     INSTALL_COMMAND ""

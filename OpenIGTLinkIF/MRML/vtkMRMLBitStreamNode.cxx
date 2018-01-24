@@ -122,6 +122,7 @@ int vtkMRMLBitStreamNode::ObserveOutsideVideoDevice(igtlio::VideoDevice* device)
     this->SetMessageStream(videoMsg);
     this->codecName = device->GetCurrentCodecType();
     this->SetAndObserveImageData(device->GetContent().image);
+    this->videoDevice = device; // should the interal video device point to the external video device?
     //-------
     return 1;
     }
