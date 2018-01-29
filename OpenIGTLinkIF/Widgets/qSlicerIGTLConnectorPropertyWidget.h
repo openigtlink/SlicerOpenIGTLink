@@ -28,7 +28,7 @@
 #include <ctkVTKObject.h>
 
 // OpenIGTLinkIF GUI includes
-#include "qSlicerOpenIGTLinkIFModuleExport.h"
+#include "qSlicerOpenIGTLinkIFModuleWidgetsExport.h"
 
 class qSlicerIGTLConnectorPropertyWidgetPrivate;
 class vtkMRMLIGTLConnectorNode;
@@ -36,7 +36,7 @@ class vtkMRMLNode;
 class vtkObject;
 
 /// \ingroup Slicer_QtModules_OpenIGTLinkIF
-class Q_SLICER_QTMODULES_OPENIGTLINKIF_EXPORT qSlicerIGTLConnectorPropertyWidget : public QWidget
+class Q_SLICER_MODULE_OPENIGTLINKIF_WIDGETS_EXPORT qSlicerIGTLConnectorPropertyWidget : public QWidget
 {
   Q_OBJECT
   QVTK_OBJECT

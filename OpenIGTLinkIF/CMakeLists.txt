@@ -5,7 +5,7 @@ if(POLICY CMP0048)
 endif()
 
 set(MODULE_NAME "OpenIGTLinkIF")
-set(MODULE_TITLE "OpenIGTLink I/F")
+set(MODULE_TITLE "OpenIGTLinkIF")
 
 string(TOUPPER ${MODULE_NAME} MODULE_NAME_UPPER)
 
@@ -33,6 +33,7 @@ find_package(OpenIGTLinkIO REQUIRED PATHS ${OpenIGTLinkIO_DIR})
 #-----------------------------------------------------------------------------
 add_subdirectory(MRML)
 add_subdirectory(Logic)
+add_subdirectory(Widgets)
 
 #-----------------------------------------------------------------------------
 set(MODULE_EXPORT_DIRECTIVE "Q_SLICER_QTMODULES_OPENIGTLINKIF_EXPORT")
@@ -45,58 +46,35 @@ set(MODULE_INCLUDE_DIRECTORIES
   ${CMAKE_CURRENT_BINARY_DIR}/Logic
   ${CMAKE_CURRENT_SOURCE_DIR}/MRML
   ${CMAKE_CURRENT_BINARY_DIR}/MRML
+  ${CMAKE_CURRENT_SOURCE_DIR}/Widgets
+  ${CMAKE_CURRENT_BINARY_DIR}/Widgets
   )
 
 set(MODULE_SRCS
   qSlicerOpenIGTLinkIFModule.cxx
   qSlicerOpenIGTLinkIFModule.h
-  qSlicerOpenIGTLinkIFModuleWidget.cxx
-  qSlicerOpenIGTLinkIFModuleWidget.h
-  GUI/qMRMLSceneIGTLConnectorModel.cxx
-  GUI/qMRMLSceneIGTLConnectorModel.h
-  GUI/qMRMLIGTLConnectorTreeView.cxx
-  GUI/qMRMLIGTLConnectorTreeView.h
-  GUI/qMRMLIGTLIOModel.cxx
-  GUI/qMRMLIGTLIOModel.h
-  GUI/qMRMLIGTLIOModel_p.h
-  GUI/qMRMLIGTLIOTreeView.cxx
-  GUI/qMRMLIGTLIOTreeView.h
-  GUI/qSlicerIGTLConnectorPropertyWidget.cxx
-  GUI/qSlicerIGTLConnectorPropertyWidget.h
-  GUI/qSlicerIGTLIONodeSelectorWidget.cxx
-  GUI/qSlicerIGTLIONodeSelectorWidget.h
   )
 
 set(MODULE_MOC_SRCS
   qSlicerOpenIGTLinkIFModule.h
-  qSlicerOpenIGTLinkIFModuleWidget.h
-  GUI/qMRMLSceneIGTLConnectorModel.h
-  GUI/qMRMLIGTLConnectorTreeView.h
-  GUI/qMRMLIGTLIOModel.h
-#  GUI/qMRMLIGTLIOModel_p.h
-  GUI/qMRMLIGTLIOTreeView.h
-  GUI/qSlicerIGTLConnectorPropertyWidget.h
-  GUI/qSlicerIGTLIONodeSelectorWidget.h
   )
 
 set(MODULE_UI_SRCS
-  Resources/UI/qSlicerIGTLConnectorPropertyWidget.ui
-  Resources/UI/qSlicerIGTLIONodeSelectorWidget.ui
-  Resources/UI/qSlicerOpenIGTLinkIFModule.ui
 )
 
 set(MODULE_TARGET_LIBRARIES
   vtkSlicerOpenIGTLinkIFModuleLogic
   vtkSlicerOpenIGTLinkIFModuleMRML
+  qSlicerOpenIGTLinkIFModuleWidgets
   )
 
 set(MODULE_RESOURCES
-  Resources/qSlicerOpenIGTLinkIFModule.qrc
   )
 
 #-----------------------------------------------------------------------------
-slicerMacroBuildQtModule(
+slicerMacroBuildLoadableModule(
   NAME ${MODULE_NAME}
+  TITLE ${MODULE_TITLE}
   EXPORT_DIRECTIVE ${MODULE_EXPORT_DIRECTIVE}
   INCLUDE_DIRECTORIES ${MODULE_INCLUDE_DIRECTORIES}
   SRCS ${MODULE_SRCS}

@@ -25,7 +25,7 @@
 #include "qMRMLTreeView.h"
 
 // OpenIGTLinkIF GUI includes
-#include "qSlicerOpenIGTLinkIFModuleExport.h"
+#include "qSlicerOpenIGTLinkIFModuleWidgetsExport.h"
 
 class qMRMLIGTLIOTreeViewPrivate;
 class vtkMRMLNode;
@@ -34,7 +34,7 @@ class vtkSlicerOpenIGTLinkIFLogic;
 class vtkMRMLIGTLConnectorNode;
 
 /// \ingroup Slicer_QtModules_OpenIGTLinkIF
-class Q_SLICER_QTMODULES_OPENIGTLINKIF_EXPORT qMRMLIGTLIOTreeView : public qMRMLTreeView
+class Q_SLICER_MODULE_OPENIGTLINKIF_WIDGETS_EXPORT qMRMLIGTLIOTreeView : public qMRMLTreeView
 {
   Q_OBJECT
 

@@ -24,16 +24,16 @@
 #include "qMRMLSceneModel.h"
 
 // OpenIGTLinkIF GUI includes
-#include "qSlicerOpenIGTLinkIFModuleExport.h"
+#include "qSlicerOpenIGTLinkIFModuleWidgetsExport.h"
 
 // Logic includes
-#include "Logic/vtkSlicerOpenIGTLinkIFLogic.h"
+#include "../Logic/vtkSlicerOpenIGTLinkIFLogic.h"
 
 class vtkMRMLNode;
 class qMRMLIGTLIOModelPrivate;
 
 /// \ingroup Slicer_QtModules_OpenIGTLink
-class Q_SLICER_QTMODULES_OPENIGTLINKIF_EXPORT qMRMLIGTLIOModel : public qMRMLSceneModel
+class Q_SLICER_MODULE_OPENIGTLINKIF_WIDGETS_EXPORT qMRMLIGTLIOModel : public qMRMLSceneModel
 {
   Q_OBJECT
 

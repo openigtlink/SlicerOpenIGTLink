@@ -4,13 +4,13 @@
 // SlicerQt includes
 #include "qSlicerAbstractModuleWidget.h"
 
-#include "qSlicerOpenIGTLinkIFModuleExport.h"
+#include "qSlicerOpenIGTLinkIFModuleWidgetsExport.h"
 
 class qSlicerOpenIGTLinkIFModuleWidgetPrivate;
 class vtkMRMLNode;
 
 /// \ingroup Slicer_QtModules_OpenIGTLinkIF
-class Q_SLICER_QTMODULES_OPENIGTLINKIF_EXPORT qSlicerOpenIGTLinkIFModuleWidget :
+class Q_SLICER_MODULE_OPENIGTLINKIF_WIDGETS_EXPORT qSlicerOpenIGTLinkIFModuleWidget :
   public qSlicerAbstractModuleWidget
 {
   Q_OBJECT

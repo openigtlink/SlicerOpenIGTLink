@@ -29,7 +29,7 @@
 
 
 // OpenIGTLinkIF GUI includes
-#include "qSlicerOpenIGTLinkIFModuleExport.h"
+#include "qSlicerOpenIGTLinkIFModuleWidgetsExport.h"
 
 class qSlicerIGTLIONodeSelectorWidgetPrivate;
 class vtkMRMLIGTLConnectorNode;
@@ -38,7 +38,7 @@ class vtkMRMLScene;
 class vtkObject;
 
 /// \ingroup Slicer_QtModules_OpenIGTLinkIF
-class Q_SLICER_QTMODULES_OPENIGTLINKIF_EXPORT qSlicerIGTLIONodeSelectorWidget : public QWidget
+class Q_SLICER_MODULE_OPENIGTLINKIF_WIDGETS_EXPORT qSlicerIGTLIONodeSelectorWidget : public QWidget
 {
   Q_OBJECT
   QVTK_OBJECT
