@@ -41,21 +41,21 @@ add_subdirectory(OpenIGTLinkIF)
 #-----------------------------------------------------------------------------
 include(${Slicer_EXTENSION_GENERATE_CONFIG})
 set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${CMAKE_BINARY_DIR};OpenIGTLinkIF;ALL;/")
+set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${CMAKE_BINARY_DIR};OpenIGTLink;RuntimeLibraries;/")
+set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${CMAKE_BINARY_DIR};OpenIGTLinkIO;RuntimeLibraries;/")
+MESSAGE(STATUS "CPACK_INSTALL_CMAKE_PROJECTS = ${CPACK_INSTALL_CMAKE_PROJECTS}")
 include(${Slicer_EXTENSION_CPACK})
 
 #-----------------------------------------------------------------------------
 if(NOT Slicer_SOURCE_DIR)
   # Configure 'OpenIGTLinkIFConfig.cmake'
   include(CMakePackageConfigHelpers)
-
-  message("OpenIGTLinkIO_DIR:${OpenIGTLinkIO_DIR}")
   # For a build tree
   set(SHARE_DIR_CONFIG ${CMAKE_BINARY_DIR}/${Slicer_SHARE_DIR})
   set(OpenIGTLinkIO_DIR_CONFIG ${OpenIGTLinkIO_DIR})
   set(${PROJECT_NAME}_CONFIG_CODE "####### Expanded from \@SlicerOpenIGTLinkIF_CONFIG_CODE\@ #######\n")
   set(${PROJECT_NAME}_CONFIG_CODE "${${PROJECT_NAME}_CONFIG_CODE}##################################################")
   set(_config ${CMAKE_BINARY_DIR}/${PROJECT_NAME}Config.cmake)
-  message("${_config}")
   configure_package_config_file(
       ${PROJECT_NAME}Config.cmake.in
       ${_config}

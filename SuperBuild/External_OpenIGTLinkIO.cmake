@@ -1,14 +1,25 @@
-IF(OpenIGTLinkIO_DIR)
-  # OpenIGTLinkIO has been built already
-  FIND_PACKAGE(OpenIGTLinkIO REQUIRED PATHS ${OpenIGTLinkIO_DIR} NO_DEFAULT_PATH)
-  MESSAGE(STATUS "Using OpenIGTLinkIO available at: ${OpenIGTLinkIO_DIR}")
-  SET(Slicer_OpenIGTLinkIO_DIR "${OpenIGTLinkIO_DIR}")
-ELSE()
+set(proj OpenIGTLinkIO)
+
+# Set dependency list
+set(${proj}_DEPENDENCIES "")
+
+if(${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
+  unset(OpenIGTLinkIO_DIR CACHE)
+  find_package(OpenIGTLinkIO REQUIRED NO_MODULE)
+endif()
+
+# Sanity checks
+if(DEFINED OpenIGTLinkIO_DIR AND NOT EXISTS ${OpenIGTLinkIO_DIR})
+  message(FATAL_ERROR "OpenIGTLinkIO_DIR variable is defined but corresponds to nonexistent directory")
+endif()
+
+SET (OpenIGTLinkIO_SRC_DIR "${CMAKE_BINARY_DIR}/Deps/OpenIGTLinkIO")
+SET (Slicer_OpenIGTLinkIO_DIR "${CMAKE_BINARY_DIR}/Deps/OpenIGTLinkIO-bin" CACHE INTERNAL "Path to store OpenIGTLinkIO binaries")
+if(NOT DEFINED OpenIGTLinkIO_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
   # OpenIGTLinkIO has not been built yet, so download and build it as an external project
+
   
-  SET (OpenIGTLinkIO_SRC_DIR "${CMAKE_BINARY_DIR}/Deps/OpenIGTLinkIO")
-  SET (Slicer_OpenIGTLinkIO_DIR "${CMAKE_BINARY_DIR}/Deps/OpenIGTLinkIO-bin" CACHE INTERNAL "Path to store OpenIGTLinkIO binaries")
-  ExternalProject_Add( OpenIGTLinkIOLib
+  ExternalProject_Add( OpenIGTLinkIO
     PREFIX "${CMAKE_BINARY_DIR}/Deps/OpenIGTLinkIO-prefix"
     SOURCE_DIR "${OpenIGTLinkIO_SRC_DIR}"
     BINARY_DIR "${Slicer_OpenIGTLinkIO_DIR}"
@@ -18,10 +29,10 @@ ELSE()
     #--Configure step-------------
     CMAKE_ARGS 
       ${ep_common_args}
-      -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-      -DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}
-      -DBUILD_SHARED_LIBS:BOOL=OFF
+      -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=${CMAKE_BINARY_DIR}/${Slicer_THIRDPARTY_BIN_DIR}
+      -DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=${CMAKE_BINARY_DIR}/${Slicer_THIRDPARTY_LIB_DIR}
+      -DBUILD_SHARED_LIBS:BOOL=ON
       -DBUILD_EXAMPLES:BOOL=OFF
       -DBUILD_TESTING:BOOL=OFF
       -DVTK_DIR:PATH=${VTK_DIR}
@@ -34,4 +45,31 @@ ELSE()
     INSTALL_COMMAND ""
     DEPENDS ${OpenIGTLinkIO_DEPENDENCIES}
     )  
-ENDIF()
+  ExternalProject_GenerateProjectDescription_Step(${proj})
+
+  set(OpenIGTLinkIO_DIR ${EP_BINARY_DIR})
+
+  #-----------------------------------------------------------------------------
+  # Launcher setting specific to build tree
+
+  set(${proj}_LIBRARY_PATHS_LAUNCHER_BUILD
+    ${OpenIGTLinkIO_DIR}
+    ${OpenIGTLinkIO_DIR}/bin/<CMAKE_CFG_INTDIR>
+    )
+
+  #-----------------------------------------------------------------------------
+  # Launcher setting specific to install tree
+
+  if(UNIX AND NOT APPLE)
+    set(${proj}_LIBRARY_PATHS_LAUNCHER_INSTALLED <APPLAUNCHER_DIR>/lib/igtl)
+    mark_as_superbuild(
+      VARS ${proj}_LIBRARY_PATHS_LAUNCHER_INSTALLED
+      LABELS "LIBRARY_PATHS_LAUNCHER_INSTALLED"
+      )
+  endif()
+ELSE()    
+    # OpenIGTLinkIO has been built already
+    FIND_PACKAGE(OpenIGTLinkIO REQUIRED PATHS ${OpenIGTLinkIO_DIR} NO_DEFAULT_PATH)
+    MESSAGE(STATUS "Using OpenIGTLinkIO available at: ${OpenIGTLinkIO_DIR}")
+    SET(Slicer_OpenIGTLinkIO_DIR "${OpenIGTLinkIO_DIR}")
+ENDIF()    
