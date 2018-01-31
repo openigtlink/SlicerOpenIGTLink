@@ -18,6 +18,8 @@ set(${KIT}_SRCS
 set(${KIT}_TARGET_LIBRARIES
   vtkSlicerOpenIGTLinkIFModuleMRML
   ${OpenIGTLinkIO_LIBRARIES}
+  ${VTK_LIBRARIES}
+  ${ITK_LIBRARIES}
   )
 
 #-----------------------------------------------------------------------------

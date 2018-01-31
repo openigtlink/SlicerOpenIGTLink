@@ -66,6 +66,7 @@ set(MODULE_TARGET_LIBRARIES
   vtkSlicerOpenIGTLinkIFModuleLogic
   vtkSlicerOpenIGTLinkIFModuleMRML
   qSlicerOpenIGTLinkIFModuleWidgets
+  ${MRML_LIBRARIES}
   )
 
 set(MODULE_RESOURCES

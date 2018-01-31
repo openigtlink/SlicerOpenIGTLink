@@ -28,15 +28,16 @@ set(OpenIGTLinkIF_PYTHONPATH_LAUNCHER_BUILD "@EXTENSION_PYTHONPATH_BUILD@")
 # Include directories
 
 # Extension include directories for module
-
 set(qSlicerOpenIGTLinkIFModule_INCLUDE_DIRS "@qSlicerOpenIGTLinkIFModule_INCLUDE_DIRS@")
 
 # Extension include directories for module logic
-
 set(vtkSlicerOpenIGTLinkIFModuleLogic_INCLUDE_DIRS "@vtkSlicerOpenIGTLinkIFModuleLogic_INCLUDE_DIRS@")
-# Extension include directories for module mrml
 
+# Extension include directories for module mrml
 set(vtkSlicerOpenIGTLinkIFModuleMRML_INCLUDE_DIRS "@vtkSlicerOpenIGTLinkIFModuleMRML_INCLUDE_DIRS@")
+
+# Extension include directories for module mrml
+set(qSlicerOpenIGTLinkIFModuleWidgets_INCLUDE_DIRS "@qSlicerOpenIGTLinkIFModuleWidgets_INCLUDE_DIRS@")
 
 # Extension Module logic include file directories.
 set(OpenIGTLinkIF_ModuleLogic_INCLUDE_DIRS "@vtkSlicerOpenIGTLinkIFModuleLogic_INCLUDE_DIRS@"
@@ -44,6 +45,9 @@ set(OpenIGTLinkIF_ModuleLogic_INCLUDE_DIRS "@vtkSlicerOpenIGTLinkIFModuleLogic_I
 
 # Extension Module MRML include file directories.
 set(OpenIGTLinkIF_ModuleMRML_INCLUDE_DIRS "@vtkSlicerOpenIGTLinkIFModuleMRML_INCLUDE_DIRS@")
+
+# Extension Module Widgets include file directories.
+set(OpenIGTLinkIF_ModuleWidgets_INCLUDE_DIRS "@qSlicerOpenIGTLinkIFModuleWidgets_INCLUDE_DIRS@")
 
 # --------------------------------------------------------------------------
 # Target definitions
