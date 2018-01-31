@@ -1,4 +1,4 @@
-set(proj OpenIGTLinkIO)
+set(proj OpenIGTLinkIOLib)
 
 # Set dependency list
 set(${proj}_DEPENDENCIES "")
@@ -19,7 +19,7 @@ if(NOT DEFINED OpenIGTLinkIO_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj
   # OpenIGTLinkIO has not been built yet, so download and build it as an external project
 
   
-  ExternalProject_Add( OpenIGTLinkIO
+  ExternalProject_Add( ${proj}
     PREFIX "${CMAKE_BINARY_DIR}/Deps/OpenIGTLinkIO-prefix"
     SOURCE_DIR "${OpenIGTLinkIO_SRC_DIR}"
     BINARY_DIR "${Slicer_OpenIGTLinkIO_DIR}"
