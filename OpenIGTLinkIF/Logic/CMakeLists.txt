@@ -30,3 +30,12 @@ SlicerMacroBuildModuleLogic(
   SRCS ${${KIT}_SRCS}
   TARGET_LIBRARIES ${${KIT}_TARGET_LIBRARIES}
   )
+
+
+foreach(p IN LISTS ${KIT}_INCLUDE_DIRECTORIES)
+  target_include_directories(${KIT} PUBLIC $<BUILD_INTERFACE:${p}>)
+endforeach()
+foreach(p IN LISTS ${KIT}_INCLUDE_DIRS)
+  target_include_directories(${KIT} PUBLIC $<BUILD_INTERFACE:${p}>)
+endforeach()
+target_include_directories(${KIT} PUBLIC $<INSTALL_INTERFACE:${${KIT}_INSTALL_INCLUDE_DIR}>)

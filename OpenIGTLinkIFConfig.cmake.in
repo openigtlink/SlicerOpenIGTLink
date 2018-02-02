@@ -36,12 +36,14 @@ set(vtkSlicerOpenIGTLinkIFModuleLogic_INCLUDE_DIRS "@vtkSlicerOpenIGTLinkIFModul
 # Extension include directories for module mrml
 set(vtkSlicerOpenIGTLinkIFModuleMRML_INCLUDE_DIRS "@vtkSlicerOpenIGTLinkIFModuleMRML_INCLUDE_DIRS@")
 
-# Extension include directories for module mrml
+# Extension include directories for module widget
 set(qSlicerOpenIGTLinkIFModuleWidgets_INCLUDE_DIRS "@qSlicerOpenIGTLinkIFModuleWidgets_INCLUDE_DIRS@")
 
+# Extension Module include file directories.
+set(OpenIGTLinkIF_Module_INCLUDE_DIRS "@qSlicerOpenIGTLinkIFModule_INCLUDE_DIRS@")
+
 # Extension Module logic include file directories.
-set(OpenIGTLinkIF_ModuleLogic_INCLUDE_DIRS "@vtkSlicerOpenIGTLinkIFModuleLogic_INCLUDE_DIRS@"
-  CACHE INTERNAL "Extension Module logic includes" FORCE)
+set(OpenIGTLinkIF_ModuleLogic_INCLUDE_DIRS "@vtkSlicerOpenIGTLinkIFModuleLogic_INCLUDE_DIRS@")
 
 # Extension Module MRML include file directories.
 set(OpenIGTLinkIF_ModuleMRML_INCLUDE_DIRS "@vtkSlicerOpenIGTLinkIFModuleMRML_INCLUDE_DIRS@")

@@ -39,11 +39,16 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   //----------------------------------------------------------------
   
   enum{
+    ConnectedEvent = igtlio::Connector::ConnectedEvent,
+    DisconnectedEvent = igtlio::Connector::DisconnectedEvent,
+    ActivatedEvent = igtlio::Connector::ActivatedEvent,
+    DeactivatedEvent = igtlio::Connector::DeactivatedEvent,
+    ReceiveEvent = 118948, // deprecated. it was for query response, OpenIGTLinkIO doesn't support query event. it is replaced with command message.
+    NewDeviceEvent = igtlio::Connector::NewDeviceEvent,
     DeviceModifiedEvent = igtlio::Connector::DeviceContentModifiedEvent,
     CommandReceivedEvent    = igtlio::Device::CommandReceivedEvent, // COMMAND device got a query, COMMAND received
     CommandResponseReceivedEvent = igtlio::Device::CommandResponseReceivedEvent  // COMMAND device got a response, RTS_COMMAND received
   };
-  
 
   static vtkMRMLIGTLConnectorNode *New();
   vtkTypeMacro(vtkMRMLIGTLConnectorNode,vtkMRMLNode);
