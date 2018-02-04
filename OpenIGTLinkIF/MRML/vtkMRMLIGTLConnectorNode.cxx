@@ -827,7 +827,7 @@ unsigned int vtkMRMLIGTLConnectorNode::AssignNodeToDevice(vtkMRMLNode* node, igt
     igtlio::StatusDevice* statusDevice = static_cast<igtlio::StatusDevice*>(device.GetPointer());
 
     vtkMRMLIGTLStatusNode* statusNode = vtkMRMLIGTLStatusNode::SafeDownCast(node);
-    igtlio::StatusConverter::ContentData content = {statusNode->GetCode(), statusNode->GetSubCode(), statusNode->GetErrorName(), statusNode->GetStatusString()};
+    igtlio::StatusConverter::ContentData content = {static_cast<int>(statusNode->GetCode()), static_cast<int>(statusNode->GetSubCode()), statusNode->GetErrorName(), statusNode->GetStatusString()};
     statusDevice->SetContent(content);
     modifiedEvent = vtkMRMLIGTLStatusNode::StatusModifiedEvent;
     }
@@ -853,7 +853,7 @@ unsigned int vtkMRMLIGTLConnectorNode::AssignNodeToDevice(vtkMRMLNode* node, igt
     {
     igtlio::StringDevice* stringDevice = static_cast<igtlio::StringDevice*>(device.GetPointer());
     vtkMRMLTextNode* textNode = vtkMRMLTextNode::SafeDownCast(node);
-    igtlio::StringConverter::ContentData content = {textNode->GetEncoding(), textNode->GetText()};
+    igtlio::StringConverter::ContentData content = {static_cast<unsigned int>(textNode->GetEncoding()), textNode->GetText()};
     stringDevice->SetContent(content);
     modifiedEvent = vtkMRMLTextNode::TextModifiedEvent;
     }

@@ -95,3 +95,6 @@ if(NOT DEFINED OpenIGTLink_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
 else()
   ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
 endif()
+
+ExternalProject_Message(${proj} "OpenIGTLink_DIR:${OpenIGTLink_DIR}")
+mark_as_superbuild(OpenIGTLink_DIR:PATH)
