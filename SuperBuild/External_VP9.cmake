@@ -15,7 +15,6 @@ endif()
 
 SET(proj_DEPENDENCIES)
 IF(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows") # window os build doesn't need the yasm
-  SET(YASM_BINARY_DIR "${CMAKE_BINARY_DIR}/Deps/VP9")
   INCLUDE(${CMAKE_SOURCE_DIR}/SuperBuild/External_yasm.cmake)
   IF(NOT YASM_FOUND)
     LIST(APPEND VP9_DEPENDENCIES YASM)
@@ -30,7 +29,6 @@ if(NOT DEFINED ${proj}_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
   if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows") 
     SET (VP9_INCLUDE_DIR "${CMAKE_BINARY_DIR}/Deps/VP9/vpx" CACHE PATH "VP9 source directory" FORCE)
     SET (VP9_LIBRARY_DIR "${CMAKE_BINARY_DIR}/Deps/VP9" CACHE PATH "VP9 library directory" FORCE) 
-    #file(MAKE_DIRECTORY ${VP9_LIBRARY_DIR})
     include(ExternalProjectForNonCMakeProject)
 
     # environment
@@ -61,6 +59,7 @@ if(NOT DEFINED ${proj}_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
     file(WRITE ${_build_script}
     "include(\"${_env_script}\")
     set(${proj}_WORKING_DIR \"${VP9_LIBRARY_DIR}\")
+    set(ENV{PATH} \"${YASM_BINARY_DIR}:$ENV{PATH}\")
     ExternalProject_Execute(${proj} \"build\" make WORKING_DIRECTORY ${proj}_WORKING_DIR)
     ")
     set(VP9_BUILD_COMMAND ${CMAKE_COMMAND} -P ${_build_script})
@@ -119,12 +118,6 @@ if(NOT DEFINED ${proj}_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
       message(WARNING "Only support for Visual Studio 14 2015")
     endif()
   endif()
-  if(APPLE)
-    ExternalProject_Add_Step(${proj} vp9_install_chmod_library
-      COMMAND chmod u+xw ${VP9_LIBRARY_DIR}/libvpx.a
-      DEPENDEES install
-      )
-  endif()
 
   if(WIN32)
     if("${CMAKE_GENERATOR}" MATCHES "(Win64|IA64)")
@@ -136,7 +129,11 @@ if(NOT DEFINED ${proj}_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
     set(VP9_LIBRARY ${VP9_LIBRARY_DIR}/libvpx.a})
     set(${proj}_LIBRARY_PATHS_LAUNCHER_BUILD ${VP9_LIBRARY_DIR})
   endif()
-
+  
+  ExternalProject_GenerateProjectDescription_Step(${proj}
+    VERSION "v1.6.1"
+    LICENSE_FILES "https://raw.githubusercontent.com/openigtlink/CodecLibrariesFile/master/VP9/License.txt"
+    )
   set(Slicer_VP9_DIR ${VP9_LIBRARY_DIR})
 
   #-----------------------------------------------------------------------------

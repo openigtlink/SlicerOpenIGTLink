@@ -21,7 +21,7 @@ find_package(Slicer REQUIRED)
 include(${Slicer_USE_FILE})
 mark_as_superbuild(Slicer_DIR)
 
-option(Slicer_USE_VP9 OFF)
+option(Slicer_USE_VP9 "Build OpenIGTLinkIF with VP9 support" ON)
 INCLUDE(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 
 #-----------------------------------------------------------------------------
@@ -46,7 +46,6 @@ set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${OpenIGTLinkI
 include(${CMAKE_CURRENT_SOURCE_DIR}/SlicerBlockInstallVP9.cmake)
 MESSAGE(STATUS "CPACK_INSTALL_CMAKE_PROJECTS = ${CPACK_INSTALL_CMAKE_PROJECTS}")
 include(${Slicer_EXTENSION_CPACK})
-
 #-----------------------------------------------------------------------------
 if(NOT Slicer_SOURCE_DIR)
   # Configure 'OpenIGTLinkIFConfig.cmake'

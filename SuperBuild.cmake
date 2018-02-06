@@ -20,11 +20,9 @@ SET(OpenIGTLinkIO_DEPENDENCIES OpenIGTLink)
 INCLUDE(SuperBuild/External_OpenIGTLinkIO.cmake)
 LIST(APPEND OpenIGTLinkIF_DEPENDENCIES OpenIGTLink)
 LIST(APPEND OpenIGTLinkIF_DEPENDENCIES OpenIGTLinkIO)
-
 foreach(dep ${EXTENSION_DEPENDS})
   mark_as_superbuild(${dep}_DIR)
 endforeach()
-
 set(projTop ${SUPERBUILD_TOPLEVEL_PROJECT})
 ExternalProject_Include_Dependencies(${projTop}
   PROJECT_VAR projTop
@@ -56,6 +54,8 @@ ExternalProject_Add(${projTop}
     -DSubversion_SVN_EXECUTABLE:PATH=${Subversion_SVN_EXECUTABLE}
     -DSlicer_DIR:PATH=${Slicer_DIR}
     -DSlicer_USE_VP9:BOOL=${Slicer_USE_VP9}
+    -DVP9_LIBRARY:PATH=${VP9_LIBRARY}
+    -DCMAKE_MACOSX_RPATH:BOOL=0
   DEPENDS
     ${OpenIGTLinkIF_DEPENDENCIES}
   )

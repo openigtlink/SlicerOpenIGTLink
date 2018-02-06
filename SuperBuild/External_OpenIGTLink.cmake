@@ -32,7 +32,6 @@ if(NOT DEFINED OpenIGTLink_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
     master
     QUIET
     )
-  #get_filename_component(PARENT_Slicer_DIR ${Slicer_DIR} DIRECTORY)
   set(EP_SOURCE_DIR ${CMAKE_BINARY_DIR}/Deps/${proj})
   set(EP_BINARY_DIR ${CMAKE_BINARY_DIR}/Deps/${proj}-build)
   ExternalProject_Add(${proj}
