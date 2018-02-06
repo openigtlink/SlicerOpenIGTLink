@@ -585,7 +585,7 @@ igtlio::CommandDevicePointer vtkMRMLIGTLConnectorNode::SendCommand(std::string d
   return vtkSmartPointer<igtlio::CommandDevice>();
 }
 
-
+//----------------------------------------------------------------------------
 igtlio::CommandDevicePointer vtkMRMLIGTLConnectorNode::SendCommandResponse(std::string device_id, std::string command, std::string content)
 {
   igtlio::DeviceKeyType key(igtlio::CommandConverter::GetIGTLTypeName(), device_id);

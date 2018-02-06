@@ -50,6 +50,13 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
     CommandResponseReceivedEvent = igtlio::Device::CommandResponseReceivedEvent  // COMMAND device got a response, RTS_COMMAND received
   };
 
+  enum {
+    STATE_OFF = igtlio::Connector::STATE_OFF,
+    STATE_WAIT_CONNECTION = igtlio::Connector::STATE_WAIT_CONNECTION,
+    STATE_CONNECTED = igtlio::Connector::STATE_CONNECTED,
+    NUM_STATE = igtlio::Connector::NUM_STATE,
+  };
+
   static vtkMRMLIGTLConnectorNode *New();
   vtkTypeMacro(vtkMRMLIGTLConnectorNode,vtkMRMLNode);
 
@@ -118,6 +125,10 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   vtkMRMLNode* GetIncomingMRMLNode(unsigned int i);
   
   // Description:
+  // Get the state of the connector:
+  int GetState() { return this->IOConnector->GetState(); };
+
+  // Description:
   // A function to explicitly push node to OpenIGTLink. The function is called either by
   // external nodes or MRML event hander in the connector node.
   int PushNode(vtkMRMLNode* node);
@@ -133,7 +144,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   // For controling remote devices
   //----------------------------------------------------------------
   // Description:
-  // Push query int the query list.
+  // Push query into the query list.
   void PushQuery(vtkMRMLIGTLQueryNode* query);
   
   // Description:
