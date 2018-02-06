@@ -21,7 +21,7 @@ find_package(Slicer REQUIRED)
 include(${Slicer_USE_FILE})
 mark_as_superbuild(Slicer_DIR)
 
-
+option(Slicer_USE_VP9 OFF)
 INCLUDE(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 
 #-----------------------------------------------------------------------------
@@ -43,6 +43,7 @@ include(${Slicer_EXTENSION_GENERATE_CONFIG})
 set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${CMAKE_BINARY_DIR};OpenIGTLinkIF;ALL;/")
 set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${OpenIGTLink_DIR};OpenIGTLink;RuntimeLibraries;/")
 set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${OpenIGTLinkIO_DIR};OpenIGTLinkIO;RuntimeLibraries;/")
+include(${CMAKE_CURRENT_SOURCE_DIR}/SlicerBlockInstallVP9.cmake)
 MESSAGE(STATUS "CPACK_INSTALL_CMAKE_PROJECTS = ${CPACK_INSTALL_CMAKE_PROJECTS}")
 include(${Slicer_EXTENSION_CPACK})
 

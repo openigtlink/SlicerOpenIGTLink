@@ -11,6 +11,10 @@ set(ep_common_cxx_flags "${CMAKE_CXX_FLAGS_INIT} ${ADDITIONAL_CXX_FLAGS}")
 #-----------------------------------------------------------------------------
 
 include(ExternalProject)
+if(Slicer_USE_VP9)
+  INCLUDE(SuperBuild/External_VP9.cmake)
+  SET(OpenIGTLink_DEPENDENCIES VP9)
+endif()
 INCLUDE(SuperBuild/External_OpenIGTLink.cmake)
 SET(OpenIGTLinkIO_DEPENDENCIES OpenIGTLink)
 INCLUDE(SuperBuild/External_OpenIGTLinkIO.cmake)
@@ -51,6 +55,7 @@ ExternalProject_Add(${projTop}
     -DCMAKE_OSX_ARCHITECTURES:STRING=${CMAKE_OSX_ARCHITECTURES}
     -DSubversion_SVN_EXECUTABLE:PATH=${Subversion_SVN_EXECUTABLE}
     -DSlicer_DIR:PATH=${Slicer_DIR}
+    -DSlicer_USE_VP9:BOOL=${Slicer_USE_VP9}
   DEPENDS
     ${OpenIGTLinkIF_DEPENDENCIES}
   )
