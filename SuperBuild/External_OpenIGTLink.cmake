@@ -1,8 +1,6 @@
 set(proj OpenIGTLink)
 
 # Set dependency list
-set(${proj}_DEPENDENCIES "")
-
 if(${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
   unset(OpenIGTLink_DIR CACHE)
   find_package(OpenIGTLink REQUIRED NO_MODULE)
