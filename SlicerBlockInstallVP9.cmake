@@ -33,21 +33,21 @@ if(Slicer_USE_VP9)
       )
       if("${CMAKE_GENERATOR}" MATCHES "(Win64|IA64)")
         install(FILES
-          ${VP9_DIR}\\x64\\Release\\vpxmd.lib
-          DESTINATION ${VP9_INSTALL_LIB_DIR}\\Release
+          ${VP9_DIR}/x64/Release/vpxmd.lib
+          DESTINATION ${VP9_INSTALL_LIB_DIR}/Release/
         )
         install(FILES
-          ${VP9_DIR}\\x64\\Release\\vpxmdd.lib
-          DESTINATION ${VP9_INSTALL_LIB_DIR}\\Debug
+          ${VP9_DIR}/x64/Debug/vpxmdd.lib
+          DESTINATION ${VP9_INSTALL_LIB_DIR}/Debug/
         )
       else()
         install(FILES
-          ${VP9_DIR}\\Win32\\Release\\vpxmd.lib
-          DESTINATION ${VP9_INSTALL_LIB_DIR}\\Release
+          ${VP9_DIR}/Win32/Release/vpxmd.lib
+          DESTINATION ${VP9_INSTALL_LIB_DIR}/Release/
         )
         install(FILES
-          ${VP9_DIR}\\Win32\\Release\\vpxmdd.lib
-          DESTINATION ${VP9_INSTALL_LIB_DIR}\\Debug
+          ${VP9_DIR}/Win32/Debug/vpxmdd.lib
+          DESTINATION ${VP9_INSTALL_LIB_DIR}/Debug/
         )
       endif()
     else()
