@@ -59,7 +59,7 @@ if(NOT DEFINED ${proj}_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
     file(WRITE ${_build_script}
     "include(\"${_env_script}\")
     set(${proj}_WORKING_DIR \"${VP9_LIBRARY_DIR}\")
-    set(ENV{PATH} \"${YASM_BINARY_DIR}:$ENV{PATH}\")
+    set(ENV{PATH} \"${YASM_BINARY_DIR}:${YASM_BINARY_DIR}/Debug:${YASM_BINARY_DIR}/Release:$ENV{PATH}\")
     ExternalProject_Execute(${proj} \"build\" make WORKING_DIRECTORY ${proj}_WORKING_DIR)
     ")
     set(VP9_BUILD_COMMAND ${CMAKE_COMMAND} -P ${_build_script})

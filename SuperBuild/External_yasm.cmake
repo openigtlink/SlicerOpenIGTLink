@@ -7,6 +7,8 @@ IF(YASM_FOUND)
   # YASM has been built already
   MESSAGE(STATUS "Using YASM available at: ${YASM_BINARY_DIR}")
 ELSE()
+  set(CMAKE_PROJECT_INCLUDE_EXTERNAL_PROJECT_ARG)      
+  include(ExternalProjectForNonCMakeProject)
   SET(YASM_PYTHON_EXECUTABLE "" CACHE STRING "Python Interpreter")
   if("${YASM_PYTHON_EXECUTABLE}" STREQUAL "")
     find_package(PythonInterp "2.7" REQUIRED)
