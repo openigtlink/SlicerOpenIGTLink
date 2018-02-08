@@ -133,11 +133,7 @@ void qSlicerIGTLIONodeSelectorWidget::onAddNodeButtonClicked()
 
   if (d->ConnectorNode)
     {
-    if (d->Direction == 1)
-      {
-      d->ConnectorNode->RegisterIncomingMRMLNode(node);
-      }
-    else if (d->Direction == 2)
+    if (d->Direction == 2)
       {
       d->ConnectorNode->RegisterOutgoingMRMLNode(node);
       }

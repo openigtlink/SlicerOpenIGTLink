@@ -102,7 +102,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   // Description:
   // Register MRML node for incoming data.
   // Returns a pointer to the node information in IncomingMRMLNodeInfoList
-  igtlio::Connector::NodeInfoType* RegisterIncomingMRMLNode(vtkMRMLNode* node);
+  igtlio::Connector::NodeInfoType* RegisterIncomingMRMLNode(vtkMRMLNode* node, vtkSmartPointer<igtlio::Device> device);
   
   // Description:
   // Unregister MRML node for incoming data.
@@ -192,7 +192,9 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
 
   typedef std::map<std::string,  std::vector<std::string> > DeviceTypeToNodeTagMapType;
   
-  MessageDeviceMapType  MRMLIDToDeviceMap;
+  MessageDeviceMapType  OutgoingMRMLIDToDeviceMap;
+
+  MessageDeviceMapType  IncomingMRMLIDToDeviceMap;
 
   DeviceTypeToNodeTagMapType DeviceTypeToNodeTagMap;
 
@@ -216,7 +218,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   vtkMRMLIGTLConnectorNode(const vtkMRMLIGTLConnectorNode&);
   void operator=(const vtkMRMLIGTLConnectorNode&);
 
-  unsigned int AssignNodeToDevice(vtkMRMLNode* node, igtlio::DevicePointer device);
+  unsigned int AssignOutGoingNodeToDevice(vtkMRMLNode* node, igtlio::DevicePointer device);
 
   void ProcessNewDeviceEvent(vtkObject *caller, unsigned long event, void *callData );
 

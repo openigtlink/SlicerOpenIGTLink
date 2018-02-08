@@ -38,6 +38,7 @@ vtkMRMLBitStreamNode::~vtkMRMLBitStreamNode()
 void vtkMRMLBitStreamNode::ProcessMRMLEvents(vtkObject *caller, unsigned long event, void *callData )
 {
   this->vtkMRMLNode::ProcessMRMLEvents(caller, event, callData);
+  this->InvokeEvent(ImageDataModifiedEvent);
 }
 
 void vtkMRMLBitStreamNode::ProcessDeviceModifiedEvents( vtkObject *caller, unsigned long event, void *callData )

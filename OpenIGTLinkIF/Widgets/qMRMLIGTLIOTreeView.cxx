@@ -287,8 +287,8 @@ void qMRMLIGTLIOTreeView::onClicked(const QModelIndex& index)
   vtkSmartPointer<igtlio::Device> device = NULL;
   if(dnode)
     {
-    vtkMRMLIGTLConnectorNode::MessageDeviceMapType::iterator iter = cnode->MRMLIDToDeviceMap.find(dnode->GetID());
-    if (iter == cnode->MRMLIDToDeviceMap.end())
+    vtkMRMLIGTLConnectorNode::MessageDeviceMapType::iterator iter = cnode->OutgoingMRMLIDToDeviceMap.find(dnode->GetID());
+    if (iter == cnode->OutgoingMRMLIDToDeviceMap.end())
       {
       igtlio::DeviceKeyType key;
       key.name = dnode->GetName();
@@ -307,7 +307,7 @@ void qMRMLIGTLIOTreeView::onClicked(const QModelIndex& index)
         device = cnode->IOConnector->GetDeviceFactory()->create(key.type, key.name);
         if (device)
           {
-          cnode->MRMLIDToDeviceMap[dnode->GetID()] = device;
+          cnode->OutgoingMRMLIDToDeviceMap[dnode->GetID()] = device;
           cnode->IOConnector->AddDevice(device);
           }
         else
@@ -318,7 +318,7 @@ void qMRMLIGTLIOTreeView::onClicked(const QModelIndex& index)
       }
     else
       {
-      device = cnode->MRMLIDToDeviceMap[dnode->GetID()];
+      device = cnode->OutgoingMRMLIDToDeviceMap[dnode->GetID()];
       }
     }
   if (index.column() == qMRMLIGTLIOModel::VisualizationColumn)
