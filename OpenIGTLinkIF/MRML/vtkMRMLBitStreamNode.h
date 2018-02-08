@@ -30,31 +30,31 @@ public:
   
   static vtkMRMLBitStreamNode *New();
   vtkTypeMacro(vtkMRMLBitStreamNode,vtkMRMLVectorVolumeNode);
-  void PrintSelf(ostream& os, vtkIndent indent);
+  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
   
-  virtual vtkMRMLNode* CreateNodeInstance();
+  virtual vtkMRMLNode* CreateNodeInstance() VTK_OVERRIDE;
   
-  virtual void ProcessMRMLEvents( vtkObject *caller, unsigned long event, void *callData );
+  virtual void ProcessMRMLEvents( vtkObject *caller, unsigned long event, void *callData ) VTK_OVERRIDE;
   
   void ProcessDeviceModifiedEvents( vtkObject *caller, unsigned long event, void *callData );
   ///
   /// Set node attributes
-  virtual void ReadXMLAttributes( const char** atts);
+  virtual void ReadXMLAttributes( const char** atts) VTK_OVERRIDE;
   
   /// Create default storage node or NULL if does not have one
   virtual vtkMRMLStorageNode* CreateDefaultStorageNode() VTK_OVERRIDE;
   
   ///
   /// Write this node's information to a MRML file in XML format.
-  virtual void WriteXML(ostream& of, int indent);
+  virtual void WriteXML(ostream& of, int indent) VTK_OVERRIDE;
   
   ///
   /// Copy the node's attributes to this object
-  virtual void Copy(vtkMRMLNode *node);
+  virtual void Copy(vtkMRMLNode *node) VTK_OVERRIDE;
   
   ///
   /// Get node XML tag name (like Volume, Model)
-  virtual const char* GetNodeTagName() {return "BitStream";};
+  virtual const char* GetNodeTagName() {return "BitStream";} VTK_OVERRIDE;
   
   void SetVideoMessageDevice(igtlio::VideoDevice* inDevice)
   {
