@@ -17,6 +17,7 @@ set(${KIT}_SRCS
 
 set(${KIT}_TARGET_LIBRARIES
   vtkSlicerOpenIGTLinkIFModuleMRML
+  OpenIGTLink
   ${OpenIGTLinkIO_LIBRARIES}
   ${VTK_LIBRARIES}
   ${ITK_LIBRARIES}

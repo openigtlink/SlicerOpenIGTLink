@@ -18,8 +18,8 @@ IF(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows") # window os build doesn't need the 
   INCLUDE(${CMAKE_SOURCE_DIR}/SuperBuild/External_yasm.cmake)
   IF(NOT YASM_FOUND)
     LIST(APPEND VP9_DEPENDENCIES YASM)
-    message("VP9 dependencies modified." ${VP9_DEPENDENCIES})
   ENDIF()
+  set(proj VP9)
 ENDIF()
 
 if(NOT DEFINED ${proj}_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
@@ -53,13 +53,12 @@ if(NOT DEFINED ${proj}_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
       )
     ")
     set(VP9_CONFIGURE_COMMAND ${CMAKE_COMMAND} -P ${_configure_script})
-
     # build step
     set(_build_script ${CMAKE_BINARY_DIR}/${proj}_build_step.cmake)
     file(WRITE ${_build_script}
     "include(\"${_env_script}\")
     set(${proj}_WORKING_DIR \"${VP9_LIBRARY_DIR}\")
-    set(ENV{PATH} \"${YASM_BINARY_DIR}:${YASM_BINARY_DIR}/Debug:${YASM_BINARY_DIR}/Release:$ENV{PATH}\")
+    set(ENV{PATH} \"${YASM_DIR}:${YASM_DIR}/Debug:${YASM_DIR}/Release:$ENV{PATH}\")
     ExternalProject_Execute(${proj} \"build\" make WORKING_DIRECTORY ${proj}_WORKING_DIR)
     ")
     set(VP9_BUILD_COMMAND ${CMAKE_COMMAND} -P ${_build_script})
@@ -126,7 +125,7 @@ if(NOT DEFINED ${proj}_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
       SET(VP9_LIBRARY optimized ${VP9_LIBRARY_DIR}\\Win32\\Release\\vpxmd.lib debug ${VP9_LIBRARY_DIR}\\Win32\\Debug\\vpxmdd.lib)
     endif()
   else()
-    set(VP9_LIBRARY ${VP9_LIBRARY_DIR}/libvpx.a})
+    set(VP9_LIBRARY ${VP9_LIBRARY_DIR}/libvpx.a)
     set(${proj}_LIBRARY_PATHS_LAUNCHER_BUILD ${VP9_LIBRARY_DIR})
   endif()
   

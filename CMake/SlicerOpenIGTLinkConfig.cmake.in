@@ -5,10 +5,10 @@ set_and_check(OpenIGTLinkIO_DIR "@OpenIGTLinkIO_DIR@")
 
 if(NOT OpenIGTLinkIO_FOUND)
   set(OpenIGTLinkIO_DIR "@OpenIGTLinkIO_DIR@")
-  find_package(OpenIGTLinkIO REQUIRED NO_MODULE)
 endif()
+find_package(OpenIGTLinkIO REQUIRED NO_MODULE)
 
-if(NOT SlicerOpenIGTLinkIF_FIND_QUIETLY)
+if(NOT OpenIGTLinkIF_FIND_QUIETLY)
   message(STATUS "OpenIGTLinkIO_DIR set to ${OpenIGTLinkIO_DIR}")
 endif()
 
@@ -54,12 +54,12 @@ set(OpenIGTLinkIF_ModuleWidgets_INCLUDE_DIRS "@qSlicerOpenIGTLinkIFModuleWidgets
 # --------------------------------------------------------------------------
 # Target definitions
 
-set_and_check(SlicerOpenIGTLinkIF_TARGETS "@CMAKE_BINARY_DIR@/OpenIGTLinkIFTargets.cmake")
+set_and_check(OpenIGTLinkIF_TARGETS "@CMAKE_BINARY_DIR@/SlicerOpenIGTLinkTargets.cmake")
 
-@SlicerOpenIGTLinkIF_CONFIG_CODE@
+@OpenIGTLinkIF_CONFIG_CODE@
 
-if(NOT SlicerOpenIGTLinkIF_TARGETS_IMPORTED)
-  set(SlicerOpenIGTLinkIF_TARGETS_IMPORTED 1)
-  include(${SlicerOpenIGTLinkIF_TARGETS})
+if(NOT OpenIGTLinkIF_TARGETS_IMPORTED)
+  set(OpenIGTLinkIF_TARGETS_IMPORTED 1)
+  include(${OpenIGTLinkIF_TARGETS})
 endif()
 

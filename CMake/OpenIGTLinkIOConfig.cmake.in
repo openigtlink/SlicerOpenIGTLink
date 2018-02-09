@@ -4,5 +4,5 @@ set_and_check(OpenIGTLinkIO_DIR "@OpenIGTLinkIO_DIR@")
 
 if(NOT OpenIGTLinkIO_FOUND)
   set(OpenIGTLinkIO_DIR "@OpenIGTLinkIO_DIR@")
-  find_package(OpenIGTLinkIO REQUIRED NO_MODULE)
 endif()
+find_package(OpenIGTLinkIO REQUIRED NO_MODULE)

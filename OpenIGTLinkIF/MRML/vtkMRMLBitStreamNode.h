@@ -54,7 +54,8 @@ public:
   
   ///
   /// Get node XML tag name (like Volume, Model)
-  virtual const char* GetNodeTagName() {return "BitStream";} VTK_OVERRIDE;
+  virtual const char* GetNodeTagName() VTK_OVERRIDE
+  {return "BitStream";};
   
   void SetVideoMessageDevice(igtlio::VideoDevice* inDevice)
   {

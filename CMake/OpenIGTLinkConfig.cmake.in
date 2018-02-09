@@ -4,5 +4,6 @@ set_and_check(OpenIGTLink_DIR "@OpenIGTLink_DIR@")
 
 if(NOT OpenIGTLink_FOUND)
   set(OpenIGTLink_DIR "@OpenIGTLink_DIR@")
-  find_package(OpenIGTLink REQUIRED NO_MODULE)
 endif()
+find_package(OpenIGTLink REQUIRED NO_MODULE)
+

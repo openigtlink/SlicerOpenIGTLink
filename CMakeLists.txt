@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(OpenIGTLinkIF)
+project(SlicerOpenIGTLink)
 
 #-----------------------------------------------------------------------------
 # Extension meta-information
@@ -26,9 +26,9 @@ INCLUDE(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 
 #-----------------------------------------------------------------------------
 # SuperBuild setup
-option(OpenIGTLinkIF_SUPERBUILD "Build OpenIGTLinkIF and the projects it depends on." ON)
-mark_as_advanced(OpenIGTLinkIF_SUPERBUILD)
-if(OpenIGTLinkIF_SUPERBUILD)
+option(SlicerOpenIGTLink_SUPERBUILD "Build OpenIGTLink related modules and the projects it depends on." ON)
+mark_as_advanced(SlicerOpenIGTLink_SUPERBUILD)
+if(SlicerOpenIGTLink_SUPERBUILD)
   include("${CMAKE_CURRENT_SOURCE_DIR}/SuperBuild.cmake")
   return()
 endif()
@@ -39,8 +39,8 @@ add_subdirectory(OpenIGTLinkIF)
 ## NEXT_MODULE
 
 #-----------------------------------------------------------------------------
-include(${Slicer_EXTENSION_GENERATE_CONFIG}) # for project targeting generation only, the config file will be overwritten 
-set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${CMAKE_BINARY_DIR};OpenIGTLinkIF;ALL;/")
+include(${Slicer_EXTENSION_GENERATE_CONFIG}) 
+set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${CMAKE_BINARY_DIR};${EXTENSION_NAME};ALL;/")
 set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${OpenIGTLink_DIR};OpenIGTLink;RuntimeLibraries;/")
 set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${OpenIGTLinkIO_DIR};OpenIGTLinkIO;RuntimeLibraries;/")
 include(${CMAKE_CURRENT_SOURCE_DIR}/CMake/SlicerBlockInstallVP9.cmake)
@@ -48,16 +48,16 @@ MESSAGE(STATUS "CPACK_INSTALL_CMAKE_PROJECTS = ${CPACK_INSTALL_CMAKE_PROJECTS}")
 include(${Slicer_EXTENSION_CPACK})
 #-----------------------------------------------------------------------------
 if(NOT Slicer_SOURCE_DIR)
-  # Configure 'OpenIGTLinkIFConfig.cmake'
+  # Configure 'OpenIGTLinkIFConfig.cmake.in'
   include(CMakePackageConfigHelpers)
   # For a build tree
   set(SHARE_DIR_CONFIG ${CMAKE_BINARY_DIR}/${Slicer_SHARE_DIR})
   set(OpenIGTLinkIO_DIR_CONFIG ${OpenIGTLinkIO_DIR})
-  set(${PROJECT_NAME}_CONFIG_CODE "####### Expanded from \@SlicerOpenIGTLinkIF_CONFIG_CODE\@ #######\n")
-  set(${PROJECT_NAME}_CONFIG_CODE "${${PROJECT_NAME}_CONFIG_CODE}##################################################")
-  set(_config ${CMAKE_BINARY_DIR}/${PROJECT_NAME}Config.cmake)
+  set(SlicerOpenIGTLink_CONFIG_CODE "####### Expanded from \@SlicerOpenIGTLink_CONFIG_CODE\@ #######\n")
+  set(SlicerOpenIGTLink_CONFIG_CODE "${SlicerOpenIGTLink_CONFIG_CODE}##################################################")
+  set(_config ${CMAKE_BINARY_DIR}/SlicerOpenIGTLinkConfig.cmake)
   configure_package_config_file(
-      CMake/${PROJECT_NAME}Config.cmake.in
+      CMake/SlicerOpenIGTLinkConfig.cmake.in
       ${_config}
       INSTALL_DESTINATION ${CMAKE_BINARY_DIR}
       PATH_VARS SHARE_DIR_CONFIG OpenIGTLinkIO_DIR_CONFIG
