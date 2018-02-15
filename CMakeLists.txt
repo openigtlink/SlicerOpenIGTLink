@@ -21,7 +21,7 @@ find_package(Slicer REQUIRED)
 include(${Slicer_USE_FILE})
 mark_as_superbuild(Slicer_DIR)
 
-option(Slicer_USE_VP9 "Build OpenIGTLinkIF with VP9 support" ON)
+option(Slicer_USE_VP9 "Build SlicerOpenIGTLink with VP9 support" ON)
 INCLUDE(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 
 #-----------------------------------------------------------------------------
@@ -39,7 +39,7 @@ add_subdirectory(OpenIGTLinkIF)
 ## NEXT_MODULE
 
 #-----------------------------------------------------------------------------
-include(${Slicer_EXTENSION_GENERATE_CONFIG}) 
+include(${Slicer_EXTENSION_GENERATE_CONFIG})
 set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${CMAKE_BINARY_DIR};${EXTENSION_NAME};ALL;/")
 set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${OpenIGTLink_DIR};OpenIGTLink;RuntimeLibraries;/")
 set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${OpenIGTLinkIO_DIR};OpenIGTLinkIO;RuntimeLibraries;/")
@@ -48,21 +48,8 @@ MESSAGE(STATUS "CPACK_INSTALL_CMAKE_PROJECTS = ${CPACK_INSTALL_CMAKE_PROJECTS}")
 include(${Slicer_EXTENSION_CPACK})
 #-----------------------------------------------------------------------------
 if(NOT Slicer_SOURCE_DIR)
-  # Configure 'OpenIGTLinkIFConfig.cmake.in'
+  # Generate OpenIGTLinkConfig.cmake and OpenIGTLinkIOConfig.cmake files
   include(CMakePackageConfigHelpers)
-  # For a build tree
-  set(SHARE_DIR_CONFIG ${CMAKE_BINARY_DIR}/${Slicer_SHARE_DIR})
-  set(OpenIGTLinkIO_DIR_CONFIG ${OpenIGTLinkIO_DIR})
-  set(SlicerOpenIGTLink_CONFIG_CODE "####### Expanded from \@SlicerOpenIGTLink_CONFIG_CODE\@ #######\n")
-  set(SlicerOpenIGTLink_CONFIG_CODE "${SlicerOpenIGTLink_CONFIG_CODE}##################################################")
-  set(_config ${CMAKE_BINARY_DIR}/SlicerOpenIGTLinkConfig.cmake)
-  configure_package_config_file(
-      CMake/SlicerOpenIGTLinkConfig.cmake.in
-      ${_config}
-      INSTALL_DESTINATION ${CMAKE_BINARY_DIR}
-      PATH_VARS SHARE_DIR_CONFIG OpenIGTLinkIO_DIR_CONFIG
-      NO_CHECK_REQUIRED_COMPONENTS_MACRO
-  )
   configure_package_config_file(
       CMake/OpenIGTLinkConfig.cmake.in
       ${CMAKE_BINARY_DIR}/OpenIGTLinkConfig.cmake
