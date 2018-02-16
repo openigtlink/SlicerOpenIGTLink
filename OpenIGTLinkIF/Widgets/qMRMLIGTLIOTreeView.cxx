@@ -47,6 +47,9 @@
 #include <vtkMRMLNode.h>
 #include "vtkMRMLIGTLConnectorNode.h"
 
+// OpenIGTLinkIO includes
+#include "igtlioConnector.h"
+
 //------------------------------------------------------------------------------
 /// \ingroup Slicer_QtModules_OpenIGTLinkIF
 class qMRMLIGTLIOTreeViewPrivate
@@ -284,43 +287,13 @@ void qMRMLIGTLIOTreeView::onClicked(const QModelIndex& index)
     {
     return;
     }
-  vtkSmartPointer<igtlio::Device> device = NULL;
-  if(dnode)
+
+  igtlio::Device* device = static_cast<igtlio::Device*>(cnode->CreateDeviceForOutgoingMRMLNode(dnode));
+  if (!device)
     {
-    vtkMRMLIGTLConnectorNode::MessageDeviceMapType::iterator iter = cnode->OutgoingMRMLIDToDeviceMap.find(dnode->GetID());
-    if (iter == cnode->OutgoingMRMLIDToDeviceMap.end())
-      {
-      igtlio::DeviceKeyType key;
-      key.name = dnode->GetName();
-      std::vector<std::string> deviceTypes = cnode->GetDeviceTypeFromMRMLNodeType(dnode->GetNodeTagName());
-      for (int typeIndex = 0; typeIndex < deviceTypes.size(); typeIndex++)
-        {
-        key.type = deviceTypes[typeIndex];
-        device = cnode->IOConnector->GetDevice(key);
-        if (device != NULL)
-          {
-          break;
-          }
-        }
-      if(device == NULL)
-        {
-        device = cnode->IOConnector->GetDeviceFactory()->create(key.type, key.name);
-        if (device)
-          {
-          cnode->OutgoingMRMLIDToDeviceMap[dnode->GetID()] = device;
-          cnode->IOConnector->AddDevice(device);
-          }
-        else
-          {
-          return;
-          }
-        }
-      }
-    else
-      {
-      device = cnode->OutgoingMRMLIDToDeviceMap[dnode->GetID()];
-      }
+    return;
     }
+
   if (index.column() == qMRMLIGTLIOModel::VisualizationColumn)
     {
     //qMRMLSceneModel* sceneModel = qobject_cast<qMRMLSceneModel*>(d->SortFilterModel->sourceModel());

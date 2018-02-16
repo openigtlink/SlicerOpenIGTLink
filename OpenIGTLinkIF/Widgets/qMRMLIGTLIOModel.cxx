@@ -37,6 +37,8 @@
 // OpenIGTLink IF includes
 #include "vtkMRMLIGTLConnectorNode.h"
 
+#include "igtlioDevice.h"
+
 #include "qMRMLIGTLIOModel_p.h"
 
 // TODO: reimplement functions that use mrmlNodeFromItem() in qMRMLSceneModel.
@@ -144,15 +146,15 @@ QStandardItem* qMRMLIGTLIOModel::insertNode(vtkMRMLNode* node, QStandardItem* pa
   if (this->listenNodeModifiedEvent() &&
       node->IsA("vtkMRMLIGTLConnectorNode"))
     {
-    qvtkConnect(node, igtlio::Connector::ConnectedEvent,
+    qvtkConnect(node, vtkMRMLIGTLConnectorNode::ConnectedEvent,
                 this, SLOT(onMRMLNodeModified(vtkObject*)));
-    qvtkConnect(node, igtlio::Connector::DisconnectedEvent,
+    qvtkConnect(node, vtkMRMLIGTLConnectorNode::DisconnectedEvent,
                 this, SLOT(onMRMLNodeModified(vtkObject*)));
-    qvtkConnect(node, igtlio::Connector::ActivatedEvent,
+    qvtkConnect(node, vtkMRMLIGTLConnectorNode::ActivatedEvent,
                 this, SLOT(onMRMLNodeModified(vtkObject*)));
-    qvtkConnect(node, igtlio::Connector::DeactivatedEvent,
+    qvtkConnect(node, vtkMRMLIGTLConnectorNode::DeactivatedEvent,
                 this, SLOT(onMRMLNodeModified(vtkObject*)));
-    qvtkConnect(node, igtlio::Connector::NewDeviceEvent,
+    qvtkConnect(node, vtkMRMLIGTLConnectorNode::NewDeviceEvent,
                 this, SLOT(onMRMLNodeModified(vtkObject*)));
     qvtkConnect(node, vtkMRMLIGTLConnectorNode::DeviceModifiedEvent,
                 this, SLOT(onDeviceVisibilityModified(vtkObject*)));
@@ -185,20 +187,27 @@ void qMRMLIGTLIOModel::updateItemDataFromNode(QStandardItem* item, vtkMRMLNode* 
       }
     case qMRMLIGTLIOModel::TypeColumn:
       {
-      Q_ASSERT(cnode->IOConnector->GetType() < igtlio::Connector::NUM_TYPE);
-      //item->setText(QString(igtlio::Connector::ConnectorTypeStr[cnode->GetType()]));
-      item->setText("");
+      switch (cnode->GetType())
+        {
+        case vtkMRMLIGTLConnectorNode::TypeClient: item->setText(tr("C")); break;
+        case vtkMRMLIGTLConnectorNode::TypeServer: item->setText(tr("S")); break;
+        default:
+          item->setText(tr("?"));
+        }
       break;
       }
     case qMRMLIGTLIOModel::StatusColumn:
       {
-      Q_ASSERT(cnode->IOConnector->GetState() < igtlio::Connector::NUM_STATE);
-      //item->setText(QString(igtlio::Connector::ConnectorStateStr[cnode->GetState()]));
-      item->setText("");
+      switch (cnode->GetState())
+        {
+        case vtkMRMLIGTLConnectorNode::StateOff: item->setText(tr("OFF")); break;
+        case vtkMRMLIGTLConnectorNode::StateWaitConnection: item->setText(tr("WAIT")); break;
+        case vtkMRMLIGTLConnectorNode::StateConnected: item->setText(tr("ON")); break;
+        default:
+          item->setText("");
+        }
       break;
       }
-    default:
-      break;
     }
 }
 
@@ -358,19 +367,11 @@ void qMRMLIGTLIOModel::updateIOTreeBranch(vtkMRMLIGTLConnectorNode* node, QStand
         vtkSmartPointer<igtlio::Device> device = NULL;
         if (dir == qMRMLIGTLIOModel::INCOMING)
           {
-          vtkMRMLIGTLConnectorNode::MessageDeviceMapType::iterator citer = node->IncomingMRMLIDToDeviceMap.find(inode->GetID());
-          if (citer != node->IncomingMRMLIDToDeviceMap.end())
-            {
-            device = citer->second;
-            }
+          device = static_cast<igtlio::Device*>(node->GetDeviceFromIncomingMRMLNode(inode->GetID()));
           }
         else
           {
-          vtkMRMLIGTLConnectorNode::MessageDeviceMapType::iterator citer = node->OutgoingMRMLIDToDeviceMap.find(inode->GetID());
-          if (citer != node->OutgoingMRMLIDToDeviceMap.end())
-            {
-            device = citer->second;
-            }
+          device = static_cast<igtlio::Device*>(node->GetDeviceFromOutgoingMRMLNode(inode->GetID()));
           }
         if (device != NULL)
         {
