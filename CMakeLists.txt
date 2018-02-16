@@ -39,26 +39,18 @@ add_subdirectory(OpenIGTLinkIF)
 ## NEXT_MODULE
 
 #-----------------------------------------------------------------------------
+
+# Generate SlicerOpenIGTLinkConfig.cmake file
+# Add OpenIGTLink and OpenIGTLinkIO targets to SlicerOpenIGTLinkConfig.cmake file
+set(SlicerOpenIGTLink_CUSTOM_CONFIG "
+include(\"${OpenIGTLink_DIR}/OpenIGTLinkConfig.cmake\")
+include(\"${OpenIGTLinkIO_DIR}/OpenIGTLinkIOConfig.cmake\")
+")
 include(${Slicer_EXTENSION_GENERATE_CONFIG})
+
 set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${CMAKE_BINARY_DIR};${EXTENSION_NAME};ALL;/")
 set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${OpenIGTLink_DIR};OpenIGTLink;RuntimeLibraries;/")
 set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${OpenIGTLinkIO_DIR};OpenIGTLinkIO;RuntimeLibraries;/")
 include(${CMAKE_CURRENT_SOURCE_DIR}/CMake/SlicerBlockInstallVP9.cmake)
 MESSAGE(STATUS "CPACK_INSTALL_CMAKE_PROJECTS = ${CPACK_INSTALL_CMAKE_PROJECTS}")
 include(${Slicer_EXTENSION_CPACK})
-#-----------------------------------------------------------------------------
-if(NOT Slicer_SOURCE_DIR)
-  # Generate OpenIGTLinkConfig.cmake and OpenIGTLinkIOConfig.cmake files
-  include(CMakePackageConfigHelpers)
-  configure_package_config_file(
-      CMake/OpenIGTLinkConfig.cmake.in
-      ${CMAKE_BINARY_DIR}/OpenIGTLinkConfig.cmake
-      INSTALL_DESTINATION ${CMAKE_BINARY_DIR}
-      NO_CHECK_REQUIRED_COMPONENTS_MACRO
-  )
-  configure_package_config_file(
-      CMake/OpenIGTLinkIOConfig.cmake.in
-      ${CMAKE_BINARY_DIR}/OpenIGTLinkIOConfig.cmake
-      INSTALL_DESTINATION ${CMAKE_BINARY_DIR}
-  )
-endif()
