@@ -211,7 +211,9 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(v
       igtlio::ImageDevice* imageDevice = reinterpret_cast<igtlio::ImageDevice*>(modifiedDevice);
       if (strcmp(modifiedNode->GetName(), deviceName.c_str()) == 0)
       {
-        if (strcmp(modifiedNode->GetNodeTagName(), "Volume") == 0)
+        if (strcmp(modifiedNode->GetNodeTagName(), "Volume") == 0 ||
+            strcmp(modifiedNode->GetNodeTagName(), "VectorVolume") == 0
+            )
         {
           vtkMRMLVolumeNode* volumeNode = vtkMRMLVolumeNode::SafeDownCast(modifiedNode);
           volumeNode->SetIJKToRASMatrix(imageDevice->GetContent().transform);

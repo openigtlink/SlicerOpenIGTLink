@@ -7,7 +7,6 @@ set(KIT_TEST_SRCS
   
 set(${KIT}_TARGET_LIBRARIES
   vtkSlicerOpenIGTLinkIFModuleMRML
-  ${OpenIGTLinkIO_LIBRARIES}
   SlicerBaseLogic
   )
 
