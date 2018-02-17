@@ -44,15 +44,16 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   
   enum
   {
-    ConnectedEvent,
-    DisconnectedEvent,
-    ActivatedEvent,
-    DeactivatedEvent,
-    NewDeviceEvent,
-    DeviceModifiedEvent,
-    CommandReceivedEvent, // COMMAND device got a query, COMMAND received
-    CommandResponseReceivedEvent, // COMMAND device got a response, RTS_COMMAND received
-    ReceiveEvent = 118948 // deprecated. it was for query response, OpenIGTLinkIO doesn't support query event. it is replaced with command message.
+    ConnectedEvent = 118944,
+    DisconnectedEvent = 118945,
+    ActivatedEvent = 118946,
+    DeactivatedEvent = 118947,
+    ReceiveEvent = 118948, // deprecated. it was for query response, OpenIGTLinkIO doesn't support query event. it is replaced with command message
+    NewDeviceEvent = 118949,
+    DeviceModifiedEvent = 118950,
+    RemovedDeviceEvent= 118951,
+    CommandReceivedEvent = 119001, // COMMAND device got a query, COMMAND received
+    CommandResponseReceivedEvent = 119002, // COMMAND device got a response, RTS_COMMAND received
   };
 
   enum

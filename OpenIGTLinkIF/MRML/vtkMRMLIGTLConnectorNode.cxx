@@ -55,7 +55,7 @@ Version:   $Revision: 1.2 $
 vtkMRMLNodeNewMacro(vtkMRMLIGTLConnectorNode);
 
 //---------------------------------------------------------------------------
-class vtkMRMLIGTLConnectorNode::vtkInternal
+class vtkMRMLIGTLConnectorNode::vtkInternal:public vtkObject
 {
 public:
   //---------------------------------------------------------------------------
@@ -726,6 +726,7 @@ void vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents(vtkObject *caller, unsig
     case 118948: mrmlEvent = ReceiveEvent; break; // deprecated. it was for query response, OpenIGTLinkIO doesn't support query event. it is replaced with command message.
     case igtlio::Connector::NewDeviceEvent: mrmlEvent = NewDeviceEvent; break;
     case igtlio::Connector::DeviceContentModifiedEvent: mrmlEvent = DeviceModifiedEvent; break;
+    case igtlio::Connector::RemovedDeviceEvent: mrmlEvent = DeviceModifiedEvent; break;
     case igtlio::Device::CommandReceivedEvent: mrmlEvent = CommandReceivedEvent; break;  // COMMAND device got a query, COMMAND received
     case igtlio::Device::CommandResponseReceivedEvent: mrmlEvent = CommandResponseReceivedEvent; break;  // COMMAND device got a response, RTS_COMMAND received
     }

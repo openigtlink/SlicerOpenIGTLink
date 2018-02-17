@@ -21,7 +21,7 @@ vtkMRMLNodeNewMacro(vtkMRMLBitStreamNode);
 
 
 //---------------------------------------------------------------------------
-class vtkMRMLBitStreamNode::vtkInternal
+class vtkMRMLBitStreamNode::vtkInternal:public vtkObject
 {
 public:
   //---------------------------------------------------------------------------
