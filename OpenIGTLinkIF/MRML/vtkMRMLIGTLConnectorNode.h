@@ -18,10 +18,6 @@
 #include "vtkSlicerOpenIGTLinkIFModuleMRMLExport.h"
 #include "vtkMRMLIGTLQueryNode.h"
 
-// OpenIGTLinkIO includes
-#include "igtlioConnector.h"
-#include "igtlioDeviceFactory.h"
-
 // MRML includes
 #include <vtkMRML.h>
 #include <vtkMRMLNode.h>
@@ -29,6 +25,14 @@
 #include <vtkMRMLScene.h>
 
 #include <vtkCallbackCommand.h>
+#include <vtkWeakPointer.h>
+
+#include <list>
+
+class vtkMRMLIGTLQueryNode;
+class vtkMutexLock;
+
+typedef void* IGTLDevicePointer;
 
 class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : public vtkMRMLNode
 {
@@ -38,23 +42,34 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   // Standard methods for MRML nodes
   //----------------------------------------------------------------
   
-  enum{
-    ConnectedEvent = igtlio::Connector::ConnectedEvent,
-    DisconnectedEvent = igtlio::Connector::DisconnectedEvent,
-    ActivatedEvent = igtlio::Connector::ActivatedEvent,
-    DeactivatedEvent = igtlio::Connector::DeactivatedEvent,
-    ReceiveEvent = 118948, // deprecated. it was for query response, OpenIGTLinkIO doesn't support query event. it is replaced with command message.
-    NewDeviceEvent = igtlio::Connector::NewDeviceEvent,
-    DeviceModifiedEvent = igtlio::Connector::DeviceContentModifiedEvent,
-    CommandReceivedEvent    = igtlio::Device::CommandReceivedEvent, // COMMAND device got a query, COMMAND received
-    CommandResponseReceivedEvent = igtlio::Device::CommandResponseReceivedEvent  // COMMAND device got a response, RTS_COMMAND received
+  enum
+  {
+    ConnectedEvent = 118944,
+    DisconnectedEvent = 118945,
+    ActivatedEvent = 118946,
+    DeactivatedEvent = 118947,
+    ReceiveEvent = 118948, // deprecated. it was for query response, OpenIGTLinkIO doesn't support query event. it is replaced with command message
+    NewDeviceEvent = 118949,
+    DeviceModifiedEvent = 118950,
+    RemovedDeviceEvent= 118951,
+    CommandReceivedEvent = 119001, // COMMAND device got a query, COMMAND received
+    CommandResponseReceivedEvent = 119002, // COMMAND device got a response, RTS_COMMAND received
   };
 
-  enum {
-    STATE_OFF = igtlio::Connector::STATE_OFF,
-    STATE_WAIT_CONNECTION = igtlio::Connector::STATE_WAIT_CONNECTION,
-    STATE_CONNECTED = igtlio::Connector::STATE_CONNECTED,
-    NUM_STATE = igtlio::Connector::NUM_STATE,
+  enum
+  {
+    StateOff,
+    StateWaitConnection,
+    StateConnected,
+    State_Last // this line must be last
+  };
+
+  enum
+  {
+    TypeNotDefined,
+    TypeServer,
+    TypeClient,
+    Type_Last // this line must be last
   };
 
   static vtkMRMLIGTLConnectorNode *New();
@@ -84,6 +99,26 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   // method to propagate events generated in mrml
   virtual void ProcessMRMLEvents ( vtkObject *caller, unsigned long event, void *callData ) VTK_OVERRIDE;
   
+  int SetTypeServer(int port);
+
+  int SetTypeClient(std::string hostname, int port);
+
+  void SetType(int type);
+  int GetType();
+
+  const char* GetServerHostname();
+  int GetServerPort();
+
+  void SetServerHostname(std::string hostname);
+  void SetServerPort(int port);
+
+  int Start();
+
+  int Stop();
+
+  /// Call periodically to perform processing in the main thread.
+  /// Suggested timeout 5ms.
+  void PeriodicProcess();
   
   void ConnectEvents();
   // Description:
@@ -97,12 +132,23 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
 
 
   // Process IO connector incoming events
+  // event ID is specified in OpenIGTLinkIO
   void ProcessIOConnectorEvents( vtkObject *caller, unsigned long event, void *callData );
   
   // Description:
+  // Add a new Device.
+  // If a Device with an identical device_id already exist, the method will fail.
+  int AddDevice(IGTLDevicePointer device);
+
+  // Description:
+  // Add a new Device.
+  // If a Device with an identical device_id already exist, the method will fail.
+  int RemoveDevice(IGTLDevicePointer device);
+
+  // Description:
   // Register MRML node for incoming data.
-  // Returns a pointer to the node information in IncomingMRMLNodeInfoList
-  igtlio::Connector::NodeInfoType* RegisterIncomingMRMLNode(vtkMRMLNode* node, vtkSmartPointer<igtlio::Device> device);
+  // Returns true on success.
+  bool RegisterIncomingMRMLNode(vtkMRMLNode* node, IGTLDevicePointer device);
   
   // Description:
   // Unregister MRML node for incoming data.
@@ -115,6 +161,14 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   // Description:
   // Get Nth outgoing MRML nodes:
   vtkMRMLNode* GetOutgoingMRMLNode(unsigned int i);
+
+  IGTLDevicePointer GetDeviceFromOutgoingMRMLNode(const char* outgoingNodeID);
+  IGTLDevicePointer GetDeviceFromIncomingMRMLNode(const char* incomingNodeID);
+
+  //IGTLDevicePointer GetDevice(const std::string& deviceType, const std::string& deviceName);
+
+  // Get device for outgoing MRML node. If a device has not been created then it is created.
+  IGTLDevicePointer CreateDeviceForOutgoingMRMLNode(vtkMRMLNode* dnode);
   
   // Description:
   // Get number of registered outgoing MRML nodes:
@@ -126,7 +180,14 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   
   // Description:
   // Get the state of the connector:
-  int GetState() { return this->IOConnector->GetState(); };
+  int GetState();
+
+  // Controls if active connection will be resumed when
+  // scene is loaded.
+  bool GetPersistent();
+  void SetPersistent(bool persistent);
+
+  void SetRestrictDeviceName(int restrictDeviceName);
 
   // Description:
   // A function to explicitly push node to OpenIGTLink. The function is called either by
@@ -151,17 +212,21 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   // Removes query from the query list.
   void CancelQuery(vtkMRMLIGTLQueryNode* node);
 
+  //----------------------------------------------------------------
+  // Sending commands
+  //----------------------------------------------------------------
+
   ///  Send the given command from the given device.
   /// - If using BLOCKING, the call blocks until a response appears or timeout. Return response.
   /// - If using ASYNCHRONOUS, wait for the CommandResponseReceivedEvent event. Return device.
-  ///
-  igtlio::CommandDevicePointer SendCommand(std::string device_id, std::string command, std::string content, igtlio::SYNCHRONIZATION_TYPE synchronized = igtlio::BLOCKING, double timeout_s = 5);
+  ///  TODO: return a command object that can be observed
+  void SendCommand(std::string device_id, std::string command, std::string content, bool blocking = true, double timeout_s = 5);
 
   /// Send a command response from the given device. Asynchronous.
   /// Precondition: The given device has received a query that is not yet responded to.
-  /// Return device.
-  igtlio::CommandDevicePointer SendCommandResponse(std::string device_id, std::string command, std::string content);
-  
+  /// TODO: return a command object that can be observed
+  void SendCommandResponse(std::string device_id, std::string command, std::string content);
+
   //----------------------------------------------------------------
   // For OpenIGTLink time stamp access
   //----------------------------------------------------------------
@@ -180,24 +245,11 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   // Get OpenIGTLink's time stamp information. Returns 0, if it fails to obtain time stamp.
   int GetIGTLTimeStamp(vtkMRMLNode* node, int& second, int& nanosecond);
   
-  igtlio::Connector* IOConnector;
   
   std::vector<std::string> GetDeviceTypeFromMRMLNodeType(const char* NodeTag);
   
   std::vector<std::string> GetNodeTagFromDeviceType(const char * deviceType);
   
-  typedef std::map<std::string, igtlio::Connector::NodeInfoType>   NodeInfoMapType;
-  
-  typedef std::map<std::string, vtkSmartPointer <igtlio::Device> > MessageDeviceMapType;
-
-  typedef std::map<std::string,  std::vector<std::string> > DeviceTypeToNodeTagMapType;
-  
-  MessageDeviceMapType  OutgoingMRMLIDToDeviceMap;
-
-  MessageDeviceMapType  IncomingMRMLIDToDeviceMap;
-
-  DeviceTypeToNodeTagMapType DeviceTypeToNodeTagMap;
-
 #ifndef __VTK_WRAP__
   //BTX
   virtual void OnNodeReferenceAdded(vtkMRMLNodeReference *reference) VTK_OVERRIDE;
@@ -217,16 +269,6 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   ~vtkMRMLIGTLConnectorNode();
   vtkMRMLIGTLConnectorNode(const vtkMRMLIGTLConnectorNode&);
   void operator=(const vtkMRMLIGTLConnectorNode&);
-
-  unsigned int AssignOutGoingNodeToDevice(vtkMRMLNode* node, igtlio::DevicePointer device);
-
-  void ProcessNewDeviceEvent(vtkObject *caller, unsigned long event, void *callData );
-
-  void ProcessIncomingDeviceModifiedEvent(vtkObject *caller, unsigned long event, igtlio::Device * modifiedDevice);
-
-  void ProcessOutgoingDeviceModifiedEvent(vtkObject *caller, unsigned long event, igtlio::Device * modifiedDevice);
-
-  vtkMRMLNode* GetOrAddMRMLNodeforDevice(igtlio::Device* device);
   
   //----------------------------------------------------------------
   // Reference role strings
@@ -247,8 +289,9 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   vtkSetStringMacro(OutgoingNodeReferenceMRMLAttributeName);
   vtkGetStringMacro(OutgoingNodeReferenceMRMLAttributeName);
   
-  NodeInfoMapType IncomingMRMLNodeInfoMap;
-  
+  private:
+    class vtkInternal;
+    vtkInternal * Internal;  
 };
 
 #endif

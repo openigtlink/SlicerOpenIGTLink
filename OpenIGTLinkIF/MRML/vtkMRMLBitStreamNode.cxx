@@ -1,38 +1,168 @@
-#include "vtkObjectFactory.h"
 #include "vtkMRMLBitStreamNode.h"
-#include "vtkXMLUtilities.h"
+
+// OpenIGTLink includes
+#include "igtlioVideoDevice.h"
+#include "igtlImageMessage.h"
+
+// MRML includes
 #include "vtkMRMLScene.h"
 #include "vtkMRMLNRRDStorageNode.h"
+
 // VTK includes
-#include <vtkNew.h>
 #include <vtkCollection.h>
-#include <vtkObjectFactory.h>
 #include <vtkImageData.h>
 #include <vtkMatrix4x4.h>
+#include <vtkNew.h>
+#include <vtkObjectFactory.h>
+#include <vtkXMLUtilities.h>
+
 //----------------------------------------------------------------------------
 vtkMRMLNodeNewMacro(vtkMRMLBitStreamNode);
+
+
+//---------------------------------------------------------------------------
+class vtkMRMLBitStreamNode::vtkInternal:public vtkObject
+{
+public:
+  //---------------------------------------------------------------------------
+  vtkInternal(vtkMRMLBitStreamNode* external);
+  ~vtkInternal();
+
+  void SetVideoMessageDevice(igtlio::VideoDevice* inDevice)
+  {
+    this->videoDevice = inDevice;
+  };
+
+  igtlio::VideoDevice* GetVideoMessageDevice()
+  {
+    return this->videoDevice;
+  }
+
+  void SetMessageStream(igtl::VideoMessage::Pointer buffer)
+  {
+    this->MessageBuffer->Copy(buffer);
+    this->External->MessageBufferValid = true;
+  };
+
+  igtl::VideoMessage::Pointer GetMessageStreamBuffer()
+  {
+    igtl::VideoMessage::Pointer returnMSG = igtl::VideoMessage::New();
+    returnMSG->Copy(this->MessageBuffer);
+    return returnMSG;
+  };
+
+  void SetKeyFrameStream(igtl::VideoMessage::Pointer buffer)
+  {
+    this->KeyFrameBuffer->Copy(buffer);
+  };
+
+  igtl::VideoMessage::Pointer GetKeyFrameStream()
+  {
+    igtl::VideoMessage::Pointer returnMSG = igtl::VideoMessage::New();
+    returnMSG->Copy(this->KeyFrameBuffer);
+    return returnMSG;
+  };
+
+  igtl::ImageMessage::Pointer GetImageMessageBuffer()
+  {
+    return ImageMessageBuffer;
+  };
+
+  int ObserveOutsideVideoDevice(igtlio::VideoDevice* device);
+
+  void DecodeMessageStream(igtl::VideoMessage::Pointer videoMessage);
+
+  vtkMRMLBitStreamNode* External;
+
+  igtl::VideoMessage::Pointer MessageBuffer;
+  igtl::VideoMessage::Pointer KeyFrameBuffer;
+  igtl::ImageMessage::Pointer ImageMessageBuffer;
+
+  igtlio::VideoDevice* videoDevice;
+};
+
+//----------------------------------------------------------------------------
+// vtkInternal methods
+
+//---------------------------------------------------------------------------
+vtkMRMLBitStreamNode::vtkInternal::vtkInternal(vtkMRMLBitStreamNode* external)
+  : External(external)
+{
+  videoDevice = NULL;
+
+  MessageBuffer = igtl::VideoMessage::New();
+  MessageBuffer->InitPack();
+
+  KeyFrameBuffer = igtl::VideoMessage::New();
+  KeyFrameBuffer->InitPack();
+
+  ImageMessageBuffer = igtl::ImageMessage::New();
+  ImageMessageBuffer->InitPack();
+}
+
+//---------------------------------------------------------------------------
+vtkMRMLBitStreamNode::vtkInternal::~vtkInternal()
+{
+}
+
+//---------------------------------------------------------------------------
+int vtkMRMLBitStreamNode::vtkInternal::ObserveOutsideVideoDevice(igtlio::VideoDevice* device)
+{
+  if (device)
+  {
+    //vectorVolumeNode = vtkMRMLVectorVolumeNode::SafeDownCast(node);
+    device->AddObserver(device->GetDeviceContentModifiedEvent(), this->External, &vtkMRMLBitStreamNode::ProcessDeviceModifiedEvents);
+    //------
+    igtl::VideoMessage::Pointer videoMsg = device->GetCompressedIGTLMessage();
+    igtl_header* h = (igtl_header*)videoMsg->GetPackPointer();
+    igtl_header_convert_byte_order(h);
+    this->SetMessageStream(videoMsg);
+    this->External->codecName = device->GetCurrentCodecType();
+    this->External->SetAndObserveImageData(device->GetContent().image);
+    //this->Internal->videoDevice = device; // should the interal video device point to the external video device?
+    //-------
+    return 1;
+  }
+  return 0;
+}
+
+//---------------------------------------------------------------------------
+void vtkMRMLBitStreamNode::vtkInternal::DecodeMessageStream(igtl::VideoMessage::Pointer videoMessage)
+{
+  if (this->videoDevice == NULL)
+  {
+    igtl::MessageHeader::Pointer headerMsg = igtl::MessageHeader::New();
+    headerMsg->Copy(videoMessage);
+    this->External->SetUpVideoDeviceByName(headerMsg->GetDeviceName());
+  }
+  if (this->External->GetImageData() != this->videoDevice->GetContent().image)
+  {
+    this->External->SetAndObserveImageData(this->videoDevice->GetContent().image);
+  }
+  if (this->videoDevice->ReceiveIGTLMessage(static_cast<igtl::MessageBase::Pointer>(videoMessage), false))
+  {
+    this->External->Modified();
+  }
+}
+
+//----------------------------------------------------------------------------
+// vtkMRMLBitStreamNode methods
 
 //-----------------------------------------------------------------------------
 vtkMRMLBitStreamNode::vtkMRMLBitStreamNode()
 {
-  videoDevice = NULL;
-  codecName = "";
-  MessageBuffer = igtl::VideoMessage::New();
-  MessageBuffer->InitPack();
-  MessageBufferValid = false;
-  KeyFrameBuffer = igtl::VideoMessage::New();
-  KeyFrameBuffer->InitPack();
+  this->Internal = new vtkInternal(this);
   IsCopied = false;
   isKeyFrameReceived = false;
   isKeyFrameDecoded = false;
   isKeyFrameUpdated = false;
-  ImageMessageBuffer = igtl::ImageMessage::New();
-  ImageMessageBuffer->InitPack();
+  MessageBufferValid = false;
 }
 
 //-----------------------------------------------------------------------------
 vtkMRMLBitStreamNode::~vtkMRMLBitStreamNode()
 {
+  delete this->Internal;
 }
 
 void vtkMRMLBitStreamNode::ProcessMRMLEvents(vtkObject *caller, unsigned long event, void *callData )
@@ -59,35 +189,17 @@ void vtkMRMLBitStreamNode::ProcessDeviceModifiedEvents( vtkObject *caller, unsig
   this->SetIsCopied(false);
   this->SetKeyFrameUpdated(false);
   this->codecName = modifiedDevice->GetCurrentCodecType();
-  this->SetMessageStream(videoMsg);
+  this->Internal->SetMessageStream(videoMsg);
   if(!this->GetKeyFrameReceivedFlag() || modifiedDevice->GetContent().keyFrameUpdated)
     {
     igtl::VideoMessage::Pointer keyFrameMsg = modifiedDevice->GetKeyFrameMessage();
     igtl_header* h = (igtl_header*) keyFrameMsg->GetPackPointer();
     igtl_header_convert_byte_order(h);
-    this->SetKeyFrameStream(keyFrameMsg);
+    this->Internal->SetKeyFrameStream(keyFrameMsg);
     this->SetKeyFrameReceivedFlag(true);
     this->SetKeyFrameUpdated(true);
     }
   this->Modified();
-}
-
-void vtkMRMLBitStreamNode::DecodeMessageStream(igtl::VideoMessage::Pointer videoMessage)
-{
-  if(this->videoDevice == NULL)
-    {
-    igtl::MessageHeader::Pointer headerMsg = igtl::MessageHeader::New();
-    headerMsg->Copy(videoMessage);
-    SetUpVideoDeviceByName(headerMsg->GetDeviceName());
-    }
-  if(this->GetImageData()!=this->videoDevice->GetContent().image)
-    {
-    this->SetAndObserveImageData(this->videoDevice->GetContent().image);
-    }
-  if (this->videoDevice->ReceiveIGTLMessage(static_cast<igtl::MessageBase::Pointer>(videoMessage), false))
-    {
-    this->Modified();
-    }
 }
 
 void vtkMRMLBitStreamNode::SetUpVideoDeviceByName(const char* name)
@@ -100,35 +212,16 @@ void vtkMRMLBitStreamNode::SetUpVideoDeviceByName(const char* name)
       this->SetName(name);
     //------
     //video device initialization
-    videoDevice = igtlio::VideoDevice::New();
-    videoDevice->SetDeviceName(this->GetName());
-    igtlio::VideoConverter::ContentData contentdata = videoDevice->GetContent();
+    this->Internal->videoDevice = igtlio::VideoDevice::New();
+    this->Internal->videoDevice->SetDeviceName(this->GetName());
+    igtlio::VideoConverter::ContentData contentdata = this->Internal->videoDevice->GetContent();
     contentdata.image =  vtkSmartPointer<vtkImageData>::New();
-    videoDevice->SetContent(contentdata);
-    this->SetAndObserveImageData(videoDevice->GetContent().image);
+    this->Internal->videoDevice->SetContent(contentdata);
+    this->SetAndObserveImageData(this->Internal->videoDevice->GetContent().image);
     //-------
     }
 }
 
-int vtkMRMLBitStreamNode::ObserveOutsideVideoDevice(igtlio::VideoDevice* device)
-{
-  if (device)
-    {
-    //vectorVolumeNode = vtkMRMLVectorVolumeNode::SafeDownCast(node);
-    device->AddObserver(device->GetDeviceContentModifiedEvent(), this, &vtkMRMLBitStreamNode::ProcessDeviceModifiedEvents);
-    //------
-    igtl::VideoMessage::Pointer videoMsg = device->GetCompressedIGTLMessage();
-    igtl_header* h = (igtl_header*) videoMsg->GetPackPointer();
-    igtl_header_convert_byte_order(h);
-    this->SetMessageStream(videoMsg);
-    this->codecName = device->GetCurrentCodecType();
-    this->SetAndObserveImageData(device->GetContent().image);
-    //this->videoDevice = device; // should the interal video device point to the external video device?
-    //-------
-    return 1;
-    }
-  return 0;
-}
 
 //----------------------------------------------------------------------------
 void vtkMRMLBitStreamNode::WriteXML(ostream& of, int nIndent)
@@ -167,3 +260,15 @@ vtkMRMLStorageNode* vtkMRMLBitStreamNode::CreateDefaultStorageNode()
   return vtkMRMLNRRDStorageNode::New();
 }
 
+//----------------------------------------------------------------------------
+IGTLDevicePointer vtkMRMLBitStreamNode::GetVideoMessageDevice()
+{
+  return this->Internal->GetVideoMessageDevice();
+}
+
+//----------------------------------------------------------------------------
+int vtkMRMLBitStreamNode::ObserveOutsideVideoDevice(IGTLDevicePointer devicePtr)
+{
+  igtlio::VideoDevice* device = static_cast<igtlio::VideoDevice*>(devicePtr);
+  return this->Internal->ObserveOutsideVideoDevice(device);
+}

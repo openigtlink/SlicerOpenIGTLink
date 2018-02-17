@@ -66,13 +66,13 @@ QStandardItem* qMRMLSceneIGTLConnectorModel::insertNode(vtkMRMLNode* node, QStan
   if (this->listenNodeModifiedEvent() &&
       node->IsA("vtkMRMLIGTLConnectorNode"))
     {
-    qvtkConnect(node, igtlio::Connector::ConnectedEvent,
+    qvtkConnect(node, vtkMRMLIGTLConnectorNode::ConnectedEvent,
                 this, SLOT(onMRMLNodeModified(vtkObject*)));
-    qvtkConnect(node, igtlio::Connector::DisconnectedEvent,
+    qvtkConnect(node, vtkMRMLIGTLConnectorNode::DisconnectedEvent,
                 this, SLOT(onMRMLNodeModified(vtkObject*)));
-    qvtkConnect(node, igtlio::Connector::ActivatedEvent,
+    qvtkConnect(node, vtkMRMLIGTLConnectorNode::ActivatedEvent,
                 this, SLOT(onMRMLNodeModified(vtkObject*)));
-    qvtkConnect(node, igtlio::Connector::DeactivatedEvent,
+    qvtkConnect(node, vtkMRMLIGTLConnectorNode::DeactivatedEvent,
                 this, SLOT(onMRMLNodeModified(vtkObject*)));
     }
   return insertedItem;
@@ -130,21 +130,32 @@ void qMRMLSceneIGTLConnectorModel::updateItemDataFromNode(QStandardItem* item, v
       }
     case qMRMLSceneIGTLConnectorModel::TypeColumn:
       {
-      Q_ASSERT(cnode->IOConnector->GetType() < igtlio::Connector::NUM_TYPE);
-      item->setText(QString(igtlio::Connector::ConnectorTypeStr[cnode->IOConnector->GetType()]));
+      switch (cnode->GetType())
+        {
+        case vtkMRMLIGTLConnectorNode::TypeClient: item->setText(tr("C")); break;
+        case vtkMRMLIGTLConnectorNode::TypeServer: item->setText(tr("S")); break;
+        default:
+          item->setText(tr("?"));
+        }
       break;
       }
     case qMRMLSceneIGTLConnectorModel::StatusColumn:
       {
-      Q_ASSERT(cnode->IOConnector->GetState() < igtlio::Connector::NUM_STATE);
-      item->setText(QString(igtlio::Connector::ConnectorStateStr[cnode->IOConnector->GetState()]));
+      switch (cnode->GetState())
+        {
+        case vtkMRMLIGTLConnectorNode::StateOff: item->setText(tr("OFF")); break;
+        case vtkMRMLIGTLConnectorNode::StateWaitConnection: item->setText(tr("WAIT")); break;
+        case vtkMRMLIGTLConnectorNode::StateConnected: item->setText(tr("ON")); break;
+        default:
+          item->setText("");
+        }
       break;
       }
     case qMRMLSceneIGTLConnectorModel::HostnameColumn:
       {
-      if (cnode->IOConnector->GetType() == igtlio::Connector::TYPE_CLIENT)
+      if (cnode->GetType() == vtkMRMLIGTLConnectorNode::TypeClient)
         {
-        item->setText(QString(cnode->IOConnector->GetServerHostname()));
+        item->setText(QString(cnode->GetServerHostname()));
         }
       else
         {
@@ -154,7 +165,7 @@ void qMRMLSceneIGTLConnectorModel::updateItemDataFromNode(QStandardItem* item, v
       }
     case qMRMLSceneIGTLConnectorModel::PortColumn:
       {
-      item->setText(QString("%1").arg(cnode->IOConnector->GetServerPort()));
+      item->setText(QString("%1").arg(cnode->GetServerPort()));
       break;
       }
     default:

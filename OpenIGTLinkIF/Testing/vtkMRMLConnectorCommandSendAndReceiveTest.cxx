@@ -2,6 +2,7 @@
 
 //OpenIGTLink includes
 #include "igtlOSUtil.h"
+#include "igtlioCommandDevice.h"
 
 // IF module includes
 #include "vtkMRMLIGTLConnectorNode.h"
@@ -77,14 +78,14 @@ int main(int argc, char * argv [] )
   serverConnectorNode->AddObserver(serverConnectorNode->CommandReceivedEvent, commandServerObsever->CommandReceivedEventCallback);
   // The connector type, server port, and etc,  are set by the qSlicerIGTLConnectorPropertyWidget
   // To make the test simple, just set the port directly.
-  serverConnectorNode->IOConnector->SetTypeServer(18944);
-  serverConnectorNode->IOConnector->Start();
+  serverConnectorNode->SetTypeServer(18944);
+  serverConnectorNode->Start();
   igtl::Sleep(20);
   vtkMRMLIGTLConnectorNode * clientConnectorNode = vtkMRMLIGTLConnectorNode::New();
   CommandObserver* commandClientObsever = CommandObserver::New();
   clientConnectorNode->AddObserver(clientConnectorNode->CommandResponseReceivedEvent, commandClientObsever->CommandResponseReceivedEventCallback);
-  clientConnectorNode->IOConnector->SetTypeClient("localhost", 18944);
-  clientConnectorNode->IOConnector->Start();
+  clientConnectorNode->SetTypeClient("localhost", 18944);
+  clientConnectorNode->Start();
   
   // Make sure the server and client are connected.
   double timeout = 5;
@@ -93,16 +94,16 @@ int main(int argc, char * argv [] )
   // Client connects to server.
   while (vtkTimerLog::GetUniversalTime() - starttime < timeout)
   {
-    serverConnectorNode->IOConnector->PeriodicProcess();
-    clientConnectorNode->IOConnector->PeriodicProcess();
+    serverConnectorNode->PeriodicProcess();
+    clientConnectorNode->PeriodicProcess();
     vtksys::SystemTools::Delay(5);
 
-    if (clientConnectorNode->IOConnector->GetState() == igtlio::Connector::STATE_CONNECTED)
+    if (clientConnectorNode->GetState() == vtkMRMLIGTLConnectorNode::StateConnected)
     {
       std::cout << "SUCCESS: connected to server" << std::endl;
       break;
     }
-    if (clientConnectorNode->IOConnector->GetState() == igtlio::Connector::STATE_OFF)
+    if (clientConnectorNode->GetState() == vtkMRMLIGTLConnectorNode::StateOff)
     {
       std::cout << "FAILURE to connect to server" << std::endl;
       return false;
@@ -110,13 +111,13 @@ int main(int argc, char * argv [] )
   }
   
   std::string device_name = "TestDevice";
-  clientConnectorNode->SendCommand(device_name,"Get", "<Command>\n <Parameter Name=\"Depth\" />\n </Command>", igtlio::ASYNCHRONOUS);
+  clientConnectorNode->SendCommand(device_name,"Get", "<Command>\n <Parameter Name=\"Depth\" />\n </Command>", false);
   
   // Make sure the Server receive the command message.
   starttime = vtkTimerLog::GetUniversalTime();
   while (vtkTimerLog::GetUniversalTime() - starttime < timeout)
     {
-    serverConnectorNode->IOConnector->PeriodicProcess();
+    serverConnectorNode->PeriodicProcess();
     vtksys::SystemTools::Delay(5);
     }
   
@@ -124,11 +125,11 @@ int main(int argc, char * argv [] )
   starttime = vtkTimerLog::GetUniversalTime();
   while (vtkTimerLog::GetUniversalTime() - starttime < timeout)
     {
-    clientConnectorNode->IOConnector->PeriodicProcess();
+    clientConnectorNode->PeriodicProcess();
     vtksys::SystemTools::Delay(5);
     }
-  clientConnectorNode->IOConnector->Stop();
-  serverConnectorNode->IOConnector->Stop();
+  clientConnectorNode->Stop();
+  serverConnectorNode->Stop();
   
   //Condition only holds when both onCommandReceivedEventFunc and onCommanResponseReceivedEventFunc are called.
   if (testSuccessful==2)

@@ -3,6 +3,7 @@
 
 // OpenIGTLinkIF MRML includes
 #include "vtkSlicerOpenIGTLinkIFModuleMRMLExport.h"
+#include "vtkMRMLIGTLConnectorNode.h"
 
 // MRML includes
 #include <vtkMRML.h>
@@ -11,11 +12,6 @@
 #include "vtkMRMLVectorVolumeDisplayNode.h"
 #include "vtkMRMLVectorVolumeNode.h"
 #include "vtkMRMLVolumeArchetypeStorageNode.h"
-#include "igtlioVideoDevice.h"
-//#include "vtkIGTLToMRMLImage.h"
-
-//OpenIGTLink Include
-#include "igtlImageMessage.h"
 
 // VTK includes
 #include <vtkStdString.h>
@@ -57,21 +53,9 @@ public:
   virtual const char* GetNodeTagName() VTK_OVERRIDE
   {return "BitStream";};
   
-  void SetVideoMessageDevice(igtlio::VideoDevice* inDevice)
-  {
-  this->videoDevice = inDevice;
-  };
   
-  igtlio::VideoDevice* GetVideoMessageDevice()
-  {
-  return this->videoDevice;
-  }
-  
-  int ObserveOutsideVideoDevice(igtlio::VideoDevice* device);
   
   void SetUpVideoDeviceByName(const char* name);
-  
-  void DecodeMessageStream(igtl::VideoMessage::Pointer videoMessage);
   
   void SetKeyFrameReceivedFlag(bool flag)
   {
@@ -102,44 +86,13 @@ public:
   {
   return this->isKeyFrameDecoded;
   };
-  
-  void SetMessageStream(igtl::VideoMessage::Pointer buffer)
-  {
-  this->MessageBuffer->Copy(buffer);
-  this->MessageBufferValid = true;
-  };
-  
-  igtl::VideoMessage::Pointer GetMessageStreamBuffer()
-  {
-  igtl::VideoMessage::Pointer returnMSG = igtl::VideoMessage::New();
-  returnMSG->Copy(this->MessageBuffer);
-  return returnMSG;
-  };
-  
-  void SetKeyFrameStream(igtl::VideoMessage::Pointer buffer)
-  {
-  this->KeyFrameBuffer->Copy(buffer);
-  };
-  
-  igtl::VideoMessage::Pointer GetKeyFrameStream()
-  {
-  igtl::VideoMessage::Pointer returnMSG = igtl::VideoMessage::New();
-  returnMSG->Copy(this->KeyFrameBuffer);
-  return returnMSG;
-  };
-  
+         
   void SetIsCopied(bool copied){this->IsCopied = copied;};
   vtkGetMacro(IsCopied, bool);
-  
-  igtl::ImageMessage::Pointer GetImageMessageBuffer()
-  {
-  return ImageMessageBuffer;
-  };
-  
+   
   void SetMessageValid(bool value)
   {
-  MessageBufferValid = value
-  ;
+  MessageBufferValid = value;
   };
   
   bool GetMessageValid()
@@ -153,21 +106,17 @@ public:
   std::string GetCodecName(){return this->codecName;};
   
   void SetCodecName(std::string name){ this->codecName=name;};
-  
+
+  IGTLDevicePointer GetVideoMessageDevice();
+
+  int ObserveOutsideVideoDevice(IGTLDevicePointer devicePtr);
   
 protected:
   vtkMRMLBitStreamNode();
   ~vtkMRMLBitStreamNode();
   vtkMRMLBitStreamNode(const vtkMRMLBitStreamNode&);
   void operator=(const vtkMRMLBitStreamNode&);
-  
-  igtl::VideoMessage::Pointer MessageBuffer;
-  igtl::VideoMessage::Pointer KeyFrameBuffer;
-  igtl::ImageMessage::Pointer ImageMessageBuffer;
-  bool MessageBufferValid;
-  
-  igtlio::VideoDevice* videoDevice;
-  
+    
   bool isKeyFrameReceived;
   
   bool isKeyFrameUpdated;
@@ -177,6 +126,12 @@ protected:
   bool IsCopied;
   
   std::string codecName;
+
+  bool MessageBufferValid;
+
+private:
+  class vtkInternal;
+  vtkInternal * Internal;
 };
 
 #endif

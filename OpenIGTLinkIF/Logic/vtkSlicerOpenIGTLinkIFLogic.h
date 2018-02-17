@@ -17,16 +17,7 @@
 #ifndef __vtkSlicerOpenIGTLinkIFLogic_h
 #define __vtkSlicerOpenIGTLinkIFLogic_h
 
-// OpenIGTLinkIO Device includes
-#include "igtlioDevice.h"
-#include "igtlioConnector.h"
-#include "igtlioDeviceFactory.h"
-
 #include "vtkSlicerOpenIGTLinkIFModuleLogicExport.h"
-
-// OpenIGTLink includes
-#include <igtlImageMessage.h>
-#include <igtlTransformMessage.h>
 
 #include "vtkSlicerBaseLogic.h"
 #include "vtkSlicerModuleLogic.h"
@@ -37,7 +28,7 @@
 #include <vtkMRMLFiducialListNode.h>
 #include <vtkMRMLScene.h>
 
-
+#include "vtkMRMLIGTLConnectorNode.h"
 
 // VTK includes
 #include <vtkMultiThreader.h>
@@ -107,13 +98,13 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_LOGIC_EXPORT vtkSlicerOpenIGTLinkIFLogic :
   // Device Name management
   int  SetRestrictDeviceName(int f);
 
-  int  RegisterMessageDevice(igtlio::Device* device);
-  int  UnregisterMessageDevice(igtlio::Device* device);
+  int  RegisterMessageDevice(IGTLDevicePointer device);
+  int  UnregisterMessageDevice(IGTLDevicePointer device);
 
   unsigned int       GetNumberOfDevices();
-  igtlio::Device* GetDevice(unsigned int i);
-  igtlio::Device* GetDeviceByMRMLTag(const char* mrmlTag);
-  igtlio::Device* GetDeviceByDeviceType(const char* deviceType);
+  IGTLDevicePointer GetDevice(unsigned int i);
+  IGTLDevicePointer GetDeviceByMRMLTag(const char* mrmlTag);
+  IGTLDevicePointer GetDeviceByDeviceType(const char* deviceType);
 
   //----------------------------------------------------------------
   // MRML Management
@@ -157,18 +148,14 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_LOGIC_EXPORT vtkSlicerOpenIGTLinkIFLogic :
   //----------------------------------------------------------------
 
   //ConnectorMapType              ConnectorMap;
-  MessageDeviceListType      MessageDeviceList;
 
   //int LastConnectorID;
   int RestrictDeviceName;
 
-  //----------------------------------------------------------------
-  // IGTL-MRML devices
-  //----------------------------------------------------------------
-  igtlio::DeviceFactory* DeviceFactory;
-  
   
 private:
+  class vtkInternal;
+  vtkInternal * Internal;
 
   vtkSlicerOpenIGTLinkIFLogic(const vtkSlicerOpenIGTLinkIFLogic&); // Not implemented
   void operator=(const vtkSlicerOpenIGTLinkIFLogic&);               // Not implemented

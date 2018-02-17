@@ -53,9 +53,9 @@ void qSlicerIGTLConnectorPropertyWidgetPrivate::init()
                    q, SLOT(updateIGTLConnectorNode()));
 
   this->ConnectorNotDefinedRadioButton->setVisible(false);
-  this->ConnectorTypeButtonGroup.addButton(this->ConnectorNotDefinedRadioButton, igtlio::Connector::TYPE_NOT_DEFINED);
-  this->ConnectorTypeButtonGroup.addButton(this->ConnectorServerRadioButton, igtlio::Connector::TYPE_SERVER);
-  this->ConnectorTypeButtonGroup.addButton(this->ConnectorClientRadioButton, igtlio::Connector::TYPE_CLIENT);
+  this->ConnectorTypeButtonGroup.addButton(this->ConnectorNotDefinedRadioButton, vtkMRMLIGTLConnectorNode::TypeNotDefined);
+  this->ConnectorTypeButtonGroup.addButton(this->ConnectorServerRadioButton, vtkMRMLIGTLConnectorNode::TypeServer);
+  this->ConnectorTypeButtonGroup.addButton(this->ConnectorClientRadioButton, vtkMRMLIGTLConnectorNode::TypeClient);
 
 }
 
@@ -81,10 +81,10 @@ void qSlicerIGTLConnectorPropertyWidget::setMRMLIGTLConnectorNode(vtkMRMLIGTLCon
                 this, SLOT(onMRMLNodeModified()));
 
   foreach(int evendId, QList<int>()
-          << igtlio::Connector::ActivatedEvent
-          << igtlio::Connector::ConnectedEvent
-          << igtlio::Connector::DisconnectedEvent
-          << igtlio::Connector::DeactivatedEvent)
+          << vtkMRMLIGTLConnectorNode::ActivatedEvent
+          << vtkMRMLIGTLConnectorNode::ConnectedEvent
+          << vtkMRMLIGTLConnectorNode::DisconnectedEvent
+          << vtkMRMLIGTLConnectorNode::DeactivatedEvent)
     {
     qvtkReconnect(d->IGTLConnectorNode, connectorNode, evendId,
                   this, SLOT(onMRMLNodeModified()));
@@ -150,22 +150,22 @@ void qSlicerIGTLConnectorPropertyWidget::onMRMLNodeModified()
     return;
     }
   d->ConnectorNameEdit->setText(d->IGTLConnectorNode->GetName());
-  d->ConnectorHostNameEdit->setText(d->IGTLConnectorNode->IOConnector->GetServerHostname());
-  d->ConnectorPortEdit->setText(QString("%1").arg(d->IGTLConnectorNode->IOConnector->GetServerPort()));
-  int type = d->IGTLConnectorNode->IOConnector->GetType();
-  d->ConnectorNotDefinedRadioButton->setChecked(type == igtlio::Connector::TYPE_NOT_DEFINED);
-  d->ConnectorServerRadioButton->setChecked(type == igtlio::Connector::TYPE_SERVER);
-  d->ConnectorClientRadioButton->setChecked(type == igtlio::Connector::TYPE_CLIENT);
+  d->ConnectorHostNameEdit->setText(d->IGTLConnectorNode->GetServerHostname());
+  d->ConnectorPortEdit->setText(QString("%1").arg(d->IGTLConnectorNode->GetServerPort()));
+  int type = d->IGTLConnectorNode->GetType();
+  d->ConnectorNotDefinedRadioButton->setChecked(type == vtkMRMLIGTLConnectorNode::TypeNotDefined);
+  d->ConnectorServerRadioButton->setChecked(type == vtkMRMLIGTLConnectorNode::TypeServer);
+  d->ConnectorClientRadioButton->setChecked(type == vtkMRMLIGTLConnectorNode::TypeClient);
 
-  setStateEnabled(d, type != igtlio::Connector::TYPE_NOT_DEFINED);
+  setStateEnabled(d, type != vtkMRMLIGTLConnectorNode::TypeNotDefined);
 
-  bool deactivated = d->IGTLConnectorNode->IOConnector->GetState() == igtlio::Connector::STATE_OFF;
+  bool deactivated = d->IGTLConnectorNode->GetState() == vtkMRMLIGTLConnectorNode::StateOff;
   if (deactivated)
     {
     setNameEnabled(d, true);
     setTypeEnabled(d, true);
-    setHostnameEnabled(d, type == igtlio::Connector::TYPE_CLIENT);
-    setPortEnabled(d, type != igtlio::Connector::TYPE_NOT_DEFINED);
+    setHostnameEnabled(d, type == vtkMRMLIGTLConnectorNode::TypeClient);
+    setPortEnabled(d, type != vtkMRMLIGTLConnectorNode::TypeNotDefined);
     }
   else
     {
@@ -175,7 +175,7 @@ void qSlicerIGTLConnectorPropertyWidget::onMRMLNodeModified()
     setPortEnabled(d, false);
     }
   d->ConnectorStateCheckBox->setChecked(!deactivated);
-  d->PersistentStateCheckBox->setChecked(d->IGTLConnectorNode->IOConnector->GetPersistent() == igtlio::Connector::PERSISTENT_ON);
+  d->PersistentStateCheckBox->setChecked(d->IGTLConnectorNode->GetPersistent());
   //d->LogConnectionErrorCheckBox->setChecked(d->IGTLConnectorNode->IOConnector->GetLogErrorIfServerConnectionFailed());
 }
 
@@ -186,11 +186,11 @@ void qSlicerIGTLConnectorPropertyWidget::startCurrentIGTLConnector(bool value)
   Q_ASSERT(d->IGTLConnectorNode);
   if (value)
     {
-    d->IGTLConnectorNode->IOConnector->Start();
+    d->IGTLConnectorNode->Start();
     }
   else
     {
-    d->IGTLConnectorNode->IOConnector->Stop();
+    d->IGTLConnectorNode->Stop();
     }
 }
 
@@ -202,12 +202,10 @@ void qSlicerIGTLConnectorPropertyWidget::updateIGTLConnectorNode()
   d->IGTLConnectorNode->DisableModifiedEventOn();
 
   d->IGTLConnectorNode->SetName(d->ConnectorNameEdit->text().toLatin1());
-  d->IGTLConnectorNode->IOConnector->SetType(d->ConnectorTypeButtonGroup.checkedId());
-  d->IGTLConnectorNode->IOConnector->SetServerHostname(d->ConnectorHostNameEdit->text().toStdString());
-  d->IGTLConnectorNode->IOConnector->SetServerPort(d->ConnectorPortEdit->text().toInt());
-  d->IGTLConnectorNode->IOConnector->SetPersistent(d->PersistentStateCheckBox->isChecked() ?
-                                      igtlio::Connector::PERSISTENT_ON :
-                                      igtlio::Connector::PERSISTENT_OFF);
+  d->IGTLConnectorNode->SetType(d->ConnectorTypeButtonGroup.checkedId());
+  d->IGTLConnectorNode->SetServerHostname(d->ConnectorHostNameEdit->text().toStdString());
+  d->IGTLConnectorNode->SetServerPort(d->ConnectorPortEdit->text().toInt());
+  d->IGTLConnectorNode->SetPersistent(d->PersistentStateCheckBox->isChecked());
   //d->IGTLConnectorNode->SetLogErrorIfServerConnectionFailed(d->LogConnectionErrorCheckBox->isChecked());
 
   d->IGTLConnectorNode->DisableModifiedEventOff();

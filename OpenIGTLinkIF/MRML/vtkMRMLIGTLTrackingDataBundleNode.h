@@ -15,7 +15,6 @@
 #define __vtkMRMLIGTLTrackingDataBundleNode_h
 
 // OpenIGTLinkIF MRML includes
-#include "igtlMath.h"
 #include "vtkSlicerOpenIGTLinkIFModuleMRMLExport.h"
 
 // MRML includes
@@ -100,7 +99,6 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLTrackingDataBundleN
   // Update Transform nodes. If new data is specified, create a new Transform node.
   // default type is 1 (igtl::TrackingDataMessage::TYPE_TRACKER)
   virtual void UpdateTransformNode(const char* name, vtkMatrix4x4* matrix, int type = 1);
-  virtual void UpdateTransformNode(const char* name, igtl::Matrix4x4& matrix, int type = 1);
 
   // Description:
   // Get the number of linear transform nodes in the bundle
@@ -139,7 +137,9 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLTrackingDataBundleN
   typedef std::map<std::string, TrackingDataInfo> TrackingDataInfoMap;
 
   TrackingDataInfoMap TrackingDataList;
+
+  class vtkInternal;
+  vtkInternal * Internal;
 };
 
 #endif
-
