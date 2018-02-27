@@ -225,6 +225,7 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(v
         {
           vtkMRMLBitStreamNode* bitStreamNode = vtkMRMLBitStreamNode::SafeDownCast(modifiedNode);
           bitStreamNode->SetAndObserveImageData(imageDevice->GetContent().image);
+          bitStreamNode->SetIJKToRASMatrix(imageDevice->GetContent().transform);
           bitStreamNode->Modified();
           igtlio::VideoDevice* device = static_cast<igtlio::VideoDevice*>(bitStreamNode->GetVideoMessageDevice());
           vtkImageData* srcImageData = imageDevice->GetContent().image;
