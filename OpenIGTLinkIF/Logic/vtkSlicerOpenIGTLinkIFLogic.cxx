@@ -67,7 +67,7 @@ public:
   vtkSlicerOpenIGTLinkIFLogic* External;
 
   MessageDeviceListType      MessageDeviceList;
-  igtlio::DeviceFactory* DeviceFactory;
+  igtlio::DeviceFactoryPointer DeviceFactory;
 };
 
 //----------------------------------------------------------------------------
@@ -77,7 +77,7 @@ public:
 vtkSlicerOpenIGTLinkIFLogic::vtkInternal::vtkInternal(vtkSlicerOpenIGTLinkIFLogic* external)
   : External(external)
 {
-  this->DeviceFactory = igtlio::DeviceFactory::New();
+  this->DeviceFactory = igtlio::DeviceFactoryPointer::New();
 }
 
 //---------------------------------------------------------------------------
