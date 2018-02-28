@@ -78,7 +78,7 @@ public:
   igtl::VideoMessage::Pointer KeyFrameBuffer;
   igtl::ImageMessage::Pointer ImageMessageBuffer;
 
-  igtlio::VideoDevice* videoDevice;
+  igtlio::VideoDevicePointer videoDevice;
 };
 
 //----------------------------------------------------------------------------
@@ -212,7 +212,7 @@ void vtkMRMLBitStreamNode::SetUpVideoDeviceByName(const char* name)
       this->SetName(name);
     //------
     //video device initialization
-    this->Internal->videoDevice = igtlio::VideoDevice::New();
+    this->Internal->videoDevice = igtlio::VideoDevicePointer::New();
     this->Internal->videoDevice->SetDeviceName(this->GetName());
     igtlio::VideoConverter::ContentData contentdata = this->Internal->videoDevice->GetContent();
     contentdata.image =  vtkSmartPointer<vtkImageData>::New();
