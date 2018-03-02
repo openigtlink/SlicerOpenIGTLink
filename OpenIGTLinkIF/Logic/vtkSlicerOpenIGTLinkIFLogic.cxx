@@ -102,7 +102,7 @@ vtkSlicerOpenIGTLinkIFLogic::vtkSlicerOpenIGTLinkIFLogic()
   this->RestrictDeviceName = 0;
   
   std::vector<std::string> deviceTypes = this->Internal->DeviceFactory->GetAvailableDeviceTypes();
-  for (int typeIndex = 0; typeIndex<deviceTypes.size();typeIndex++)
+  for (size_t typeIndex = 0; typeIndex<deviceTypes.size();typeIndex++)
   {
     this->Internal->MessageDeviceList.push_back(this->Internal->DeviceFactory->GetCreator(deviceTypes[typeIndex])->Create(""));
   }

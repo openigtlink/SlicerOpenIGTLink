@@ -744,7 +744,7 @@ void vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents(vtkObject *caller, unsig
     }
   if( modifiedDevice != NULL)
     {
-    if(event==this->Internal->IOConnector->NewDeviceEvent)
+    if(static_cast<int>(event)==this->Internal->IOConnector->NewDeviceEvent)
       {
       // no action perform at this stage, wait until the message content in the device is unpacked,
       // As we need the message content data to create mrmlnode.
@@ -1018,7 +1018,7 @@ void vtkMRMLIGTLConnectorNode::OnNodeReferenceAdded(vtkMRMLNodeReference *refere
       igtlio::DeviceKeyType key;
       key.name = node->GetName();
       std::vector<std::string> deviceTypes = GetDeviceTypeFromMRMLNodeType(node->GetNodeTagName());
-      for (int typeIndex = 0; typeIndex < deviceTypes.size(); typeIndex++)
+      for (size_t typeIndex = 0; typeIndex < deviceTypes.size(); typeIndex++)
         {
         key.type = deviceTypes[typeIndex];
         device = this->Internal->IOConnector->GetDevice(key);
@@ -1279,7 +1279,7 @@ int vtkMRMLIGTLConnectorNode::RegisterOutgoingMRMLNode(vtkMRMLNode* node, const 
     igtlio::DeviceKeyType key;
     key.name = node->GetName();
     std::vector<std::string> deviceTypes = GetDeviceTypeFromMRMLNodeType(node->GetNodeTagName());
-    for (int typeIndex = 0; typeIndex < deviceTypes.size(); typeIndex++)
+    for (size_t typeIndex = 0; typeIndex < deviceTypes.size(); typeIndex++)
       {
       key.type = deviceTypes[typeIndex];
       device = this->Internal->IOConnector->GetDevice(key);
@@ -1643,7 +1643,7 @@ IGTLDevicePointer vtkMRMLIGTLConnectorNode::CreateDeviceForOutgoingMRMLNode(vtkM
     igtlio::DeviceKeyType key;
     key.name = dnode->GetName();
     std::vector<std::string> deviceTypes = this->GetDeviceTypeFromMRMLNodeType(dnode->GetNodeTagName());
-    for (int typeIndex = 0; typeIndex < deviceTypes.size(); typeIndex++)
+    for (size_t typeIndex = 0; typeIndex < deviceTypes.size(); typeIndex++)
     {
       key.type = deviceTypes[typeIndex];
       device = this->Internal->IOConnector->GetDevice(key);
