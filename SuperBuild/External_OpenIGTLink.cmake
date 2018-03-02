@@ -21,6 +21,14 @@ endif()
 
 if(NOT DEFINED OpenIGTLink_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
 
+  # Since the project do not explicitly include CTest or CTestUseLauncher, let's
+  # make sure it is included by setting CMAKE_PROJECT_<PROJECT-NAME>_INCLUDE variable.
+  set(CMAKE_PROJECT_INCLUDE_EXTERNAL_PROJECT_ARG)
+  if(CTEST_USE_LAUNCHERS)
+    set(CMAKE_PROJECT_INCLUDE_EXTERNAL_PROJECT_ARG
+      "-DCMAKE_PROJECT_OpenIGTLink_INCLUDE:FILEPATH=${CMAKE_ROOT}/Modules/CTestUseLaunchers.cmake")
+  endif()
+
   ExternalProject_SetIfNotDefined(
     ${CMAKE_PROJECT_NAME}_${proj}_GIT_REPOSITORY
     "https://github.com/openigtlink/OpenIGTLink.git"
@@ -43,6 +51,7 @@ if(NOT DEFINED OpenIGTLink_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
     SOURCE_DIR ${EP_SOURCE_DIR}
     BINARY_DIR ${EP_BINARY_DIR}
     CMAKE_CACHE_ARGS
+      ${CMAKE_PROJECT_INCLUDE_EXTERNAL_PROJECT_ARG}
       # Compiler settings
       -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
       -DCMAKE_C_FLAGS:STRING=${ep_common_c_flags}
