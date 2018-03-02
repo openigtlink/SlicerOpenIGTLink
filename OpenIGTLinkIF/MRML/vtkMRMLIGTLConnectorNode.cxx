@@ -188,18 +188,21 @@ unsigned int vtkMRMLIGTLConnectorNode::vtkInternal::AssignOutGoingNodeToDevice(v
 }
 
 //----------------------------------------------------------------------------
-void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessNewDeviceEvent(vtkObject *caller, unsigned long event, void *callData)
+void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessNewDeviceEvent(
+  vtkObject * vtkNotUsed(caller), unsigned long vtkNotUsed(event), void *vtkNotUsed(callData))
 {
 }
 
 //----------------------------------------------------------------------------
-void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessOutgoingDeviceModifiedEvent(vtkObject *caller, unsigned long event, igtlio::Device * modifiedDevice)
+void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessOutgoingDeviceModifiedEvent(
+  vtkObject * vtkNotUsed(caller), unsigned long vtkNotUsed(event), igtlio::Device * modifiedDevice)
 {
   this->IOConnector->SendMessage(CreateDeviceKey(modifiedDevice), modifiedDevice->MESSAGE_PREFIX_NOT_DEFINED);
 }
 
 //----------------------------------------------------------------------------
-void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(vtkObject *caller, unsigned long event, igtlio::Device * modifiedDevice)
+void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
+  vtkObject * vtkNotUsed(caller), unsigned long vtkNotUsed(event), igtlio::Device * modifiedDevice)
 {
   vtkMRMLNode* modifiedNode = this->GetOrAddMRMLNodeforDevice(modifiedDevice);
   const std::string deviceType = modifiedDevice->GetDeviceType();
