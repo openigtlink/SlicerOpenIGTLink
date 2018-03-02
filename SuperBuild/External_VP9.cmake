@@ -141,7 +141,7 @@ ExternalProject_Execute(${proj} \"build\" make)
 
   if(WIN32)
     if("${CMAKE_GENERATOR}" MATCHES "(Win64|IA64)")
-      SET(VP9_LIBRARY optimized ${VP9_LIBRARY_DIR}/x64/Release/vpxmd.lib debug ${VP9_LIBRARY_DIR}/x64/Debug/vpxmdd.lib)
+      set(VP9_LIBRARY optimized ${VP9_LIBRARY_DIR}/x64/Release/vpxmd.lib debug ${VP9_LIBRARY_DIR}/x64/Debug/vpxmdd.lib)
     else()
       set(VP9_LIBRARY optimized ${VP9_LIBRARY_DIR}/Win32/Release/vpxmd.lib debug ${VP9_LIBRARY_DIR}/Win32/Debug/vpxmdd.lib)
     endif()

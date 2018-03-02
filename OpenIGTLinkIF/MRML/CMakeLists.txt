@@ -27,11 +27,11 @@ if(OpenIGTLink_PROTOCOL_VERSION GREATER 1)
     )
 endif()
 
-IF(OpenIGTLink_ENABLE_VIDEOSTREAMING)
-  LIST(APPEND ${KIT}_SRCS
+if(OpenIGTLink_ENABLE_VIDEOSTREAMING)
+  list(APPEND ${KIT}_SRCS
   vtkMRMLBitStreamNode.cxx
   )
-ENDIF()
+endif()
 
 set(${KIT}_TARGET_LIBRARIES
   OpenIGTLink
