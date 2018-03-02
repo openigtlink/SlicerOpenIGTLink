@@ -1,11 +1,14 @@
 set(proj OpenIGTLinkIO)
 
 # Set dependency list
-#set(${proj}_DEPENDENCIES "")
+set(${proj}_DEPENDS OpenIGTLink)
+
+# Include dependent projects if any
+ExternalProject_Include_Dependencies(${proj} PROJECT_VAR proj DEPENDS_VAR ${proj}_DEPENDS)
 
 if(${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
   unset(OpenIGTLinkIO_DIR CACHE)
-  find_package(OpenIGTLinkIO REQUIRED NO_MODULE)
+  find_package(OpenIGTLinkIO REQUIRED)
 endif()
 
 # Sanity checks
@@ -13,74 +16,89 @@ if(DEFINED OpenIGTLinkIO_DIR AND NOT EXISTS ${OpenIGTLinkIO_DIR})
   message(FATAL_ERROR "OpenIGTLinkIO_DIR variable is defined but corresponds to nonexistent directory")
 endif()
 
-SET (OpenIGTLinkIO_SRC_DIR "${CMAKE_BINARY_DIR}/Deps/OpenIGTLinkIO")
-SET (Slicer_OpenIGTLinkIO_DIR "${CMAKE_BINARY_DIR}/Deps/OpenIGTLinkIO-build" CACHE INTERNAL "Path to store OpenIGTLinkIO binaries")
 if(NOT DEFINED OpenIGTLinkIO_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
-  # OpenIGTLinkIO has not been built yet, so download and build it as an external project
-  
-  ExternalProject_Add( ${proj}
-    PREFIX "${CMAKE_BINARY_DIR}/Deps/OpenIGTLinkIO-prefix"
-    SOURCE_DIR "${OpenIGTLinkIO_SRC_DIR}"
-    BINARY_DIR "${Slicer_OpenIGTLinkIO_DIR}"
-    #--Download step--------------
-    GIT_REPOSITORY https://github.com/IGSIO/OpenIGTLinkIO.git
-    GIT_TAG master
-    #--Configure step-------------
-    CMAKE_ARGS 
+
+  set(EP_SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj})
+  set(EP_BINARY_DIR ${CMAKE_BINARY_DIR}/${proj}-build)
+
+  ExternalProject_SetIfNotDefined(
+    ${CMAKE_PROJECT_NAME}_${proj}_GIT_REPOSITORY
+    "${EP_GIT_PROTOCOL}://github.com/IGSIO/OpenIGTLinkIO.git"
+    QUIET
+    )
+
+  ExternalProject_SetIfNotDefined(
+    ${CMAKE_PROJECT_NAME}_${proj}_GIT_TAG
+    "master"
+    QUIET
+    )
+
+  ExternalProject_Add(${proj}
+    ${${proj}_EP_ARGS}
+    GIT_REPOSITORY ${${CMAKE_PROJECT_NAME}_${proj}_GIT_REPOSITORY}
+    GIT_TAG ${${CMAKE_PROJECT_NAME}_${proj}_GIT_TAG}
+    SOURCE_DIR "${EP_SOURCE_DIR}"
+    BINARY_DIR "${EP_BINARY_DIR}"
+    CMAKE_CACHE_ARGS 
       ${ep_common_args}
-      -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
-      -DCMAKE_CXX_FLAGS:STRING=${ep_common_cxx_flags}
+      # Compiler settings
       -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
       -DCMAKE_C_FLAGS:STRING=${ep_common_c_flags}
+      -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
+      -DCMAKE_CXX_FLAGS:STRING=${ep_common_cxx_flags}
       -DCMAKE_CXX_STANDARD:STRING=${CMAKE_CXX_STANDARD}
       -DCMAKE_CXX_STANDARD_REQUIRED:BOOL=${CMAKE_CXX_STANDARD_REQUIRED}
       -DCMAKE_CXX_EXTENSIONS:BOOL=${CMAKE_CXX_EXTENSIONS}
+      -DCMAKE_MACOSX_RPATH:BOOL=0
+      # Output directories
       -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=${CMAKE_BINARY_DIR}/${Slicer_THIRDPARTY_BIN_DIR}
       -DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=${CMAKE_BINARY_DIR}/${Slicer_THIRDPARTY_LIB_DIR}
-      ${CMAKE_PROJECT_INCLUDE_EXTERNAL_PROJECT_ARG}
+      # Options
       -DBUILD_SHARED_LIBS:BOOL=ON
       -DBUILD_TESTING:BOOL=OFF
-      -DVTK_DIR:PATH=${VTK_DIR}
-      -DOpenIGTLink_DIR:PATH=${OpenIGTLink_DIR}
       -DIGTLIO_USE_GUI:BOOL=OFF
-      -DCMAKE_CXX_FLAGS:STRING=${CMAKE_CXX_FLAGS}
-      -DCMAKE_C_FLAGS:STRING=${CMAKE_C_FLAGS}
-    # macOS
-      -DCMAKE_MACOSX_RPATH:BOOL=0  
-    #--Build step-----------------
-    #--Install step-----------------
+      # Dependencies
+      -DOpenIGTLink_DIR:PATH=${OpenIGTLink_DIR}
+      -DVTK_DIR:PATH=${VTK_DIR}
     INSTALL_COMMAND ""
-    DEPENDS ${OpenIGTLinkIO_DEPENDENCIES}
+    DEPENDS
+      ${${proj}_DEPENDS}
     )  
   ExternalProject_GenerateProjectDescription_Step(${proj})
 
-  set(OpenIGTLinkIO_DIR ${Slicer_OpenIGTLinkIO_DIR})
+  set(OpenIGTLinkIO_DIR ${EP_BINARY_DIR})
 
   #-----------------------------------------------------------------------------
   # Launcher setting specific to build tree
 
+  # library paths
   set(${proj}_LIBRARY_PATHS_LAUNCHER_BUILD
     ${OpenIGTLinkIO_DIR}
     ${OpenIGTLinkIO_DIR}/bin/<CMAKE_CFG_INTDIR>
+    )
+  mark_as_superbuild(
+    VARS ${proj}_LIBRARY_PATHS_LAUNCHER_BUILD
+    LABELS "LIBRARY_PATHS_LAUNCHER_BUILD"
     )
 
   #-----------------------------------------------------------------------------
   # Launcher setting specific to install tree
 
+  # library paths
+  set(${proj}_LIBRARY_PATHS_LAUNCHER_INSTALLED)
   if(UNIX  AND NOT APPLE)
-    set(${proj}_LIBRARY_PATHS_LAUNCHER_INSTALLED <APPLAUNCHER_DIR>/lib/igtl)
-    mark_as_superbuild(
-      VARS ${proj}_LIBRARY_PATHS_LAUNCHER_INSTALLED
-      LABELS "LIBRARY_PATHS_LAUNCHER_INSTALLED"
+    list(APPEND ${proj}_LIBRARY_PATHS_LAUNCHER_INSTALLED
+      <APPLAUNCHER_DIR>/lib/igtl
       )
   endif()
-ELSE()    
-    # OpenIGTLinkIO has been built already
-    FIND_PACKAGE(OpenIGTLinkIO REQUIRED PATHS ${OpenIGTLinkIO_DIR} NO_DEFAULT_PATH)
-    MESSAGE(STATUS "Using OpenIGTLinkIO available at: ${OpenIGTLinkIO_DIR}")
-    SET(Slicer_OpenIGTLinkIO_DIR "${OpenIGTLinkIO_DIR}")
-ENDIF()    
+  mark_as_superbuild(
+    VARS ${proj}_LIBRARY_PATHS_LAUNCHER_INSTALLED
+    LABELS "LIBRARY_PATHS_LAUNCHER_INSTALLED"
+    )
 
+else()
+  ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDS})
+endif()    
 
-ExternalProject_Message(${proj} "OpenIGTLinkIO_DIR:${OpenIGTLinkIO_DIR}")
-mark_as_superbuild(OpenIGTLinkIO_DIR:PATH)
+mark_as_superbuild(${proj}_DIR:PATH)
+ExternalProject_Message(${proj} "${proj}_DIR:${${proj}_DIR}")
