@@ -188,18 +188,21 @@ unsigned int vtkMRMLIGTLConnectorNode::vtkInternal::AssignOutGoingNodeToDevice(v
 }
 
 //----------------------------------------------------------------------------
-void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessNewDeviceEvent(vtkObject *caller, unsigned long event, void *callData)
+void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessNewDeviceEvent(
+  vtkObject * vtkNotUsed(caller), unsigned long vtkNotUsed(event), void *vtkNotUsed(callData))
 {
 }
 
 //----------------------------------------------------------------------------
-void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessOutgoingDeviceModifiedEvent(vtkObject *caller, unsigned long event, igtlio::Device * modifiedDevice)
+void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessOutgoingDeviceModifiedEvent(
+  vtkObject * vtkNotUsed(caller), unsigned long vtkNotUsed(event), igtlio::Device * modifiedDevice)
 {
   this->IOConnector->SendMessage(CreateDeviceKey(modifiedDevice), modifiedDevice->MESSAGE_PREFIX_NOT_DEFINED);
 }
 
 //----------------------------------------------------------------------------
-void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(vtkObject *caller, unsigned long event, igtlio::Device * modifiedDevice)
+void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
+  vtkObject * vtkNotUsed(caller), unsigned long vtkNotUsed(event), igtlio::Device * modifiedDevice)
 {
   vtkMRMLNode* modifiedNode = this->GetOrAddMRMLNodeforDevice(modifiedDevice);
   const std::string deviceType = modifiedDevice->GetDeviceType();
@@ -741,7 +744,7 @@ void vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents(vtkObject *caller, unsig
     }
   if( modifiedDevice != NULL)
     {
-    if(event==this->Internal->IOConnector->NewDeviceEvent)
+    if(static_cast<int>(event)==this->Internal->IOConnector->NewDeviceEvent)
       {
       // no action perform at this stage, wait until the message content in the device is unpacked,
       // As we need the message content data to create mrmlnode.
@@ -1015,7 +1018,7 @@ void vtkMRMLIGTLConnectorNode::OnNodeReferenceAdded(vtkMRMLNodeReference *refere
       igtlio::DeviceKeyType key;
       key.name = node->GetName();
       std::vector<std::string> deviceTypes = GetDeviceTypeFromMRMLNodeType(node->GetNodeTagName());
-      for (int typeIndex = 0; typeIndex < deviceTypes.size(); typeIndex++)
+      for (size_t typeIndex = 0; typeIndex < deviceTypes.size(); typeIndex++)
         {
         key.type = deviceTypes[typeIndex];
         device = this->Internal->IOConnector->GetDevice(key);
@@ -1276,7 +1279,7 @@ int vtkMRMLIGTLConnectorNode::RegisterOutgoingMRMLNode(vtkMRMLNode* node, const 
     igtlio::DeviceKeyType key;
     key.name = node->GetName();
     std::vector<std::string> deviceTypes = GetDeviceTypeFromMRMLNodeType(node->GetNodeTagName());
-    for (int typeIndex = 0; typeIndex < deviceTypes.size(); typeIndex++)
+    for (size_t typeIndex = 0; typeIndex < deviceTypes.size(); typeIndex++)
       {
       key.type = deviceTypes[typeIndex];
       device = this->Internal->IOConnector->GetDevice(key);
@@ -1640,7 +1643,7 @@ IGTLDevicePointer vtkMRMLIGTLConnectorNode::CreateDeviceForOutgoingMRMLNode(vtkM
     igtlio::DeviceKeyType key;
     key.name = dnode->GetName();
     std::vector<std::string> deviceTypes = this->GetDeviceTypeFromMRMLNodeType(dnode->GetNodeTagName());
-    for (int typeIndex = 0; typeIndex < deviceTypes.size(); typeIndex++)
+    for (size_t typeIndex = 0; typeIndex < deviceTypes.size(); typeIndex++)
     {
       key.type = deviceTypes[typeIndex];
       device = this->Internal->IOConnector->GetDevice(key);

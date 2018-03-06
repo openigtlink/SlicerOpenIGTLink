@@ -1,6 +1,6 @@
 if(Slicer_USE_VP9 AND NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
   set(VP9_INSTALL_LIB_DIR ${Slicer_INSTALL_ROOT}${Slicer_BUNDLE_EXTENSIONS_LOCATION}lib/VP9)
-  SET(VP9_LIBRARY)
+  set(VP9_LIBRARY)
   if(VP9_DIR)
     set(extra_exclude_pattern)
     if(UNIX)

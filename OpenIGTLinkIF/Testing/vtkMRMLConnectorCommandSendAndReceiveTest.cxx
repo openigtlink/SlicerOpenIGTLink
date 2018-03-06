@@ -18,7 +18,8 @@
 static int testSuccessful = 0;
 static std::string ResponseString = "<Command>\n <Result success=true> <Parameter Name=”Depth” /> </Result>\n </Command>";
 
-void onCommandReceivedEventFunc(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata)
+void onCommandReceivedEventFunc(
+  vtkObject* caller, unsigned long vtkNotUsed(eid), void* vtkNotUsed(clientdata), void *calldata)
 {
   vtkMRMLIGTLConnectorNode* connectorNode = vtkMRMLIGTLConnectorNode::SafeDownCast(caller);
   igtlio::CommandDevice* clientDevice = reinterpret_cast<igtlio::CommandDevice*>(calldata);
@@ -27,7 +28,8 @@ void onCommandReceivedEventFunc(vtkObject* caller, unsigned long eid, void* clie
   testSuccessful +=1;
 }
 
-void onCommanResponseReceivedEventFunc(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata)
+void onCommanResponseReceivedEventFunc(
+  vtkObject* vtkNotUsed(caller), unsigned long vtkNotUsed(eid), void* vtkNotUsed(clientdata), void *calldata)
 {
   std::cout << "*** COMMAND response received from server" << std::endl;
   igtlio::CommandDevice* serverDevice = reinterpret_cast<igtlio::CommandDevice*>(calldata);
@@ -70,7 +72,7 @@ protected:
   ~CommandObserver(){};
 };
 
-int main(int argc, char * argv [] )
+int main(int, char * [] )
 {
   // Setup the Server and client, as well as the event observers.
   vtkMRMLIGTLConnectorNode * serverConnectorNode = vtkMRMLIGTLConnectorNode::New();

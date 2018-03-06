@@ -12,23 +12,25 @@ set(EXTENSION_ICONURL "https://raw.githubusercontent.com/openigtlink/SlicerOpenI
 set(EXTENSION_SCREENSHOTURLS "https://raw.githubusercontent.com/openigtlink/SlicerOpenIGTLink/master/Screenshots/Overview.png")
 set(EXTENSION_DEPENDS "")
 set(EXTENSION_BUILD_SUBDIRECTORY inner-build)
-#-----------------------------------------------------------------------------
 
 set(SUPERBUILD_TOPLEVEL_PROJECT inner)
 
+#-----------------------------------------------------------------------------
 # Extension dependencies
 find_package(Slicer REQUIRED)
 include(${Slicer_USE_FILE})
 mark_as_superbuild(Slicer_DIR)
 
-option(Slicer_USE_VP9 "Build SlicerOpenIGTLink with VP9 support" ON)
-INCLUDE(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
+#-----------------------------------------------------------------------------
+# Options
+option(SlicerOpenIGTLink_USE_VP9 "Build SlicerOpenIGTLink with VP9 support" ON)
+mark_as_superbuild(SlicerOpenIGTLink_USE_VP9)
 
 #-----------------------------------------------------------------------------
 # SuperBuild setup
-option(SlicerOpenIGTLink_SUPERBUILD "Build OpenIGTLink related modules and the projects it depends on." ON)
-mark_as_advanced(SlicerOpenIGTLink_SUPERBUILD)
-if(SlicerOpenIGTLink_SUPERBUILD)
+option(${EXTENSION_NAME}_SUPERBUILD "Build ${EXTENSION_NAME} and the projects it depends on." ON)
+mark_as_advanced(${EXTENSION_NAME}_SUPERBUILD)
+if(${EXTENSION_NAME}_SUPERBUILD)
   include("${CMAKE_CURRENT_SOURCE_DIR}/SuperBuild.cmake")
   return()
 endif()
@@ -39,7 +41,6 @@ add_subdirectory(OpenIGTLinkIF)
 ## NEXT_MODULE
 
 #-----------------------------------------------------------------------------
-
 # Generate SlicerOpenIGTLinkConfig.cmake file
 # Add OpenIGTLink and OpenIGTLinkIO targets to SlicerOpenIGTLinkConfig.cmake file
 set(SlicerOpenIGTLink_CUSTOM_CONFIG "
@@ -48,9 +49,11 @@ include(\"${OpenIGTLinkIO_DIR}/OpenIGTLinkIOConfig.cmake\")
 ")
 include(${Slicer_EXTENSION_GENERATE_CONFIG})
 
+#-----------------------------------------------------------------------------
+# Packaging
 set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${CMAKE_BINARY_DIR};${EXTENSION_NAME};ALL;/")
 set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${OpenIGTLink_DIR};OpenIGTLink;RuntimeLibraries;/")
 set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${OpenIGTLinkIO_DIR};OpenIGTLinkIO;RuntimeLibraries;/")
 include(${CMAKE_CURRENT_SOURCE_DIR}/CMake/SlicerBlockInstallVP9.cmake)
-MESSAGE(STATUS "CPACK_INSTALL_CMAKE_PROJECTS = ${CPACK_INSTALL_CMAKE_PROJECTS}")
+message(STATUS "CPACK_INSTALL_CMAKE_PROJECTS = ${CPACK_INSTALL_CMAKE_PROJECTS}")
 include(${Slicer_EXTENSION_CPACK})

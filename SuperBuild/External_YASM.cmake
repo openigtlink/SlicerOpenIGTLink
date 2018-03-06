@@ -1,48 +1,47 @@
-set(proj OpenIGTLink)
+set(proj YASM)
 
 # Set dependency list
 set(${proj}_DEPENDS "")
-if(SlicerOpenIGTLink_USE_VP9)
-  list(APPEND ${proj}_DEPENDS VP9)
-endif()
 
 # Include dependent projects if any
 ExternalProject_Include_Dependencies(${proj} PROJECT_VAR proj DEPENDS_VAR ${proj}_DEPENDS)
 
 if(${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
-  unset(OpenIGTLink_DIR CACHE)
-  find_package(OpenIGTLink REQUIRED)
+  unset(${proj}_DIR CACHE)
+  include(${CMAKE_SOURCE_DIR}/SuperBuild/FindYASM.cmake)
 endif()
 
 # Sanity checks
-if(DEFINED OpenIGTLink_DIR AND NOT EXISTS ${OpenIGTLink_DIR})
-  message(FATAL_ERROR "OpenIGTLink_DIR variable is defined but corresponds to nonexistent directory")
+if(DEFINED ${proj}_DIR AND NOT EXISTS ${${proj}_DIR})
+  message(FATAL_ERROR "${proj}_DIR variable is defined but corresponds to nonexistent directory")
 endif()
 
-if(NOT DEFINED OpenIGTLink_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
+if(NOT DEFINED YASM_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
 
   # Since the project do not explicitly include CTest or CTestUseLauncher, let's
   # make sure it is included by setting CMAKE_PROJECT_<PROJECT-NAME>_INCLUDE variable.
   set(CMAKE_PROJECT_INCLUDE_EXTERNAL_PROJECT_ARG)
   if(CTEST_USE_LAUNCHERS)
     set(CMAKE_PROJECT_INCLUDE_EXTERNAL_PROJECT_ARG
-      "-DCMAKE_PROJECT_OpenIGTLink_INCLUDE:FILEPATH=${CMAKE_ROOT}/Modules/CTestUseLaunchers.cmake")
+      "-DCMAKE_PROJECT_yasm_INCLUDE:FILEPATH=${CMAKE_ROOT}/Modules/CTestUseLaunchers.cmake")
   endif()
+
+  find_package(PythonInterp "2.7" REQUIRED QUIET)
 
   ExternalProject_SetIfNotDefined(
     ${CMAKE_PROJECT_NAME}_${proj}_GIT_REPOSITORY
-    "https://github.com/openigtlink/OpenIGTLink.git"
+    "https://github.com/yasm/yasm.git"
     QUIET
     )
 
   ExternalProject_SetIfNotDefined(
     ${CMAKE_PROJECT_NAME}_${proj}_GIT_TAG
-    "master"
+    master
     QUIET
     )
 
   set(EP_SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj})
-  set(EP_BINARY_DIR ${CMAKE_BINARY_DIR}/${proj}-build)
+  set(EP_BINARY_DIR ${CMAKE_BINARY_DIR}/${proj}-bin)
 
   ExternalProject_Add(${proj}
     ${${proj}_EP_ARGS}
@@ -60,23 +59,18 @@ if(NOT DEFINED OpenIGTLink_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
       -DCMAKE_CXX_STANDARD:STRING=${CMAKE_CXX_STANDARD}
       -DCMAKE_CXX_STANDARD_REQUIRED:BOOL=${CMAKE_CXX_STANDARD_REQUIRED}
       -DCMAKE_CXX_EXTENSIONS:BOOL=${CMAKE_CXX_EXTENSIONS}
-      -DCMAKE_MACOSX_RPATH:BOOL=0
-      # Output directory
-      -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=${CMAKE_BINARY_DIR}/${Slicer_THIRDPARTY_BIN_DIR}
-      -DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=${CMAKE_BINARY_DIR}/${Slicer_THIRDPARTY_LIB_DIR}
+      # Output directories
+      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=${EP_BINARY_DIR}
+      -DCMAKE_LIBRARY_OUTPUT_DIRECTORY:STRING=${EP_BINARY_DIR}
+      -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:STRING=${EP_BINARY_DIR}
+      # Install directories
+      -DYASM_INSTALL_BIN_DIR:STRING=bin
       # Options
+      -DBUILD_TESTING:BOOL=OFF 
       -DBUILD_EXAMPLES:BOOL=OFF
-      -DBUILD_SHARED_LIBS:BOOL=ON
-      -DBUILD_TESTING:BOOL=OFF
-      -DOpenIGTLink_SUPERBUILD:BOOL=OFF
-      -DOpenIGTLink_PROTOCOL_VERSION_2:BOOL=OFF
-      -DOpenIGTLink_PROTOCOL_VERSION_3:BOOL=ON
+      -DBUILD_SHARED_LIBS:BOOL=OFF
       # Dependencies
-      -DITK_DIR:PATH=${ITK_DIR}
-      -DOpenIGTLink_USE_VP9:BOOL=${Slicer_USE_VP9}
-      -DVP9_INCLUDE_DIR:PATH=${VP9_INCLUDE_DIR}
-      -DVP9_LIBRARY_DIR:PATH=${VP9_LIBRARY_DIR}
-      -DYASM_PYTHON_EXECUTABLE:FILEPATH=${PYTHON_EXECUTABLE}
+      -DPYTHON_EXECUTABLE:STRING=${PYTHON_EXECUTABLE}
     INSTALL_COMMAND ""
     DEPENDS
       ${${proj}_DEPENDS}
@@ -84,36 +78,18 @@ if(NOT DEFINED OpenIGTLink_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
 
   ExternalProject_GenerateProjectDescription_Step(${proj})
 
-  set(OpenIGTLink_DIR ${EP_BINARY_DIR})
+  set(${proj}_DIR ${EP_BINARY_DIR})
 
   #-----------------------------------------------------------------------------
   # Launcher setting specific to build tree
 
-  # library paths
-  set(${proj}_LIBRARY_PATHS_LAUNCHER_BUILD
-    ${OpenIGTLink_DIR}
-    ${OpenIGTLink_DIR}/bin/<CMAKE_CFG_INTDIR>
-    )
-  mark_as_superbuild(
-    VARS ${proj}_LIBRARY_PATHS_LAUNCHER_BUILD
-    LABELS "LIBRARY_PATHS_LAUNCHER_BUILD"
-    )
+  #  NA
 
   #-----------------------------------------------------------------------------
   # Launcher setting specific to install tree
 
-  # library paths
-  set(${proj}_LIBRARY_PATHS_LAUNCHER_INSTALLED )
-  if(UNIX AND NOT APPLE)
-    list(APPEND ${proj}_LIBRARY_PATHS_LAUNCHER_INSTALLED
-      <APPLAUNCHER_DIR>/lib/igtl
-      )
-  endif()
-  mark_as_superbuild(
-    VARS ${proj}_LIBRARY_PATHS_LAUNCHER_INSTALLED
-    LABELS "LIBRARY_PATHS_LAUNCHER_INSTALLED"
-    )
-
+  #  NA
+  
 else()
   ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
 endif()

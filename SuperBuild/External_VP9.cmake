@@ -1,10 +1,18 @@
 set(proj VP9)
 
 # Set dependency list
-#set(${proj}_DEPENDENCIES "")
+set(${proj}_DEPENDS "")
+if(UNIX)
+  list(APPEND ${proj}_DEPENDS YASM)
+endif()
+
+# Include dependent projects if any
+ExternalProject_Include_Dependencies(${proj} PROJECT_VAR proj DEPENDS_VAR ${proj}_DEPENDS)
 
 if(${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
-  unset(${proj}_DIR CACHE)
+  unset(VP9_INCLUDE_DIR CACHE)
+  unset(VP9_LIBRARY_DIR CACHE)
+  unset(VP9_ROOT CACHE)
   include(${CMAKE_SOURCE_DIR}/SuperBuild/FindVP9.cmake)
 endif()
 
@@ -13,139 +21,160 @@ if(DEFINED ${proj}_DIR AND NOT EXISTS ${${proj}_DIR})
   message(FATAL_ERROR "${proj}_DIR variable is defined but corresponds to nonexistent directory")
 endif()
 
-SET(proj_DEPENDENCIES)
-IF(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows") # window os build doesn't need the yasm
-  INCLUDE(${CMAKE_SOURCE_DIR}/SuperBuild/External_yasm.cmake)
-  IF(NOT YASM_FOUND)
-    LIST(APPEND VP9_DEPENDENCIES YASM)
-  ENDIF()
-  set(proj VP9)
-ENDIF()
-
 if(NOT DEFINED ${proj}_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
-  # OpenIGTLink has not been built yet, so download and build it as an external project
-  MESSAGE(STATUS "Downloading VP9 from https://github.com/webmproject/libvpx.git")  
-  set(CMAKE_PROJECT_INCLUDE_EXTERNAL_PROJECT_ARG)            
-  if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows") 
-    SET (VP9_INCLUDE_DIR "${CMAKE_BINARY_DIR}/Deps/VP9/vpx" CACHE PATH "VP9 source directory" FORCE)
-    SET (VP9_LIBRARY_DIR "${CMAKE_BINARY_DIR}/Deps/VP9" CACHE PATH "VP9 library directory" FORCE) 
+
+  if(UNIX)
+
+    set(EP_SOURCE_DIR "${CMAKE_BINARY_DIR}/${proj}")
+
     include(ExternalProjectForNonCMakeProject)
 
     # environment
     set(_env_script ${CMAKE_BINARY_DIR}/${proj}_Env.cmake)
     ExternalProject_Write_SetBuildEnv_Commands(${_env_script})
-
-    set(_configure_cflags)
-    #
-    # To fix compilation problem: relocation R_X86_64_32 against `a local symbol' can not be
-    # used when making a shared object; recompile with -fPIC
-    # See http://www.cmake.org/pipermail/cmake/2007-May/014350.html
-    #
     
     # configure step
     set(_configure_script ${CMAKE_BINARY_DIR}/${proj}_configure_step.cmake)
     file(WRITE ${_configure_script}
     "include(\"${_env_script}\")
-    set(${proj}_WORKING_DIR \"${VP9_LIBRARY_DIR}\")
-    ExternalProject_Execute(${proj} \"configure\" sh ${CMAKE_BINARY_DIR}/Deps/VP9/configure
-      --disable-examples --as=yasm --enable-pic --disable-tools --disable-docs --disable-vp8 --disable-libyuv --disable-unit_tests --disable-postproc 
-      WORKING_DIRECTORY ${proj}_WORKING_DIR
-      )
-    ")
-    set(VP9_CONFIGURE_COMMAND ${CMAKE_COMMAND} -P ${_configure_script})
+set(${proj}_WORKING_DIR \"${EP_SOURCE_DIR}\")
+ExternalProject_Execute(${proj} \"configure\" sh ${EP_SOURCE_DIR}/configure
+  --disable-examples --as=yasm --enable-pic --disable-tools --disable-docs --disable-vp8 --disable-libyuv --disable-unit_tests --disable-postproc
+  )
+")
+
     # build step
     set(_build_script ${CMAKE_BINARY_DIR}/${proj}_build_step.cmake)
     file(WRITE ${_build_script}
     "include(\"${_env_script}\")
-    set(${proj}_WORKING_DIR \"${VP9_LIBRARY_DIR}\")
-    set(ENV{PATH} \"${YASM_DIR}:${YASM_DIR}/Debug:${YASM_DIR}/Release:$ENV{PATH}\")
-    ExternalProject_Execute(${proj} \"build\" make WORKING_DIRECTORY ${proj}_WORKING_DIR)
-    ")
-    set(VP9_BUILD_COMMAND ${CMAKE_COMMAND} -P ${_build_script})
+set(${proj}_WORKING_DIR \"${EP_SOURCE_DIR}\")
+set(ENV{PATH} \"${YASM_DIR}:${YASM_DIR}/Debug:${YASM_DIR}/Release:$ENV{PATH}\")
+ExternalProject_Execute(${proj} \"build\" make)
+")
 
-    # install step
-    set(_install_script ${CMAKE_BINARY_DIR}/${proj}_install_step.cmake)
-    file(WRITE ${_install_script}
-    "include(\"${_env_script}\")
-    set(${proj}_WORKING_DIR \"${VP9_LIBRARY_DIR}\")
-    ExternalProject_Execute(${proj} \"install\" make install)
-    ")
-    set(VP9_INSTALL_COMMAND ${CMAKE_COMMAND} -P ${_install_script})
+    ExternalProject_SetIfNotDefined(
+      ${CMAKE_PROJECT_NAME}_${proj}_GIT_REPOSITORY
+      "${EP_GIT_PROTOCOL}://github.com/webmproject/libvpx.git"
+      QUIET
+      )
+
+    ExternalProject_SetIfNotDefined(
+      ${CMAKE_PROJECT_NAME}_${proj}_GIT_TAG
+      "v1.6.1"
+      QUIET
+      )
 
     ExternalProject_Add(${proj}
-      GIT_REPOSITORY https://github.com/webmproject/libvpx/
-      GIT_TAG v1.6.1
-      UPDATE_COMMAND "" # Disable update
-      SOURCE_DIR "${CMAKE_BINARY_DIR}/Deps/VP9"
-      BUILD_IN_SOURCE ${VP9_BUILD_IN_SOURCE}
-      CONFIGURE_COMMAND ${VP9_CONFIGURE_COMMAND}
-      BUILD_COMMAND ${VP9_BUILD_COMMAND}
-      INSTALL_COMMAND ${VP9_INSTALL_COMMAND}
-      BUILD_ALWAYS 1
+      GIT_REPOSITORY ${${CMAKE_PROJECT_NAME}_${proj}_GIT_REPOSITORY}
+      GIT_TAG ${${CMAKE_PROJECT_NAME}_${proj}_GIT_TAG}
+      SOURCE_DIR "${EP_SOURCE_DIR}"
+      BUILD_IN_SOURCE 1
+      CONFIGURE_COMMAND ${CMAKE_COMMAND} -P ${_configure_script}
+      BUILD_COMMAND ${CMAKE_COMMAND} -P ${_build_script}
+      INSTALL_COMMAND "" #${CMAKE_COMMAND} -P ${_install_script}
+      DEPENDS
+        ${${proj}_DEPENDS}
+      )
+
+    set(VP9_LIBRARY_DIR "${EP_SOURCE_DIR}/VP9")
+
+  elseif(WIN32)
+
+    # Product: VS2015 / Version: 14 / Compiler Version: 1900
+    # Product: VS2013 / Version: 12 / Compiler Version: 1800
+
+    set(EP_SOURCE_DIR "${CMAKE_BINARY_DIR}/Deps/VP9-Binary")
+
+    #--------------------
+    if(CMAKE_SIZEOF_VOID_P EQUAL 4) # 32-bit
+
+      set(VP9_binary_1900_URL "https://github.com/openigtlink/CodecLibrariesFile/archive/vs14.zip")
+      #set(VP9_binary_1900_MD5 "")
+      set(VP9_binary_1900_library_subdir "VP9-vs14")
+
+      set(VP9_binary_1800_URL "https://github.com/openigtlink/CodecLibrariesFile/archive/vs12.zip")
+      #set(VP9_binary_1800_MD5 "")
+      set(VP9_binary_1800_library_subdir "VP9-vs12")
+
+    #--------------------
+    elseif(CMAKE_SIZEOF_VOID_P EQUAL 8) # 64-bit
+
+      set(VP9_binary_1900_URL "https://github.com/openigtlink/CodecLibrariesFile/archive/vs14-Win64.zip")
+      #set(VP9_binary_1900_MD5 "")
+      set(VP9_binary_1900_library_subdir "VP9-vs14-Win64")
+
+      set(VP9_binary_1800_URL "https://github.com/openigtlink/CodecLibrariesFile/archive/vs12-Win64.zip")
+      #set(VP9_binary_1800_MD5 "")
+      set(VP9_binary_1900_library_subdir "VP9-vs12-Win64")
+
+    endif()
+
+    if(NOT DEFINED VP9_binary_${MSVC_VERSION}_URL)
+      message(FATAL_ERROR "There are no binaries available for Microsoft C++ compiler ${MSVC_VERSION}")
+    endif()
+
+    set(_download_url "${VP9_binary_${MSVC_VERSION}_URL}")
+    #set(_download_md5 "${VP9_binary_${MSVC_VERSION}_MD5}")
+
+    set(_library_subdir "${VP9_binary_${MSVC_VERSION}_library_subdir}")
+
+    set(VP9_LIBRARY_DIR "${EP_SOURCE_DIR}/${_library_subdir}")
+
+    ExternalProject_Add(VP9
+      URL ${_download_url}
+      # URL_MD5 ${_download_md5}
+      DOWNLOAD_DIR ${CMAKE_BINARY_DIR}
+      SOURCE_DIR ${EP_SOURCE_DIR}
+      CONFIGURE_COMMAND ""
+      BUILD_COMMAND ""
+      INSTALL_COMMAND ""
       DEPENDS
         ${${proj}_DEPENDENCIES}
-      ) 
-  else()
-    if( ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 14 2015") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 14 2015 Win64" ) OR 
-        ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 12 2013") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 12 2013 Win64" )
-          )
-      SET (VP9_INCLUDE_DIR "${CMAKE_BINARY_DIR}/Deps/VP9-Binary/vpx" CACHE PATH "VP9 source directory" FORCE)
-      SET (BinaryURL "")
-      if ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 14 2015") 
-        SET (VP9_LIBRARY_DIR "${CMAKE_BINARY_DIR}/Deps/VP9-Binary/VP9-vs14" CACHE PATH "VP9 library directory" FORCE)
-        SET (BinaryURL "https://github.com/openigtlink/CodecLibrariesFile/archive/vs14.zip")
-      elseif("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 14 2015 Win64" )  
-        SET (VP9_LIBRARY_DIR "${CMAKE_BINARY_DIR}/Deps/VP9-Binary/VP9-vs14-Win64" CACHE PATH "VP9 library directory" FORCE) 
-        SET (BinaryURL "https://github.com/openigtlink/CodecLibrariesFile/archive/vs14-Win64.zip")
-      elseif ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 12 2013") 
-        SET (VP9_LIBRARY_DIR "${CMAKE_BINARY_DIR}/Deps/VP9-Binary/VP9-vs12" CACHE PATH "VP9 library directory" FORCE)
-        SET (BinaryURL "https://github.com/openigtlink/CodecLibrariesFile/archive/vs12.zip")
-      elseif("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 12 2013 Win64" )  
-        SET (VP9_LIBRARY_DIR "${CMAKE_BINARY_DIR}/Deps/VP9-Binary/VP9-vs12-Win64" CACHE PATH "VP9 library directory" FORCE) 
-        SET (BinaryURL "https://github.com/openigtlink/CodecLibrariesFile/archive/vs12-Win64.zip")  
-      endif()  
-      ExternalProject_Add(VP9
-        URL               ${BinaryURL}
-        SOURCE_DIR        "${CMAKE_BINARY_DIR}/Deps/VP9-Binary"
-        CONFIGURE_COMMAND ""
-        BUILD_ALWAYS 0
-        BUILD_COMMAND ""
-        INSTALL_COMMAND   ""
-        TEST_COMMAND      ""
       )
-    else()
-      message(WARNING "Only support for Visual Studio 14 2015")
-    endif()
+
   endif()
+
+  set(VP9_INCLUDE_DIR "${EP_SOURCE_DIR}/vpx")
+
+  ExternalProject_Message(${proj} "VP9_INCLUDE_DIR:${VP9_INCLUDE_DIR}")
+  ExternalProject_Message(${proj} "VP9_LIBRARY_DIR:${VP9_LIBRARY_DIR}")
 
   if(WIN32)
     if("${CMAKE_GENERATOR}" MATCHES "(Win64|IA64)")
-      SET(VP9_LIBRARY optimized ${VP9_LIBRARY_DIR}/x64/Release/vpxmd.lib debug ${VP9_LIBRARY_DIR}/x64/Debug/vpxmdd.lib)
+      set(VP9_LIBRARY optimized ${VP9_LIBRARY_DIR}/x64/Release/vpxmd.lib debug ${VP9_LIBRARY_DIR}/x64/Debug/vpxmdd.lib)
     else()
-      SET(VP9_LIBRARY optimized ${VP9_LIBRARY_DIR}/Win32/Release/vpxmd.lib debug ${VP9_LIBRARY_DIR}/Win32/Debug/vpxmdd.lib)
+      set(VP9_LIBRARY optimized ${VP9_LIBRARY_DIR}/Win32/Release/vpxmd.lib debug ${VP9_LIBRARY_DIR}/Win32/Debug/vpxmdd.lib)
     endif()
   else()
     set(VP9_LIBRARY ${VP9_LIBRARY_DIR}/libvpx.a)
-    set(${proj}_LIBRARY_PATHS_LAUNCHER_BUILD ${VP9_LIBRARY_DIR})
   endif()
-  
+
+  ExternalProject_Message(${proj} "VP9_LIBRARY:${VP9_LIBRARY}")
+
   ExternalProject_GenerateProjectDescription_Step(${proj}
     VERSION "v1.6.1"
     LICENSE_FILES "https://raw.githubusercontent.com/openigtlink/CodecLibrariesFile/master/VP9/License.txt"
     )
-  set(Slicer_VP9_DIR ${VP9_LIBRARY_DIR})
 
   #-----------------------------------------------------------------------------
   # Launcher setting specific to build tree
 
   # library paths
+  set(${proj}_LIBRARY_PATHS_LAUNCHER_BUILD)
+  if(UNIX)
+    list(APPEND ${proj}_LIBRARY_PATHS_LAUNCHER_BUILD
+      ${VP9_LIBRARY_DIR}
+      )
+  endif()
   mark_as_superbuild(
     VARS ${proj}_LIBRARY_PATHS_LAUNCHER_BUILD
     LABELS "LIBRARY_PATHS_LAUNCHER_BUILD"
     )
 
   # paths
-  set(${proj}_PATHS_LAUNCHER_BUILD ${Slicer_VP9_DIR})
+  set(${proj}_PATHS_LAUNCHER_BUILD
+    ${VP9_LIBRARY_DIR}
+    )
   mark_as_superbuild(
     VARS ${proj}_PATHS_LAUNCHER_BUILD
     LABELS "PATHS_LAUNCHER_BUILD"
@@ -153,7 +182,6 @@ if(NOT DEFINED ${proj}_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
 
   # environment variables
   set(${proj}_ENVVARS_LAUNCHER_BUILD
-    "VP9_LIBRARY=${Slicer_VP9_DIR}/vpx"
     )
   mark_as_superbuild(
     VARS ${proj}_ENVVARS_LAUNCHER_BUILD
@@ -175,16 +203,27 @@ if(NOT DEFINED ${proj}_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
     LABELS "LIBRARY_PATHS_LAUNCHER_INSTALLED"
     )
 
+  # paths
+  set(${proj}_PATHS_LAUNCHER_INSTALLED
+    )
+  mark_as_superbuild(
+    VARS ${proj}_PATHS_LAUNCHER_INSTALLED
+    LABELS "PATHS_LAUNCHER_INSTALLED"
+    )
+
   # environment variables
   set(${proj}_ENVVARS_LAUNCHER_INSTALLED
-    "VP9_LIBRARY=<APPLAUNCHER_DIR>/lib/VP9/lib/vp9"
     )
   mark_as_superbuild(
     VARS ${proj}_ENVVARS_LAUNCHER_INSTALLED
     LABELS "ENVVARS_LAUNCHER_INSTALLED"
     )
-ENDIF()
+else()
+  ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDS})
+endif()
 
-set(VP9_DIR ${VP9_LIBRARY_DIR})
-ExternalProject_Message(${proj} "VP9_DIR:${VP9_LIBRARY_DIR}")
-mark_as_superbuild(VP9_DIR:PATH)
+mark_as_superbuild(VP9_LIBRARY:STRING)
+
+set(${proj}_DIR ${VP9_LIBRARY_DIR})
+mark_as_superbuild(${proj}_DIR:PATH)
+# ExternalProject_Message(${proj} "${proj}_DIR:${${proj}_DIR}")
