@@ -104,13 +104,14 @@ public:
 vtkMRMLIGTLConnectorNode::vtkInternal::vtkInternal(vtkMRMLIGTLConnectorNode* external)
   : External(external)
 {
-  this->IOConnector = igtlio::ConnectorPointer::New();
+  this->IOConnector = igtlio::Connector::New();
 }
 
 
 //---------------------------------------------------------------------------
 vtkMRMLIGTLConnectorNode::vtkInternal::~vtkInternal()
 {
+  IOConnector->Delete();
 }
 
 //----------------------------------------------------------------------------
@@ -143,7 +144,7 @@ unsigned int vtkMRMLIGTLConnectorNode::vtkInternal::AssignOutGoingNodeToDevice(v
     vtkSmartPointer<vtkMatrix4x4> mat = vtkSmartPointer<vtkMatrix4x4>::New();
     vtkMRMLLinearTransformNode* transformNode = vtkMRMLLinearTransformNode::SafeDownCast(node);
     transformNode->GetMatrixTransformToParent(mat);
-    igtlio::TransformConverter::ContentData content = { mat, transformNode->GetName() };
+    igtlio::TransformConverter::ContentData content = { mat, transformNode->GetName(),"",""};
     transformDevice->SetContent(content);
     modifiedEvent = vtkMRMLLinearTransformNode::TransformModifiedEvent;
   }
