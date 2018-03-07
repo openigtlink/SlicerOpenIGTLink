@@ -31,6 +31,7 @@
 
 class vtkMRMLIGTLQueryNode;
 class vtkMutexLock;
+class vtkSlicerOpenIGTLinkIFCommand;
 
 typedef void* IGTLDevicePointer;
 
@@ -222,10 +223,25 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   ///  TODO: return a command object that can be observed
   void SendCommand(std::string device_id, std::string command, std::string content, bool blocking = true, double timeout_s = 5);
 
+  /// Sends the specified command and attaches an observer
+  /// Blocking behavior and device_id are set in the command object
+  /// Records the id of the command in the command object
+  /// Invokes a CommandResponse event on the command object when a response is received.
+  void SendCommand(vtkSlicerOpenIGTLinkIFCommand* command);
+
   /// Send a command response from the given device. Asynchronous.
   /// Precondition: The given device has received a query that is not yet responded to.
   /// TODO: return a command object that can be observed
   void SendCommandResponse(std::string device_id, std::string command, std::string content);
+
+  /// Send a commmand response from the specified command.
+  void SendCommandResponse(vtkSlicerOpenIGTLinkIFCommand* command);
+
+  /// Cancels the command in the specified device
+  void CancelCommand(std::string device_id, int command_id);
+
+  /// Cancels the specified command
+  void CancelCommand(vtkSlicerOpenIGTLinkIFCommand* command);
 
   //----------------------------------------------------------------
   // For OpenIGTLink time stamp access
@@ -289,6 +305,17 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   vtkSetStringMacro(OutgoingNodeReferenceMRMLAttributeName);
   vtkGetStringMacro(OutgoingNodeReferenceMRMLAttributeName);
   
+  //----------------------------------------------------------------
+  // Command processing
+  //----------------------------------------------------------------
+
+  /// Callback for when commands are received
+  void ReceiveCommandResponse(vtkObject *caller, unsigned long event, void *callData);
+
+  // List of commands sent using SendCommand(vtkSlicerOpenIGTLinkIFCommand* ...)
+  std::vector<vtkSlicerOpenIGTLinkIFCommand*> PendingCommands;
+  vtkMutexLock* PendingCommandMutex;
+
   private:
     class vtkInternal;
     vtkInternal * Internal;  
