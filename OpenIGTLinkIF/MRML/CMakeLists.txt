@@ -27,9 +27,9 @@ if(OpenIGTLink_PROTOCOL_VERSION GREATER 1)
     )
 endif()
 
-if(OpenIGTLink_ENABLE_VIDEOSTREAMING)
+if(Slicer_USE_VP9)
   list(APPEND ${KIT}_SRCS
-  vtkMRMLBitStreamNode.cxx
+    vtkMRMLBitStreamNode.cxx
   )
 endif()
 

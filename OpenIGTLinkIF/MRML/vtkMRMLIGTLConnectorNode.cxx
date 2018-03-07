@@ -84,7 +84,7 @@ public:
   vtkMRMLNode* GetOrAddMRMLNodeforDevice(igtlio::Device* device);
 
   vtkMRMLIGTLConnectorNode* External;
-  igtlio::ConnectorPointer IOConnector;
+  igtlio::Connector* IOConnector;
 
   typedef std::map<std::string, igtlio::Connector::NodeInfoType>   NodeInfoMapType;
   typedef std::map<std::string, vtkSmartPointer <igtlio::Device> > MessageDeviceMapType;
@@ -104,13 +104,14 @@ public:
 vtkMRMLIGTLConnectorNode::vtkInternal::vtkInternal(vtkMRMLIGTLConnectorNode* external)
   : External(external)
 {
-  this->IOConnector = igtlio::ConnectorPointer::New();
+  this->IOConnector = igtlio::Connector::New();
 }
 
 
 //---------------------------------------------------------------------------
 vtkMRMLIGTLConnectorNode::vtkInternal::~vtkInternal()
 {
+  IOConnector->Delete();
 }
 
 //----------------------------------------------------------------------------
@@ -143,7 +144,7 @@ unsigned int vtkMRMLIGTLConnectorNode::vtkInternal::AssignOutGoingNodeToDevice(v
     vtkSmartPointer<vtkMatrix4x4> mat = vtkSmartPointer<vtkMatrix4x4>::New();
     vtkMRMLLinearTransformNode* transformNode = vtkMRMLLinearTransformNode::SafeDownCast(node);
     transformNode->GetMatrixTransformToParent(mat);
-    igtlio::TransformConverter::ContentData content = { mat, transformNode->GetName() };
+    igtlio::TransformConverter::ContentData content = { mat, transformNode->GetName(),"",""};
     transformDevice->SetContent(content);
     modifiedEvent = vtkMRMLLinearTransformNode::TransformModifiedEvent;
   }
