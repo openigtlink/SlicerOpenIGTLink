@@ -31,10 +31,10 @@ set(OpenIGTLinkIO_DIR "" CACHE PATH "OpenIGTLinkIO directory")
 find_package(OpenIGTLinkIO REQUIRED PATHS ${OpenIGTLinkIO_DIR})
 
 #-----------------------------------------------------------------------------
+add_subdirectory(Command)
 add_subdirectory(MRML)
 add_subdirectory(Logic)
 add_subdirectory(Widgets)
-add_subdirectory(Command)
 
 #-----------------------------------------------------------------------------
 set(MODULE_EXPORT_DIRECTIVE "Q_SLICER_QTMODULES_OPENIGTLINKIF_EXPORT")

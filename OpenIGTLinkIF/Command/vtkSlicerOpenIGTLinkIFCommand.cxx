@@ -162,7 +162,6 @@ const char* vtkSlicerOpenIGTLinkIFCommand::GetResponseMessage(int responseID/*=0
 
   // If responseID is > 0 or if above is not true, look instead for:
   // <Command><Response Success="true/false" Message="MESSAGE_TEXT"></Response></Command>
-  vtkXMLDataElement* nestedElement;
   int numberOfNestedElements = this->ResponseXML->GetNumberOfNestedElements();
   if (responseID >= numberOfNestedElements)
     {
@@ -170,7 +169,7 @@ const char* vtkSlicerOpenIGTLinkIFCommand::GetResponseMessage(int responseID/*=0
     return "";
     }
 
-  nestedElement = this->ResponseXML->GetNestedElement(responseID);
+  vtkXMLDataElement* nestedElement = this->ResponseXML->GetNestedElement(responseID);
   if (!nestedElement)
     {
     vtkErrorMacro("Could not find requested command response");
