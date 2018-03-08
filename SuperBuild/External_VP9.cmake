@@ -76,7 +76,7 @@ ExternalProject_Execute(${proj} \"build\" make)
         ${${proj}_DEPENDS}
       )
 
-    set(VP9_LIBRARY_DIR "${EP_SOURCE_DIR}/VP9")
+    set(VP9_LIBRARY_DIR "${EP_SOURCE_DIR}")
 
   elseif(WIN32)
 

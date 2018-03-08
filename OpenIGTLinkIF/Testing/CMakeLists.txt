@@ -30,6 +30,4 @@ set_target_properties(${KIT}CxxTests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE
 target_link_libraries(${KIT}CxxTests ${${KIT}_TARGET_LIBRARIES})
 
 #-----------------------------------------------------------------------------
-foreach(testname ${KIT_TEST_NAMES})
-  simple_test(${testname} )
-endforeach()
+simple_test(vtkMRMLConnectorCommandSendAndReceiveTest)

@@ -28,7 +28,7 @@ if(OpenIGTLink_PROTOCOL_VERSION GREATER 1)
     )
 endif()
 
-if(Slicer_USE_VP9)
+if(SlicerOpenIGTLink_USE_VP9)
   list(APPEND ${KIT}_SRCS
     vtkMRMLBitStreamNode.cxx
   )
