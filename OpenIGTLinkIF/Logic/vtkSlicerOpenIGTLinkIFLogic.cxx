@@ -17,7 +17,6 @@
 #include <vtkSlicerColorLogic.h>
 
 // OpenIGTLinkIF MRML includes
-#include "vtkIGTLCircularBuffer.h"
 #include "vtkMRMLIGTLConnectorNode.h"
 #include "vtkMRMLImageMetaListNode.h"
 #include "vtkMRMLLabelMetaListNode.h"
@@ -28,8 +27,10 @@
 #include "vtkMRMLIGTLStatusNode.h"
 #include "vtkMRMLIGTLSensorNode.h"
 
+#include "igtlConfigure.h"
 #if defined(OpenIGTLink_ENABLE_VIDEOSTREAMING)
-  #include "vtkMRMLBitStreamNode.h"
+  #include "vtkMRMLBitStreamVolumeNode.h"
+  #include "vtkMRMLIGTLIOCompressionDeviceNode.h"
 #endif
 
 // OpenIGTLinkIO Device includes
@@ -155,9 +156,7 @@ void vtkSlicerOpenIGTLinkIFLogic::RegisterNodes()
   scene->RegisterNodeClass(vtkNew<vtkMRMLIGTLTrackingDataBundleNode>().GetPointer());
   scene->RegisterNodeClass(vtkNew<vtkMRMLIGTLStatusNode>().GetPointer());
   scene->RegisterNodeClass(vtkNew<vtkMRMLIGTLSensorNode>().GetPointer());
-#if defined(OpenIGTLink_ENABLE_VIDEOSTREAMING)
-  scene->RegisterNodeClass(vtkNew<vtkMRMLBitStreamNode>().GetPointer());
-#endif
+  scene->RegisterNodeClass(vtkNew<vtkMRMLIGTLIOCompressionDeviceNode>().GetPointer());
 }
 
 //---------------------------------------------------------------------------
