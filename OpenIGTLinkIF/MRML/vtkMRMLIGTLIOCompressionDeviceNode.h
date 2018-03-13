@@ -40,7 +40,11 @@ public:
 
   virtual std::string GetDeviceType() const;
   virtual int UncompressedDataFromBitStream(std::string bitStreamData, bool checkCRC);
-  virtual std::string* GetBitStreamFromContentUsingDefaultDevice() ;
+
+  virtual std::string GetCompressedBitStreamFromData();
+
+  std::string GetBitStreamFromContentUsingDefaultDevice();
+
   int LinkIGTLIOVideoDevice(igtlio::Device* device);
   int LinkIGTLIOImageDevice(igtlio::Device* device);
 
