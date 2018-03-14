@@ -309,9 +309,6 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   // Command processing
   //----------------------------------------------------------------
 
-  /// Callback for when commands are received
-  void ReceiveCommandResponse(vtkObject *caller, unsigned long event, void *callData);
-
   // List of commands sent using SendCommand(vtkSlicerOpenIGTLinkIFCommand* ...)
   std::vector<vtkSlicerOpenIGTLinkIFCommand*> PendingCommands;
   vtkMutexLock* PendingCommandMutex;
