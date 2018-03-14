@@ -60,12 +60,12 @@ Version:   $Revision: 1.2 $
 vtkMRMLNodeNewMacro(vtkMRMLIGTLConnectorNode);
 
 //---------------------------------------------------------------------------
-class vtkMRMLIGTLConnectorNode::vtkInternal:public vtkObject
+class vtkMRMLIGTLConnectorNode::vtkInternal
 {
 public:
   //---------------------------------------------------------------------------
   vtkInternal(vtkMRMLIGTLConnectorNode* external);
-  ~vtkInternal();
+  virtual ~vtkInternal();
 
   ///  Send the given command from the given device.
   /// - If using BLOCKING, the call blocks until a response appears or timeout. Return response.
@@ -383,7 +383,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetOrAddMRMLNodeforDevice(ig
     volumeNode->SetName(deviceName.c_str());
     this->External->GetScene()->SaveStateForUndo();
     volumeNode->SetDescription("Received by OpenIGTLink");
-    vtkDebugMacro("Name vol node " << volumeNode->GetClassName());
+    vtkDebugWithObjectMacro(this->External, "Name vol node " << volumeNode->GetClassName());
     this->External->GetScene()->AddNode(volumeNode);
 #if defined(OpenIGTLink_ENABLE_VIDEOSTREAMING)
     vtkMRMLBitStreamNode * tempNode = vtkMRMLBitStreamNode::SafeDownCast(volumeNode);
@@ -411,7 +411,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetOrAddMRMLNodeforDevice(ig
     memcpy(imageData->GetScalarPointer(), srcImageData->GetScalarPointer(), dataSize);
     //videoDevice->GetContent().image = imageData;
 #endif
-    vtkDebugMacro("Set basic display info");
+    vtkDebugWithObjectMacro(this->External, "Set basic display info");
     bool scalarDisplayNodeRequired = (numberOfComponents == 1);
     vtkSmartPointer<vtkMRMLVolumeDisplayNode> displayNode;
     if (scalarDisplayNodeRequired)
@@ -583,7 +583,7 @@ igtlio::CommandDevicePointer vtkMRMLIGTLConnectorNode::vtkInternal::SendCommandR
   igtlio::CommandDevicePointer device = igtlio::CommandDevice::SafeDownCast(this->IOConnector->GetDevice(key));
   if (!device)
     {
-    vtkErrorMacro("Could not find device specified!");
+    vtkErrorWithObjectMacro(this->External, "Could not find device specified!");
     return nullptr;
     }
 
@@ -825,12 +825,16 @@ void vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents(vtkObject *caller, unsig
       command->SetCommandName(commandName.c_str());
       command->SetCommandText(commandContent.c_str());
       command->SetQueryID(queryID);
+      command->SetDeviceID(commandDevice->GetDeviceName().c_str());
 
-      this->InvokeEvent(mrmlEvent, command);
+      this->InvokeEvent(mrmlEvent, command.GetPointer());
       return;
       }
     else if (event==modifiedDevice->CommandResponseReceivedEvent)
       {
+      // TODO: It is inconsistent that command events are invoked with vtkSlicerOpenIGTLinkIFCommand attached
+      // and command response events are invoked with igtlio::Device attached.
+      // Probably command response event should be invoked with vtkSlicerOpenIGTLinkIFCommand attached.
       this->InvokeEvent(mrmlEvent, modifiedDevice);
       return;
       }
@@ -1737,7 +1741,10 @@ void vtkMRMLIGTLConnectorNode::SendCommandResponse(vtkSlicerOpenIGTLinkIFCommand
     vtkErrorMacro("vtkMRMLIGTLConnectorNode::SendCommandResponse failed: Invalid command");
     }
 
-  this->SendCommandResponse(command->GetDeviceID(), command->GetCommandName(), command->GetResponseText());
+  const char* deviceID = command->GetDeviceID();
+  const char* commandName = command->GetCommandName();
+  const char* responseText = command->GetResponseText();
+  this->SendCommandResponse(deviceID ? deviceID : "", commandName ? commandName : "", responseText ? responseText : "");
 }
 
 //----------------------------------------------------------------------------
