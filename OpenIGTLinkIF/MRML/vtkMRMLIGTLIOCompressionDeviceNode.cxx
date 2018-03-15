@@ -20,8 +20,8 @@ vtkMRMLNodeNewMacro(vtkMRMLIGTLIOCompressionDeviceNode);
 //---------------------------------------------------------------------------
 vtkMRMLIGTLIOCompressionDeviceNode::vtkMRMLIGTLIOCompressionDeviceNode()
 {
-  this->defaultVideoDevice = igtlio::VideoDevice::New();
-  this->linkedDevice = NULL;
+  this->DefaultVideoDevice = igtlio::VideoDevice::New();
+  this->LinkedDevice = NULL;
   this->CompressImageDeviceContent = false;
 }
 
@@ -58,9 +58,9 @@ void vtkMRMLIGTLIOCompressionDeviceNode::ProcessLinkedDeviceModifiedEvents( vtkO
       this->Content->deviceName = std::string(imageDevice->GetDeviceName());
       this->Content->image = imageDevice->GetContent().image;
       this->GetBitStreamFromContentUsingDefaultDevice(); // inside this line FrameMSG is copied.
-      if(defaultVideoDevice->GetContent().keyFrameUpdated)
+      if(DefaultVideoDevice->GetContent().keyFrameUpdated)
         {
-        this->CopyVideoMessageIntoKeyFrameMSG(defaultVideoDevice->GetKeyFrameMessage());
+        this->CopyVideoMessageIntoKeyFrameMSG(DefaultVideoDevice->GetKeyFrameMessage());
         Content->keyFrameUpdated = true;
         }
       }
@@ -93,7 +93,7 @@ void vtkMRMLIGTLIOCompressionDeviceNode::CopyVideoMessageIntoFrameMSG(igtl::Vide
 int vtkMRMLIGTLIOCompressionDeviceNode::LinkIGTLIOVideoDevice(igtlio::Device* device)
 {
   igtlio::VideoDevice* modifiedDevice = reinterpret_cast<igtlio::VideoDevice*>(device);
-  this->Content->codecName = std::string(modifiedDevice->GetContent().videoMessage->GetCodecType());
+  this->Content->codecType= std::string(modifiedDevice->GetContent().videoMessage->GetCodecType());
   this->Content->deviceName = std::string(modifiedDevice->GetDeviceName());
   this->Content->keyFrameUpdated = modifiedDevice->GetContent().keyFrameUpdated;
   this->Content->image = modifiedDevice->GetContent().image;
@@ -104,7 +104,7 @@ int vtkMRMLIGTLIOCompressionDeviceNode::LinkIGTLIOVideoDevice(igtlio::Device* de
     Content->keyFrameUpdated = true;
     }
   modifiedDevice->AddObserver(modifiedDevice->GetDeviceContentModifiedEvent(), this, &vtkMRMLIGTLIOCompressionDeviceNode::ProcessLinkedDeviceModifiedEvents);
-  this->linkedDevice = device;
+  this->LinkedDevice = device;
   return 0;
 }
 
@@ -112,18 +112,18 @@ int vtkMRMLIGTLIOCompressionDeviceNode::LinkIGTLIOImageDevice(igtlio::Device* de
 {
   igtlio::ImageDevice* modifiedDevice = reinterpret_cast<igtlio::ImageDevice*>(device);
   
-  this->Content->codecName = defaultVideoDevice->GetContent().codecName;
+  this->Content->codecType = DefaultVideoDevice->GetContent().codecName;
   this->Content->deviceName = std::string(modifiedDevice->GetDeviceName());
-  igtlio::VideoConverter::ContentData deviceContent = defaultVideoDevice->GetContent();
+  igtlio::VideoConverter::ContentData deviceContent = DefaultVideoDevice->GetContent();
   deviceContent.image = modifiedDevice->GetContent().image;
-  defaultVideoDevice->SetContent(deviceContent);
+  DefaultVideoDevice->SetContent(deviceContent);
   this->Content->image = modifiedDevice->GetContent().image;
   std::string frameMessage(this->GetBitStreamFromContentUsingDefaultDevice()); // in this line FrameMSG is updated.
   this->Content->keyFrameMessage.resize(frameMessage.length());
   this->Content->keyFrameMessage.assign(frameMessage, frameMessage.length());
   Content->keyFrameUpdated = true;
   modifiedDevice->AddObserver(modifiedDevice->GetDeviceContentModifiedEvent(), this, &vtkMRMLIGTLIOCompressionDeviceNode::ProcessLinkedDeviceModifiedEvents);
-  this->linkedDevice = device;
+  this->LinkedDevice = device;
   return 0;
 }
 
@@ -131,7 +131,7 @@ int vtkMRMLIGTLIOCompressionDeviceNode::LinkIGTLIOImageDevice(igtlio::Device* de
 int vtkMRMLIGTLIOCompressionDeviceNode::UncompressedDataFromBitStream(std::string bitStreamData, bool checkCRC)
 {
   //To do : use the buffer to update Content.image
-   if (this->linkedDevice == NULL && this->defaultVideoDevice == NULL)
+   if (this->LinkedDevice == NULL && this->DefaultVideoDevice == NULL)
     {
       vtkWarningMacro("Video Devices are NULL, message not generated.")
       return 0;
@@ -150,22 +150,22 @@ int vtkMRMLIGTLIOCompressionDeviceNode::UncompressedDataFromBitStream(std::strin
   buffer->AllocatePack();
   memcpy(buffer->GetPackBodyPointer(), bitStreamData.c_str()+IGTL_HEADER_SIZE, buffer->GetPackBodySize());
   if (strcmp(headerMsg->GetDeviceType(), igtlio::ImageConverter::GetIGTLTypeName()) == 0 ||
-      this->linkedDevice == NULL ||
-      this->linkedDevice->GetDeviceType().compare(igtlio::ImageConverter::GetIGTLTypeName()) == 0)
+      this->LinkedDevice == NULL ||
+      this->LinkedDevice->GetDeviceType().compare(igtlio::ImageConverter::GetIGTLTypeName()) == 0)
     {
-    if (this->defaultVideoDevice->ReceiveIGTLMessage(buffer, checkCRC))
+    if (this->DefaultVideoDevice->ReceiveIGTLMessage(buffer, checkCRC))
       {
-      this->Content->image = defaultVideoDevice->GetContent().image;
+      this->Content->image = DefaultVideoDevice->GetContent().image;
       this->Modified();
       return 1;
       }
     }
   else if (strcmp(headerMsg->GetDeviceType(), igtlio::VideoConverter::GetIGTLTypeName()) == 0)
     {
-    igtlio::VideoDevice* videoDevice = reinterpret_cast<igtlio::VideoDevice*>(this->linkedDevice.GetPointer());
+    igtlio::VideoDevice* videoDevice = reinterpret_cast<igtlio::VideoDevice*>(this->LinkedDevice.GetPointer());
     if (videoDevice)
       {
-      if (this->linkedDevice->ReceiveIGTLMessage(buffer, checkCRC))
+      if (this->LinkedDevice->ReceiveIGTLMessage(buffer, checkCRC))
         {
         this->Content->image = videoDevice->GetContent().image;
         this->Modified();
@@ -191,10 +191,10 @@ std::string vtkMRMLIGTLIOCompressionDeviceNode::GetBitStreamFromContentUsingDefa
     vtkWarningMacro("Image is NULL, message not generated.")
     return "";
     }
-  igtlio::VideoConverter::ContentData deviceContent = defaultVideoDevice->GetContent();
+  igtlio::VideoConverter::ContentData deviceContent = DefaultVideoDevice->GetContent();
   deviceContent.image = Content->image;
-  defaultVideoDevice->SetContent(deviceContent);
-  igtl::VideoMessage::Pointer videoMessage = dynamic_pointer_cast<igtl::VideoMessage>(defaultVideoDevice->GetIGTLMessage());
+  DefaultVideoDevice->SetContent(deviceContent);
+  igtl::VideoMessage::Pointer videoMessage = dynamic_pointer_cast<igtl::VideoMessage>(DefaultVideoDevice->GetIGTLMessage());
   if (videoMessage.GetPointer() == NULL)
     {
     vtkWarningMacro("Encoding failed, message not generated.")

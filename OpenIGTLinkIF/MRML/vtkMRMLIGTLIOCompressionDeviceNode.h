@@ -48,14 +48,14 @@ public:
   int LinkIGTLIOVideoDevice(igtlio::Device* device);
   int LinkIGTLIOImageDevice(igtlio::Device* device);
 
-  igtlio::Device* GetLinkedIGTLIODevice(){return linkedDevice;};
+  igtlio::Device* GetLinkedIGTLIODevice(){return this->LinkedDevice;};
 
   // bool flag  whether compress the image data when it gets updated.
   vtkSetMacro(CompressImageDeviceContent, bool);
   vtkGetMacro(CompressImageDeviceContent, bool);
 
-  void SetDefaultDeviceName(std::string name) {defaultVideoDevice->SetDeviceName(name);};
-  std::string GetDefaultDeviceName() {return defaultVideoDevice->GetDeviceName();};
+  void SetDefaultDeviceName(std::string name) {this->DefaultVideoDevice->SetDeviceName(name);};
+  std::string GetDefaultDeviceName() {return this->DefaultVideoDevice->GetDeviceName();};
 
 public:
   static vtkMRMLIGTLIOCompressionDeviceNode *New();
@@ -69,8 +69,8 @@ protected:
 private:
   void CopyVideoMessageIntoKeyFrameMSG(igtl::VideoMessage::Pointer keyFrameMsg);
   void CopyVideoMessageIntoFrameMSG(igtl::VideoMessage::Pointer frameMsg);
-  igtlio::DevicePointer linkedDevice;
-  igtlio::VideoDevicePointer defaultVideoDevice;
+  igtlio::DevicePointer LinkedDevice;
+  igtlio::VideoDevicePointer DefaultVideoDevice;
   bool CompressImageDeviceContent;
 };
 
