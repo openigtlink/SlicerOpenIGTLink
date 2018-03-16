@@ -74,6 +74,8 @@ protected:
 
 int vtkMRMLConnectorCommandSendAndReceiveTest(int argc, char * argv [] )
 {
+  int port = 18955;
+
   // Setup the Server and client, as well as the event observers.
   vtkSmartPointer<CommandObserver> commandServerObsever = CommandObserver::New();
   vtkSmartPointer<vtkMRMLIGTLConnectorNode> serverConnectorNode = vtkMRMLIGTLConnectorNode::New();
@@ -81,12 +83,12 @@ int vtkMRMLConnectorCommandSendAndReceiveTest(int argc, char * argv [] )
   serverConnectorNode->AddObserver(serverConnectorNode->CommandReceivedEvent, commandServerObsever, &CommandObserver::onCommandReceivedEventFunc);
   // The connector type, server port, and etc,  are set by the qSlicerIGTLConnectorPropertyWidget
   // To make the test simple, just set the port directly.
-  serverConnectorNode->SetTypeServer(18944);
+  serverConnectorNode->SetTypeServer(port);
   serverConnectorNode->Start();
   igtl::Sleep(20);
   vtkSmartPointer<vtkMRMLIGTLConnectorNode> clientConnectorNode = vtkMRMLIGTLConnectorNode::New();
   clientConnectorNode->AddObserver(clientConnectorNode->CommandResponseReceivedEvent, commandServerObsever, &CommandObserver::onCommanResponseReceivedEventFunc);
-  clientConnectorNode->SetTypeClient("localhost", 18944);
+  clientConnectorNode->SetTypeClient("localhost", port);
   clientConnectorNode->Start();
   
   // Make sure the server and client are connected.
