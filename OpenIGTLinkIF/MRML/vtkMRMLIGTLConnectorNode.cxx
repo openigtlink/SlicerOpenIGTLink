@@ -214,6 +214,12 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
   vtkObject * vtkNotUsed(caller), unsigned long vtkNotUsed(event), igtlio::Device * modifiedDevice)
 {
   vtkMRMLNode* modifiedNode = this->GetOrAddMRMLNodeforDevice(modifiedDevice);
+  if (!modifiedNode)
+  {
+    // Could not find or add node.
+    return;
+  }
+
   const std::string deviceType = modifiedDevice->GetDeviceType();
   const std::string deviceName = modifiedDevice->GetDeviceName();
   if (this->External->GetNodeTagFromDeviceType(deviceType.c_str()).size() > 0)
@@ -326,6 +332,13 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetOrAddMRMLNodeforDevice(ig
       return NULL;
     }
   }
+
+  if (!this->External->GetScene())
+  {
+    // No scene to add nodes to.
+    return NULL;
+  }
+
   // Found the node and return the node;
   NodeInfoMapType::iterator inIter;
   for (inIter = this->IncomingMRMLNodeInfoMap.begin();
