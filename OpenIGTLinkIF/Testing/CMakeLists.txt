@@ -24,6 +24,10 @@ set(${KIT}_TARGET_LIBRARIES
   SlicerBaseLogic
   )
 
+# Add '--launcher-additional-settings' to launch command
+list(FIND Slicer_LAUNCH_COMMAND "--launch" launch_index)
+list(INSERT Slicer_LAUNCH_COMMAND ${launch_index} ${Slicer_ADDITIONAL_LAUNCHER_SETTINGS}) 
+
 #-----------------------------------------------------------------------------
 add_executable(${KIT}CxxTests ${Tests})
 set_target_properties(${KIT}CxxTests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${Slicer_BIN_DIR})
