@@ -1,4 +1,4 @@
-#include "vtkMRMLIGTLIOCompressionDeviceNode.h"
+#include "vtkIGTLStreamingVolumeCodec.h"
 
 // MRML includes
 #include "vtkMRMLScene.h"
@@ -16,9 +16,9 @@
 #include "igtlioImageDevice.h"
 
 //---------------------------------------------------------------------------
-vtkMRMLNodeNewMacro(vtkMRMLIGTLIOCompressionDeviceNode);
+vtkStandardNewMacro(vtkIGTLStreamingVolumeCodec);
 //---------------------------------------------------------------------------
-vtkMRMLIGTLIOCompressionDeviceNode::vtkMRMLIGTLIOCompressionDeviceNode()
+vtkIGTLStreamingVolumeCodec::vtkIGTLStreamingVolumeCodec()
 {
   this->DefaultVideoDevice = igtlio::VideoDevice::New();
   this->LinkedDevice = NULL;
@@ -26,18 +26,18 @@ vtkMRMLIGTLIOCompressionDeviceNode::vtkMRMLIGTLIOCompressionDeviceNode()
 }
 
 //---------------------------------------------------------------------------
-vtkMRMLIGTLIOCompressionDeviceNode::~vtkMRMLIGTLIOCompressionDeviceNode()
+vtkIGTLStreamingVolumeCodec::~vtkIGTLStreamingVolumeCodec()
 {
 }
 //---------------------------------------------------------------------------
-std::string vtkMRMLIGTLIOCompressionDeviceNode::GetDeviceType() const
+std::string vtkIGTLStreamingVolumeCodec::GetDeviceType() const
 {
   return "igtlioVideoDevice";
 }
 
 
 //----------------------------------------------------------------------------
-void vtkMRMLIGTLIOCompressionDeviceNode::ProcessLinkedDeviceModifiedEvents( vtkObject *caller, unsigned long event, void *callData )
+void vtkIGTLStreamingVolumeCodec::ProcessLinkedDeviceModifiedEvents( vtkObject *caller, unsigned long event, void *callData )
 {
   igtlio::Device* modifiedDevice = reinterpret_cast<igtlio::Device*>(caller);
   if (modifiedDevice->GetDeviceType().compare(igtlio::VideoConverter::GetIGTLTypeName()) == 0)
@@ -57,7 +57,7 @@ void vtkMRMLIGTLIOCompressionDeviceNode::ProcessLinkedDeviceModifiedEvents( vtkO
       igtlio::ImageDevice* imageDevice = reinterpret_cast<igtlio::ImageDevice*>(caller);
       this->Content->deviceName = std::string(imageDevice->GetDeviceName());
       this->Content->image = imageDevice->GetContent().image;
-      this->GetBitStreamFromContentUsingDefaultDevice(); // inside this line FrameMSG is copied.
+      this->GetStreamFromContentUsingDefaultDevice(); // inside this line FrameMSG is copied.
       if(DefaultVideoDevice->GetContent().keyFrameUpdated)
         {
         this->CopyVideoMessageIntoKeyFrameMSG(DefaultVideoDevice->GetKeyFrameMessage());
@@ -68,29 +68,29 @@ void vtkMRMLIGTLIOCompressionDeviceNode::ProcessLinkedDeviceModifiedEvents( vtkO
     this->InvokeEvent(DeviceModifiedEvent);
 }
 
-void vtkMRMLIGTLIOCompressionDeviceNode::CopyVideoMessageIntoKeyFrameMSG(igtl::VideoMessage::Pointer keyFrameMsg)
+void vtkIGTLStreamingVolumeCodec::CopyVideoMessageIntoKeyFrameMSG(igtl::VideoMessage::Pointer keyFrameMsg)
 {
   igtl_header* h_key = (igtl_header*) keyFrameMsg->GetPackPointer();
   igtl_header_convert_byte_order(h_key);
   char * messageString = new char[keyFrameMsg->GetPackSize()];
   memcpy(messageString, (char*)h_key, IGTL_HEADER_SIZE);
   memcpy(messageString+IGTL_HEADER_SIZE, keyFrameMsg->GetPackBodyPointer(), keyFrameMsg->GetPackSize() - IGTL_HEADER_SIZE);
-  Content->keyFrameMessage.resize(keyFrameMsg->GetPackSize());
-  Content->keyFrameMessage.assign(messageString, keyFrameMsg->GetPackSize());
+  Content->keyFrame.resize(keyFrameMsg->GetPackSize());
+  Content->keyFrame.assign(messageString, keyFrameMsg->GetPackSize());
 }
 
-void vtkMRMLIGTLIOCompressionDeviceNode::CopyVideoMessageIntoFrameMSG(igtl::VideoMessage::Pointer frameMsg)
+void vtkIGTLStreamingVolumeCodec::CopyVideoMessageIntoFrameMSG(igtl::VideoMessage::Pointer frameMsg)
 {
   igtl_header* h_key = (igtl_header*) frameMsg->GetPackPointer();
   igtl_header_convert_byte_order(h_key);
   char * messageString = new char[frameMsg->GetPackSize()];
   memcpy(messageString, (char*)h_key, IGTL_HEADER_SIZE);
   memcpy(messageString+IGTL_HEADER_SIZE, frameMsg->GetPackBodyPointer(), frameMsg->GetPackSize() - IGTL_HEADER_SIZE);
-  Content->frameMessage.resize(frameMsg->GetPackSize());
-  Content->frameMessage.assign(messageString, frameMsg->GetPackSize());
+  Content->frame.resize(frameMsg->GetPackSize());
+  Content->frame.assign(messageString, frameMsg->GetPackSize());
 }
 
-int vtkMRMLIGTLIOCompressionDeviceNode::LinkIGTLIOVideoDevice(igtlio::Device* device)
+int vtkIGTLStreamingVolumeCodec::LinkIGTLIOVideoDevice(igtlio::Device* device)
 {
   igtlio::VideoDevice* modifiedDevice = reinterpret_cast<igtlio::VideoDevice*>(device);
   this->Content->codecType= std::string(modifiedDevice->GetContent().videoMessage->GetCodecType());
@@ -103,12 +103,12 @@ int vtkMRMLIGTLIOCompressionDeviceNode::LinkIGTLIOVideoDevice(igtlio::Device* de
     this->CopyVideoMessageIntoKeyFrameMSG(modifiedDevice->GetKeyFrameMessage());
     Content->keyFrameUpdated = true;
     }
-  modifiedDevice->AddObserver(modifiedDevice->GetDeviceContentModifiedEvent(), this, &vtkMRMLIGTLIOCompressionDeviceNode::ProcessLinkedDeviceModifiedEvents);
+  modifiedDevice->AddObserver(modifiedDevice->GetDeviceContentModifiedEvent(), this, &vtkIGTLStreamingVolumeCodec::ProcessLinkedDeviceModifiedEvents);
   this->LinkedDevice = device;
   return 0;
 }
 
-int vtkMRMLIGTLIOCompressionDeviceNode::LinkIGTLIOImageDevice(igtlio::Device* device)
+int vtkIGTLStreamingVolumeCodec::LinkIGTLIOImageDevice(igtlio::Device* device)
 {
   igtlio::ImageDevice* modifiedDevice = reinterpret_cast<igtlio::ImageDevice*>(device);
   
@@ -118,17 +118,17 @@ int vtkMRMLIGTLIOCompressionDeviceNode::LinkIGTLIOImageDevice(igtlio::Device* de
   deviceContent.image = modifiedDevice->GetContent().image;
   DefaultVideoDevice->SetContent(deviceContent);
   this->Content->image = modifiedDevice->GetContent().image;
-  std::string frameMessage(this->GetBitStreamFromContentUsingDefaultDevice()); // in this line FrameMSG is updated.
-  this->Content->keyFrameMessage.resize(frameMessage.length());
-  this->Content->keyFrameMessage.assign(frameMessage, frameMessage.length());
+  std::string frameMessage(this->GetStreamFromContentUsingDefaultDevice()); // in this line FrameMSG is updated.
+  this->Content->keyFrame.resize(frameMessage.length());
+  this->Content->keyFrame.assign(frameMessage, frameMessage.length());
   Content->keyFrameUpdated = true;
-  modifiedDevice->AddObserver(modifiedDevice->GetDeviceContentModifiedEvent(), this, &vtkMRMLIGTLIOCompressionDeviceNode::ProcessLinkedDeviceModifiedEvents);
+  modifiedDevice->AddObserver(modifiedDevice->GetDeviceContentModifiedEvent(), this, &vtkIGTLStreamingVolumeCodec::ProcessLinkedDeviceModifiedEvents);
   this->LinkedDevice = device;
   return 0;
 }
 
 //---------------------------------------------------------------------------
-int vtkMRMLIGTLIOCompressionDeviceNode::UncompressedDataFromBitStream(std::string bitStreamData, bool checkCRC)
+int vtkIGTLStreamingVolumeCodec::UncompressedDataFromStream(std::string bitStreamData, bool checkCRC)
 {
   //To do : use the buffer to update Content.image
    if (this->LinkedDevice == NULL && this->DefaultVideoDevice == NULL)
@@ -179,12 +179,12 @@ int vtkMRMLIGTLIOCompressionDeviceNode::UncompressedDataFromBitStream(std::strin
 
 //---------------------------------------------------------------------------
 
-std::string vtkMRMLIGTLIOCompressionDeviceNode::GetCompressedBitStreamFromData()
+std::string vtkIGTLStreamingVolumeCodec::GetCompressedStreamFromData()
 {
-  return this->GetBitStreamFromContentUsingDefaultDevice();
+  return this->GetStreamFromContentUsingDefaultDevice();
 }
 
-std::string vtkMRMLIGTLIOCompressionDeviceNode::GetBitStreamFromContentUsingDefaultDevice()
+std::string vtkIGTLStreamingVolumeCodec::GetStreamFromContentUsingDefaultDevice()
 {
   if (!Content->image)
     {
@@ -201,43 +201,15 @@ std::string vtkMRMLIGTLIOCompressionDeviceNode::GetBitStreamFromContentUsingDefa
     return "";
     }
   this->CopyVideoMessageIntoFrameMSG(videoMessage);
-  std::string compressedBitStream(Content->frameMessage);
+  std::string compressedBitStream(Content->frame);
   return compressedBitStream;
 }
 
 //---------------------------------------------------------------------------
-void vtkMRMLIGTLIOCompressionDeviceNode::PrintSelf(ostream& os, vtkIndent indent)
+void vtkIGTLStreamingVolumeCodec::PrintSelf(ostream& os, vtkIndent indent)
 {
   Superclass::PrintSelf(os, indent);
   os << indent << "Video:\t" <<"\n";
   Content->image->PrintSelf(os, indent.GetNextIndent());
 }
-
-
-//----------------------------------------------------------------------------
-void vtkMRMLIGTLIOCompressionDeviceNode::WriteXML(ostream& of, int nIndent)
-{
-  Superclass::WriteXML(of, nIndent);
-}
-
-//----------------------------------------------------------------------------
-void vtkMRMLIGTLIOCompressionDeviceNode::ReadXMLAttributes(const char** atts)
-{
-  int disabledModify = this->StartModify();
-  
-  Superclass::ReadXMLAttributes(atts);
-  
-  this->EndModify(disabledModify);
-}
-
-
-//----------------------------------------------------------------------------
-void vtkMRMLIGTLIOCompressionDeviceNode::Copy(vtkMRMLNode *anode)
-{
-  int disabledModify = this->StartModify();
-  Superclass::Copy(anode);
-  this->EndModify(disabledModify);
-}
-
-
 

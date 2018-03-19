@@ -29,8 +29,7 @@
 
 #include "igtlConfigure.h"
 #if defined(OpenIGTLink_ENABLE_VIDEOSTREAMING)
-  #include "vtkMRMLBitStreamVolumeNode.h"
-  #include "vtkMRMLIGTLIOCompressionDeviceNode.h"
+  #include "vtkMRMLStreamingVolumeNode.h"
 #endif
 
 // OpenIGTLinkIO Device includes
@@ -156,7 +155,6 @@ void vtkSlicerOpenIGTLinkIFLogic::RegisterNodes()
   scene->RegisterNodeClass(vtkNew<vtkMRMLIGTLTrackingDataBundleNode>().GetPointer());
   scene->RegisterNodeClass(vtkNew<vtkMRMLIGTLStatusNode>().GetPointer());
   scene->RegisterNodeClass(vtkNew<vtkMRMLIGTLSensorNode>().GetPointer());
-  scene->RegisterNodeClass(vtkNew<vtkMRMLIGTLIOCompressionDeviceNode>().GetPointer());
 }
 
 //---------------------------------------------------------------------------

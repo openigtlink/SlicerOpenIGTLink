@@ -7,8 +7,8 @@
 #include <vtkImageData.h>
 #include <vtkObject.h>
 #include <vtkSmartPointer.h>
-#include <vtkMRMLBitStreamVolumeNode.h>
-#include <vtkMRMLCompressionDeviceNode.h>
+#include <vtkMRMLStreamingVolumeNode.h>
+#include <vtkStreamingVolumeCodec.h>
 
 // OpenIGTLink and OpenIGTLinkIO include
 #include "igtlioDevice.h"
@@ -17,33 +17,18 @@
 
 /// A Device supporting the compression codec
 
-class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLIOCompressionDeviceNode : public vtkMRMLCompressionDeviceNode
+class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkIGTLStreamingVolumeCodec : public vtkStreamingVolumeCodec
 {
 public:
-  virtual vtkMRMLNode* CreateNodeInstance() VTK_OVERRIDE;
-  /// Get node XML tag name (like Volume, Model)
-  virtual const char* GetNodeTagName() VTK_OVERRIDE
-  {return "IGTLIOCompressionDevice";};
-  
-  /// Set node attributes
-  virtual void ReadXMLAttributes( const char** atts) VTK_OVERRIDE;
-
-  ///å
-  /// Write this node's information to a MRML file in XML format.
-  virtual void WriteXML(ostream& of, int indent) VTK_OVERRIDE;
 
   void ProcessLinkedDeviceModifiedEvents( vtkObject *caller, unsigned long event, void *callData );
 
-  ///
-  /// Copy the node's attributes to this object
-  virtual void Copy(vtkMRMLNode *node) VTK_OVERRIDE;
-
   virtual std::string GetDeviceType() const;
-  virtual int UncompressedDataFromBitStream(std::string bitStreamData, bool checkCRC);
+  virtual int UncompressedDataFromStream(std::string bitStreamData, bool checkCRC);
 
-  virtual std::string GetCompressedBitStreamFromData();
+  virtual std::string GetCompressedStreamFromData();
 
-  std::string GetBitStreamFromContentUsingDefaultDevice();
+  std::string GetStreamFromContentUsingDefaultDevice();
 
   int LinkIGTLIOVideoDevice(igtlio::Device* device);
   int LinkIGTLIOImageDevice(igtlio::Device* device);
@@ -58,13 +43,13 @@ public:
   std::string GetDefaultDeviceName() {return this->DefaultVideoDevice->GetDeviceName();};
 
 public:
-  static vtkMRMLIGTLIOCompressionDeviceNode *New();
-  vtkTypeMacro(vtkMRMLIGTLIOCompressionDeviceNode, vtkMRMLCompressionDeviceNode);
+  static vtkIGTLStreamingVolumeCodec *New();
+  vtkTypeMacro(vtkIGTLStreamingVolumeCodec, vtkStreamingVolumeCodec);
   void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
   
 protected:
-  vtkMRMLIGTLIOCompressionDeviceNode();
-  ~vtkMRMLIGTLIOCompressionDeviceNode();
+  vtkIGTLStreamingVolumeCodec();
+  ~vtkIGTLStreamingVolumeCodec();
 
 private:
   void CopyVideoMessageIntoKeyFrameMSG(igtl::VideoMessage::Pointer keyFrameMsg);

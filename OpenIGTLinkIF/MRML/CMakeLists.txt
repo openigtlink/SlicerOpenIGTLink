@@ -29,7 +29,7 @@ endif()
 
 if(SlicerOpenIGTLink_USE_VP9)
   list(APPEND ${KIT}_SRCS
-    vtkMRMLIGTLIOCompressionDeviceNode.cxx
+    vtkIGTLStreamingVolumeCodec.cxx
   )
 endif()
 
