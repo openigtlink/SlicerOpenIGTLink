@@ -1,4 +1,4 @@
-#include "vtkSlicerOpenIGTLinkIFCommand.h"
+#include "vtkSlicerOpenIGTLinkCommand.h"
 
 #include <sstream>
 
@@ -8,12 +8,13 @@
 #include <vtkXMLUtilities.h>
 
 //----------------------------------------------------------------------------
-vtkStandardNewMacro(vtkSlicerOpenIGTLinkIFCommand);
+vtkStandardNewMacro(vtkSlicerOpenIGTLinkCommand);
 //----------------------------------------------------------------------------
 
 //----------------------------------------------------------------------------
-vtkSlicerOpenIGTLinkIFCommand::vtkSlicerOpenIGTLinkIFCommand()
-: ID(NULL)
+vtkSlicerOpenIGTLinkCommand::vtkSlicerOpenIGTLinkCommand()
+: CommandName(NULL)
+, ID(NULL)
 , DeviceID(NULL)
 , CommandXML(NULL)
 , CommandTimeoutSec(10)
@@ -32,7 +33,7 @@ vtkSlicerOpenIGTLinkIFCommand::vtkSlicerOpenIGTLinkIFCommand()
 }
 
 //----------------------------------------------------------------------------
-vtkSlicerOpenIGTLinkIFCommand::~vtkSlicerOpenIGTLinkIFCommand()
+vtkSlicerOpenIGTLinkCommand::~vtkSlicerOpenIGTLinkCommand()
 {
   this->SetID(NULL);
   if (this->CommandXML)
@@ -50,12 +51,12 @@ vtkSlicerOpenIGTLinkIFCommand::~vtkSlicerOpenIGTLinkIFCommand()
 }
 
 //----------------------------------------------------------------------------
-void vtkSlicerOpenIGTLinkIFCommand::PrintSelf(ostream& os, vtkIndent indent)
+void vtkSlicerOpenIGTLinkCommand::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os, indent);
 
   os << "ID: " << ( (this->GetID()) ? this->GetID() : "None" ) << "\n";
-  os << "Status: " << vtkSlicerOpenIGTLinkIFCommand::StatusToString(this->GetStatus()) << "\n";
+  os << "Status: " << vtkSlicerOpenIGTLinkCommand::StatusToString(this->GetStatus()) << "\n";
   os << "CommandText: " << ( (this->GetCommandText()) ? this->GetCommandText() : "None" ) << "\n";
   os << "CommandXML: ";
   if (this->CommandXML)
@@ -81,32 +82,19 @@ void vtkSlicerOpenIGTLinkIFCommand::PrintSelf(ostream& os, vtkIndent indent)
 }
 
 //----------------------------------------------------------------------------
-const char* vtkSlicerOpenIGTLinkIFCommand::GetCommandName()
-{
-  return this->GetCommandAttribute("Name");
-}
-
-//----------------------------------------------------------------------------
-void vtkSlicerOpenIGTLinkIFCommand::SetCommandName(const char* name)
-{
-  this->SetCommandAttribute("Name", name);
-  this->Modified();
-}
-
-//----------------------------------------------------------------------------
-const char* vtkSlicerOpenIGTLinkIFCommand::GetCommandAttribute(const char* attName)
+const char* vtkSlicerOpenIGTLinkCommand::GetCommandAttribute(const char* attName)
 {
   return this->CommandXML->GetAttribute(attName);
 }
 
 //----------------------------------------------------------------------------
-void vtkSlicerOpenIGTLinkIFCommand::SetCommandAttribute(const char* attName, const char* attValue)
+void vtkSlicerOpenIGTLinkCommand::SetCommandAttribute(const char* attName, const char* attValue)
 {
   this->CommandXML->SetAttribute(attName, attValue);
 }
 
 //----------------------------------------------------------------------------
-const char* vtkSlicerOpenIGTLinkIFCommand::GetCommandText()
+const char* vtkSlicerOpenIGTLinkCommand::GetCommandText()
 {
   std::ostringstream os;
   this->CommandXML->PrintXML(os, vtkIndent(0));
@@ -115,7 +103,7 @@ const char* vtkSlicerOpenIGTLinkIFCommand::GetCommandText()
 }
 
 //----------------------------------------------------------------------------
-bool vtkSlicerOpenIGTLinkIFCommand::SetCommandText(const char* text)
+bool vtkSlicerOpenIGTLinkCommand::SetCommandText(const char* text)
 {
   if (text==NULL)
     {
@@ -135,14 +123,14 @@ bool vtkSlicerOpenIGTLinkIFCommand::SetCommandText(const char* text)
 }
 
 //----------------------------------------------------------------------------
-int vtkSlicerOpenIGTLinkIFCommand::GetNumberOfResponses()
+int vtkSlicerOpenIGTLinkCommand::GetNumberOfResponses()
 {
   int numberOfNestedElements = this->ResponseXML->GetNumberOfNestedElements();
   return numberOfNestedElements;
 }
 
 //----------------------------------------------------------------------------
-const char* vtkSlicerOpenIGTLinkIFCommand::GetResponseMessage(int responseID/*=0*/)
+const char* vtkSlicerOpenIGTLinkCommand::GetResponseMessage(int responseID/*=0*/)
 {
   if (this->ResponseXML == nullptr)
     {
@@ -165,7 +153,7 @@ const char* vtkSlicerOpenIGTLinkIFCommand::GetResponseMessage(int responseID/*=0
   int numberOfNestedElements = this->ResponseXML->GetNumberOfNestedElements();
   if (responseID >= numberOfNestedElements)
     {
-    vtkErrorMacro("Could not find requested command response: responseID is out of range (Number of responses is" << numberOfNestedElements << ")");
+    vtkErrorMacro("Could not find requested command response: responseID is out of range (Number of responses is " << numberOfNestedElements << ")");
     return "";
     }
 
@@ -187,7 +175,7 @@ const char* vtkSlicerOpenIGTLinkIFCommand::GetResponseMessage(int responseID/*=0
 }
 
 //----------------------------------------------------------------------------
-const char* vtkSlicerOpenIGTLinkIFCommand::GetResponseAttribute(const char* attName)
+const char* vtkSlicerOpenIGTLinkCommand::GetResponseAttribute(const char* attName)
 {
   if (this->ResponseXML==NULL)
     {
@@ -197,13 +185,13 @@ const char* vtkSlicerOpenIGTLinkIFCommand::GetResponseAttribute(const char* attN
 }
 
 //----------------------------------------------------------------------------
-const char* vtkSlicerOpenIGTLinkIFCommand::GetResponseText()
+const char* vtkSlicerOpenIGTLinkCommand::GetResponseText()
 {
   return this->ResponseTextInternal;
 }
 
 //----------------------------------------------------------------------------
-void vtkSlicerOpenIGTLinkIFCommand::SetResponseText(const char* text)
+void vtkSlicerOpenIGTLinkCommand::SetResponseText(const char* text)
 {
   this->SetResponseTextInternal(text);
 
@@ -228,32 +216,10 @@ void vtkSlicerOpenIGTLinkIFCommand::SetResponseText(const char* text)
     return;
   }
 
-  // Retrieve status from XML string
-  const char* status = this->ResponseXML->GetAttribute("Status");
-  if (status == nullptr)
-  {
-    vtkWarningMacro("OpenIGTLink command response: missing Status attribute: " << text);
-  }
-  else
-  {
-    if (strcmp(status, "SUCCESS") == 0)
-    {
-      this->SetStatus(CommandSuccess);
-    }
-    else if (strcmp(status, "FAIL") == 0)
-    {
-      this->SetStatus(CommandFail);
-    }
-    else
-    {
-      vtkErrorMacro("OpenIGTLink command response: invalid Status attribute value: " << this->ResponseXML->GetAttribute("Success"));
-      this->SetStatus(CommandFail);
-    }
-  }
 }
 
 //----------------------------------------------------------------------------
-const char* vtkSlicerOpenIGTLinkIFCommand::StatusToString(int status)
+const char* vtkSlicerOpenIGTLinkCommand::StatusToString(int status)
 {
   switch (status)
   {
@@ -269,13 +235,13 @@ const char* vtkSlicerOpenIGTLinkIFCommand::StatusToString(int status)
 }
 
 //----------------------------------------------------------------------------
-bool vtkSlicerOpenIGTLinkIFCommand::IsInProgress()
+bool vtkSlicerOpenIGTLinkCommand::IsInProgress()
 {
   return this->Status == CommandWaiting;
 }
 
 //----------------------------------------------------------------------------
-bool vtkSlicerOpenIGTLinkIFCommand::IsCompleted()
+bool vtkSlicerOpenIGTLinkCommand::IsCompleted()
 {
   return
     this->Status == CommandSuccess ||
@@ -285,13 +251,13 @@ bool vtkSlicerOpenIGTLinkIFCommand::IsCompleted()
 }
 
 //----------------------------------------------------------------------------
-bool vtkSlicerOpenIGTLinkIFCommand::IsSucceeded()
+bool vtkSlicerOpenIGTLinkCommand::IsSucceeded()
 {
   return this->Status == CommandSuccess;
 }
 
 //----------------------------------------------------------------------------
-bool vtkSlicerOpenIGTLinkIFCommand::IsFailed()
+bool vtkSlicerOpenIGTLinkCommand::IsFailed()
 {
   return
     this->Status == CommandFail ||

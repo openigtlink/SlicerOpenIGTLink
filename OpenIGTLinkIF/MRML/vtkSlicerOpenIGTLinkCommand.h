@@ -15,22 +15,22 @@
 
 ==============================================================================*/
 
-// .NAME vtkSlicerOpenIGTLinkIFCommand - class for storing an OpenIGTLink command message and response
+// .NAME vtkSlicerOpenIGTLinkCommand - class for storing an OpenIGTLink command message and response
 // .SECTION Description
 // This class is used for storing OpenIGTLink command and response data.
 
 
-#ifndef __vtkSlicerOpenIGTLinkIFCommand_h
-#define __vtkSlicerOpenIGTLinkIFCommand_h
+#ifndef __vtkSlicerOpenIGTLinkCommand_h
+#define __vtkSlicerOpenIGTLinkCommand_h
 
-#include "vtkSlicerOpenIGTLinkIFModuleCommandExport.h"
+#include "vtkSlicerOpenIGTLinkIFModuleMRMLExport.h"
 
 #include "vtkCommand.h"
 
 class vtkXMLDataElement;
 
 /// \ingroup Slicer_QtModules_ExtensionTemplate
-class VTK_SLICER_OPENIGTLINKIF_MODULE_COMMAND_EXPORT vtkSlicerOpenIGTLinkIFCommand :
+class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkSlicerOpenIGTLinkCommand :
   public vtkObject
 {
 public:
@@ -60,8 +60,8 @@ public:
     CommandCompletedEvent = vtkCommand::UserEvent + 123
   };
 
-  static vtkSlicerOpenIGTLinkIFCommand *New();
-  vtkTypeMacro(vtkSlicerOpenIGTLinkIFCommand, vtkObject);
+  static vtkSlicerOpenIGTLinkCommand *New();
+  vtkTypeMacro(vtkSlicerOpenIGTLinkCommand, vtkObject);
   void PrintSelf(ostream& os, vtkIndent indent);
 
   // Common command information (both command and response)
@@ -88,8 +88,8 @@ public:
   // Command information
 
   /// Set command name (required)
-  const char* GetCommandName();
-  void SetCommandName(const char* name);
+  vtkSetStringMacro(CommandName);
+  vtkGetStringMacro(CommandName);
 
   /// Set optional command attributes
   const char* GetCommandAttribute(const char* attName);
@@ -153,8 +153,8 @@ public:
   bool IsFailed();
 
 protected:
-  vtkSlicerOpenIGTLinkIFCommand();
-  virtual ~vtkSlicerOpenIGTLinkIFCommand();
+  vtkSlicerOpenIGTLinkCommand();
+  virtual ~vtkSlicerOpenIGTLinkCommand();
 
   /// Helper method for storing the returned command text.
   /// The exported command text is stored as a member variable to allow returning it
@@ -167,10 +167,12 @@ protected:
 
 
 private:
-  vtkSlicerOpenIGTLinkIFCommand(const vtkSlicerOpenIGTLinkIFCommand&); // Not implemented
-  void operator=(const vtkSlicerOpenIGTLinkIFCommand&);               // Not implemented
+  vtkSlicerOpenIGTLinkCommand(const vtkSlicerOpenIGTLinkCommand&); // Not implemented
+  void operator=(const vtkSlicerOpenIGTLinkCommand&);               // Not implemented
 
-  // ID of the vtkSlicerOpenIGTLinkIFCommand object
+  // Name of the Command to be sent
+  char* CommandName;
+  // ID of the vtkSlicerOpenIGTLinkCommand object
   char* ID;
   // ID of the device sending the command
   char* DeviceID;

@@ -41,7 +41,7 @@ Version:   $Revision: 1.2 $
 #include <vtkMRMLColorTableNode.h>
 
 // OpenIGTLinkIF includes
-#include "vtkSlicerOpenIGTLinkIFCommand.h"
+#include "vtkSlicerOpenIGTLinkCommand.h"
 
 // VTK includes
 #include <vtkCollection.h>
@@ -79,7 +79,7 @@ public:
   igtlio::CommandDevicePointer SendCommandResponse(std::string device_id, std::string command, std::string content);
 
   // Convert igtlio query status to igtlif commmand status
-  vtkSlicerOpenIGTLinkIFCommand::CommandStatus ConvertIGTLIOQueryStatusToIGTLIFCommandStatus(igtlio::CommandDevice::QUERY_STATUS igtlioStatus);
+  vtkSlicerOpenIGTLinkCommand::CommandStatus ConvertIGTLIOQueryStatusToIGTLIFCommandStatus(igtlio::CommandDevice::QUERY_STATUS igtlioStatus);
 
   unsigned int AssignOutGoingNodeToDevice(vtkMRMLNode* node, igtlio::DevicePointer device);
 
@@ -88,6 +88,12 @@ public:
   void ProcessIncomingDeviceModifiedEvent(vtkObject *caller, unsigned long event, igtlio::Device * modifiedDevice);
 
   void ProcessOutgoingDeviceModifiedEvent(vtkObject *caller, unsigned long event, igtlio::Device * modifiedDevice);
+
+  /// Called when command responses are received.
+  /// Handles vtkSlicerOpenIGTLinkCommand related details on command response.
+  /// If there is a corresponding vtkSlicerOpenIGTLinkCommand, an event is invoked on it.
+  /// Returns vtkSlicerOpenIGTLinkCommand if found, otherwise, returns nullptr.
+  void ReceiveCommandResponse(igtlio::CommandDevice* commandDevice);
 
   vtkMRMLNode* GetOrAddMRMLNodeforDevice(igtlio::Device* device);
 
@@ -103,6 +109,14 @@ public:
   MessageDeviceMapType  IncomingMRMLIDToDeviceMap;
   DeviceTypeToNodeTagMapType DeviceTypeToNodeTagMap;
 
+  //----------------------------------------------------------------
+  // Command processing
+  //----------------------------------------------------------------
+
+  /// List of commands sent using SendCommand()
+  std::deque<vtkSmartPointer<vtkSlicerOpenIGTLinkCommand>> PendingCommands;
+  vtkMutexLock* PendingCommandMutex;
+
 };
 
 //----------------------------------------------------------------------------
@@ -113,6 +127,9 @@ vtkMRMLIGTLConnectorNode::vtkInternal::vtkInternal(vtkMRMLIGTLConnectorNode* ext
   : External(external)
 {
   this->IOConnector = igtlio::Connector::New();
+
+  this->PendingCommands = std::deque<vtkSmartPointer<vtkSlicerOpenIGTLinkCommand>>();
+  this->PendingCommandMutex = vtkMutexLock::New();
 }
 
 
@@ -120,6 +137,11 @@ vtkMRMLIGTLConnectorNode::vtkInternal::vtkInternal(vtkMRMLIGTLConnectorNode* ext
 vtkMRMLIGTLConnectorNode::vtkInternal::~vtkInternal()
 {
   IOConnector->Delete();
+
+  if (this->PendingCommandMutex)
+  {
+    this->PendingCommandMutex->Delete();
+  }
 }
 
 //----------------------------------------------------------------------------
@@ -617,18 +639,93 @@ igtlio::CommandDevicePointer vtkMRMLIGTLConnectorNode::vtkInternal::SendCommandR
 }
 
 //----------------------------------------------------------------------------
-vtkSlicerOpenIGTLinkIFCommand::CommandStatus vtkMRMLIGTLConnectorNode::vtkInternal::ConvertIGTLIOQueryStatusToIGTLIFCommandStatus(igtlio::CommandDevice::QUERY_STATUS igtlioStatus)
+vtkSlicerOpenIGTLinkCommand::CommandStatus vtkMRMLIGTLConnectorNode::vtkInternal::ConvertIGTLIOQueryStatusToIGTLIFCommandStatus(igtlio::CommandDevice::QUERY_STATUS igtlioStatus)
 {
   switch (igtlioStatus)
     {
-    case igtlio::CommandDevice::QUERY_STATUS_WAITING: return vtkSlicerOpenIGTLinkIFCommand::CommandWaiting;
-    case igtlio::CommandDevice::QUERY_STATUS_SUCCESS: return vtkSlicerOpenIGTLinkIFCommand::CommandSuccess;
-    case igtlio::CommandDevice::QUERY_STATUS_ERROR: return vtkSlicerOpenIGTLinkIFCommand::CommandFail;
-    case igtlio::CommandDevice::QUERY_STATUS_EXPIRED: return vtkSlicerOpenIGTLinkIFCommand::CommandExpired;
+    case igtlio::CommandDevice::QUERY_STATUS_WAITING: return vtkSlicerOpenIGTLinkCommand::CommandWaiting;
+    case igtlio::CommandDevice::QUERY_STATUS_SUCCESS: return vtkSlicerOpenIGTLinkCommand::CommandSuccess;
+    case igtlio::CommandDevice::QUERY_STATUS_ERROR: return vtkSlicerOpenIGTLinkCommand::CommandFail;
+    case igtlio::CommandDevice::QUERY_STATUS_EXPIRED: return vtkSlicerOpenIGTLinkCommand::CommandExpired;
     case igtlio::CommandDevice::QUERY_STATUS_NONE:
-    default: return vtkSlicerOpenIGTLinkIFCommand::CommandUnknown;
+    default: return vtkSlicerOpenIGTLinkCommand::CommandUnknown;
     }
-  return vtkSlicerOpenIGTLinkIFCommand::CommandUnknown;
+  return vtkSlicerOpenIGTLinkCommand::CommandUnknown;
+}
+
+//----------------------------------------------------------------------------
+void vtkMRMLIGTLConnectorNode::vtkInternal::ReceiveCommandResponse(igtlio::CommandDevice* commandDevice)
+{
+  if (!commandDevice)
+    {
+    vtkErrorWithObjectMacro(this->External, "Could not find command device.");
+    return;
+    }
+  vtkSmartPointer<vtkSlicerOpenIGTLinkCommand> command;
+
+  // Look for queries that are no longer waiting
+  igtlio::CommandDevice::QUERY_STATUS queryStatus;
+  std::vector<igtlio::CommandDevice::QueryType> queries = commandDevice->GetQueries();
+
+  for (std::vector<igtlio::CommandDevice::QueryType>::iterator queryIt = queries.begin(); queryIt != queries.end(); ++queryIt)
+    {
+    igtlio::CommandDevice::QueryType query = (*queryIt);
+    queryStatus = query.status;
+    if (queryStatus == igtlio::CommandDevice::QUERY_STATUS_WAITING)
+      {
+      continue;
+      }
+
+    igtlio::CommandDevice* queryDevice = igtlio::CommandDevice::SafeDownCast(query.Query.GetPointer());
+    igtlio::CommandDevice* responseDevice = igtlio::CommandDevice::SafeDownCast(query.Response.GetPointer());
+    if (!queryDevice || !responseDevice)
+      {
+      continue;
+      }
+
+    // Find the matching command matching the received response from the command device
+    int queryID = queryDevice->GetContent().id;
+    this->PendingCommandMutex->Lock();
+    for (std::deque<vtkSmartPointer<vtkSlicerOpenIGTLinkCommand>>::iterator commandIt = this->PendingCommands.begin();
+      commandIt != this->PendingCommands.end(); ++commandIt)
+      {
+      if (queryID == (*commandIt)->GetQueryID())
+        {
+        command = (*commandIt);
+        break;
+        }
+      }
+    this->PendingCommandMutex->Unlock();
+
+    if (command)
+      {
+      // The current command has been recieved, removing from the list of pending commands
+      this->PendingCommandMutex->Lock();
+      this->PendingCommands.erase(std::remove(this->PendingCommands.begin(), this->PendingCommands.end(), command), this->PendingCommands.end());
+      this->PendingCommandMutex->Unlock();
+      }
+    else
+      {
+      igtlio::CommandConverter::ContentData queryContent = queryDevice->GetContent();
+      std::string commandName = queryContent.name;
+      std::string commandText = queryContent.content;
+      command = vtkSmartPointer<vtkSlicerOpenIGTLinkCommand>::New();
+      command->SetQueryID(queryID);
+      command->SetCommandName(commandName.c_str());
+      command->SetCommandName(commandText.c_str());
+      }
+
+    vtkSlicerOpenIGTLinkCommand::CommandStatus commandStatus = this->ConvertIGTLIOQueryStatusToIGTLIFCommandStatus(queryStatus);
+    command->SetStatus(commandStatus);
+
+    igtlio::CommandConverter::ContentData responseContent = responseDevice->GetContent();
+    std::string responseString = responseContent.content;
+    command->SetResponseText(responseString.c_str());
+
+    // Invoke command responses both on the vtkSlicerOpenIGTLinkCommand and the connectorNode.
+    command->InvokeEvent(vtkSlicerOpenIGTLinkCommand::CommandCompletedEvent);
+    this->External->InvokeEvent(CommandResponseReceivedEvent, command.GetPointer());
+    }
 }
 
 //----------------------------------------------------------------------------
@@ -667,9 +764,6 @@ vtkMRMLIGTLConnectorNode::vtkMRMLIGTLConnectorNode()
   this->Internal->DeviceTypeToNodeTagMap["POLYDATA"] = std::vector<std::string>(modelTags, modelTags+2);
   this->Internal->DeviceTypeToNodeTagMap["STRING"] = std::vector<std::string>(1,"Text");
 
-  this->PendingCommands = std::vector<vtkSlicerOpenIGTLinkIFCommand*>();
-  this->PendingCommandMutex = vtkMutexLock::New();
-
 }
 
 //----------------------------------------------------------------------------
@@ -682,11 +776,6 @@ vtkMRMLIGTLConnectorNode::~vtkMRMLIGTLConnectorNode()
 
   delete this->Internal;
   this->Internal = NULL;
-
-  if (this->PendingCommandMutex)
-    {
-    this->PendingCommandMutex->Delete();
-    }
 }
 
 void vtkMRMLIGTLConnectorNode::ConnectEvents()
@@ -833,7 +922,7 @@ void vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents(vtkObject *caller, unsig
       std::string commandContent = commandDevice->GetContent().content;
       int queryID = commandDevice->GetContent().id;
 
-      vtkSmartPointer<vtkSlicerOpenIGTLinkIFCommand> command = vtkSmartPointer<vtkSlicerOpenIGTLinkIFCommand>::New();
+      vtkSmartPointer<vtkSlicerOpenIGTLinkCommand> command = vtkSmartPointer<vtkSlicerOpenIGTLinkCommand>::New();
       command->SetDirectionIn();
       command->SetCommandName(commandName.c_str());
       command->SetCommandText(commandContent.c_str());
@@ -845,10 +934,9 @@ void vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents(vtkObject *caller, unsig
       }
     else if (event==modifiedDevice->CommandResponseReceivedEvent)
       {
-      // TODO: It is inconsistent that command events are invoked with vtkSlicerOpenIGTLinkIFCommand attached
-      // and command response events are invoked with igtlio::Device attached.
-      // Probably command response event should be invoked with vtkSlicerOpenIGTLinkIFCommand attached.
-      this->InvokeEvent(mrmlEvent, modifiedDevice);
+      // Invoke command response events on all pending commands with responses
+      igtlio::CommandDevice* commandDevice = igtlio::CommandDevice::SafeDownCast(modifiedDevice);
+      this->Internal->ReceiveCommandResponse(commandDevice);
       return;
       }
     }
@@ -1527,44 +1615,29 @@ void vtkMRMLIGTLConnectorNode::PushQuery(vtkMRMLIGTLQueryNode* node)
 //---------------------------------------------------------------------------
 void vtkMRMLIGTLConnectorNode::CancelCommand(std::string device_id, int query_id)
 {
-  igtlio::DeviceKeyType key;
-  key.name = device_id;
-  key.type = "COMMAND";
-  
-  igtlio::CommandDevicePointer commandDevice = igtlio::CommandDevice::SafeDownCast(this->Internal->IOConnector->GetDevice(key));
-  if (!commandDevice)
-    {
-    vtkErrorMacro("vtkMRMLIGTLConnectorNode::CancelCommand failed: invalid command");
-    }
+  vtkSmartPointer<vtkSlicerOpenIGTLinkCommand> command = nullptr;
 
-  // Search through the list of queries in the command device to find the matching query
-  int queryIndex = -1;
-  std::vector<igtlio::CommandDevice::QueryType> queries = commandDevice->GetQueries();
-  for (std::vector<igtlio::CommandDevice::QueryType>::iterator queryIt = queries.begin(); queryIt != queries.end(); ++queryIt)
+  this->Internal->PendingCommandMutex->Lock();
+  for (std::deque<vtkSmartPointer<vtkSlicerOpenIGTLinkCommand>>::iterator commandIt = this->Internal->PendingCommands.begin();
+       commandIt != this->Internal->PendingCommands.end(); ++commandIt)
     {
-    igtlio::CommandDevice::QueryType query = (*queryIt);
-    igtlio::CommandDevicePointer command = igtlio::CommandDevice::SafeDownCast(query.Query);
-    if (!command)
+    if (device_id.compare((*commandIt)->GetDeviceID()) == 0 &&
+        query_id == (*commandIt)->GetQueryID())
       {
-        continue;
-      }
-    int currentId = command->GetContent().id;
-    if (currentId == query_id)
-      {
-      queryIndex = queryIt - queries.begin();
+      command = (*commandIt);
       }
     }
+  this->Internal->PendingCommandMutex->Unlock();
 
-  if (queryIndex == -1)
+  if (command)
     {
-    vtkErrorMacro("vtkMRMLIGTLConnectorNode::CancelCommand failed: query could not be found");
-    return;
+    this->CancelCommand(command);
     }
-  commandDevice->CancelQuery(queryIndex);
+
 }
 
 //---------------------------------------------------------------------------
-void vtkMRMLIGTLConnectorNode::CancelCommand(vtkSlicerOpenIGTLinkIFCommand* command)
+void vtkMRMLIGTLConnectorNode::CancelCommand(vtkSlicerOpenIGTLinkCommand* command)
 {
   if (!command)
     {
@@ -1578,11 +1651,50 @@ void vtkMRMLIGTLConnectorNode::CancelCommand(vtkSlicerOpenIGTLinkIFCommand* comm
     return;
     }
 
-  this->CancelCommand(command->GetDeviceID(), command->GetQueryID());
+  const char* deviceID = command->GetDeviceID();
+  int queryID = command->GetQueryID();
+
+  igtlio::DeviceKeyType key;
+  key.name = deviceID;
+  key.type = "COMMAND";
+
+  igtlio::CommandDevicePointer commandDevice = igtlio::CommandDevice::SafeDownCast(this->Internal->IOConnector->GetDevice(key));
+  if (!commandDevice)
+  {
+    vtkErrorMacro("vtkMRMLIGTLConnectorNode::CancelCommand failed: invalid command");
+  }
+
+  // Search through the list of queries in the command device to find the matching query
+  int queryIndex = -1;
+  std::vector<igtlio::CommandDevice::QueryType> queries = commandDevice->GetQueries();
+  for (std::vector<igtlio::CommandDevice::QueryType>::iterator queryIt = queries.begin(); queryIt != queries.end(); ++queryIt)
+  {
+    igtlio::CommandDevice::QueryType query = (*queryIt);
+    igtlio::CommandDevicePointer command = igtlio::CommandDevice::SafeDownCast(query.Query);
+    if (!command)
+    {
+      continue;
+    }
+    int currentId = command->GetContent().id;
+    if (currentId == queryID)
+    {
+      queryIndex = queryIt - queries.begin();
+    }
+  }
+
+  if (queryIndex == -1)
+  {
+    vtkErrorMacro("vtkMRMLIGTLConnectorNode::CancelCommand failed: query could not be found");
+    return;
+  }
+
+  commandDevice->CancelQuery(queryIndex);
   command->SetStatus(command->CommandCancelled);
-  this->PendingCommandMutex->Lock();
-  this->PendingCommands.erase(std::remove(this->PendingCommands.begin(), this->PendingCommands.end(), command), this->PendingCommands.end());
-  this->PendingCommandMutex->Unlock();
+  command->InvokeEvent(vtkSlicerOpenIGTLinkCommand::CommandCancelled);
+
+  this->Internal->PendingCommandMutex->Lock();
+  this->Internal->PendingCommands.erase(std::remove(this->Internal->PendingCommands.begin(), this->Internal->PendingCommands.end(), command), this->Internal->PendingCommands.end());
+  this->Internal->PendingCommandMutex->Unlock();
 }
 
 //---------------------------------------------------------------------------
@@ -1675,20 +1787,8 @@ void vtkMRMLIGTLConnectorNode::SetPersistent(bool persistent)
   this->Internal->IOConnector->SetPersistent(persistent ? igtlio::Connector::PERSISTENT_ON : igtlio::Connector::PERSISTENT_OFF);
 }
 
-//---------------------------------------------------------------------------
-void vtkMRMLIGTLConnectorNode::SendCommand(std::string device_id, std::string command, std::string content, bool blocking /*=true*/, double timeout_s /*=5*/)
-{
-  this->Internal->SendCommand(device_id, command, content, blocking ? igtlio::BLOCKING : igtlio::ASYNCHRONOUS, timeout_s);
-}
-
-//---------------------------------------------------------------------------
-void vtkMRMLIGTLConnectorNode::SendCommandResponse(std::string device_id, std::string command, std::string content)
-{
-  this->Internal->SendCommandResponse(device_id, command, content);
-}
-
 //----------------------------------------------------------------------------
-void vtkMRMLIGTLConnectorNode::SendCommand(vtkSlicerOpenIGTLinkIFCommand* command)
+void vtkMRMLIGTLConnectorNode::SendCommand(vtkSlicerOpenIGTLinkCommand* command)
 {
   if (!command)
     {
@@ -1730,24 +1830,38 @@ void vtkMRMLIGTLConnectorNode::SendCommand(vtkSlicerOpenIGTLinkIFCommand* comman
         continue;
         }
       igtlio::CommandDevice::QUERY_STATUS queryStatus = (*queryIt).status;
-      vtkSlicerOpenIGTLinkIFCommand::CommandStatus commandStatus = this->Internal->ConvertIGTLIOQueryStatusToIGTLIFCommandStatus(queryStatus);
+      vtkSlicerOpenIGTLinkCommand::CommandStatus commandStatus = this->Internal->ConvertIGTLIOQueryStatusToIGTLIFCommandStatus(queryStatus);
       command->SetStatus(commandStatus);
       }
     command->SetResponseText(commandDevice->GetContent().content.c_str());
-    command->InvokeEvent(vtkSlicerOpenIGTLinkIFCommand::CommandCompletedEvent);
+    command->InvokeEvent(vtkSlicerOpenIGTLinkCommand::CommandCompletedEvent);
     }
   else
     {
-    this->PendingCommandMutex->Lock();
-    this->PendingCommands.push_back(command);
-    this->PendingCommandMutex->Unlock();
-    commandDevice->RemoveAllObservers();
-    commandDevice->AddObserver(commandDevice->CommandResponseReceivedEvent, this, &vtkMRMLIGTLConnectorNode::ReceiveCommandResponse);
+    this->Internal->PendingCommandMutex->Lock();
+    this->Internal->PendingCommands.push_back(command);
+    this->Internal->PendingCommandMutex->Unlock();
     }
 }
 
+//---------------------------------------------------------------------------
+void vtkMRMLIGTLConnectorNode::SendCommand(std::string deviceID, std::string commandName, std::string content, bool blocking /*=true*/, double timeout_s /*=5*/)
+{
+  const char* deviceIDChar = deviceID.c_str();
+  const char* commandNameChar = commandName.c_str();
+  const char* commandTextChar = content.c_str();
+
+  vtkSmartPointer<vtkSlicerOpenIGTLinkCommand> command = vtkSmartPointer<vtkSlicerOpenIGTLinkCommand>::New();
+  command->SetDeviceID(deviceIDChar);
+  command->SetCommandName(commandNameChar);
+  command->SetCommandText(commandTextChar);
+  command->SetBlocking(blocking);
+  command->SetCommandTimeoutSec(timeout_s);
+  this->SendCommand(command);
+}
+
 //----------------------------------------------------------------------------
-void vtkMRMLIGTLConnectorNode::SendCommandResponse(vtkSlicerOpenIGTLinkIFCommand* command)
+void vtkMRMLIGTLConnectorNode::SendCommandResponse(vtkSlicerOpenIGTLinkCommand* command)
 {
   if (!command)
     {
@@ -1757,69 +1871,26 @@ void vtkMRMLIGTLConnectorNode::SendCommandResponse(vtkSlicerOpenIGTLinkIFCommand
   const char* deviceID = command->GetDeviceID();
   const char* commandName = command->GetCommandName();
   const char* responseText = command->GetResponseText();
-  this->SendCommandResponse(deviceID ? deviceID : "", commandName ? commandName : "", responseText ? responseText : "");
+  this->Internal->SendCommandResponse(deviceID ? deviceID : "", commandName ? commandName : "", responseText ? responseText : "");
 }
 
-//----------------------------------------------------------------------------
-void vtkMRMLIGTLConnectorNode::ReceiveCommandResponse(vtkObject *caller, unsigned long vtkNotUsed(event), void * vtkNotUsed(callData))
+
+//---------------------------------------------------------------------------
+void vtkMRMLIGTLConnectorNode::SendCommandResponse(std::string device_id, std::string commandName, std::string content)
 {
-  igtlio::CommandDevice* commandDevice = dynamic_cast<igtlio::CommandDevice*>(caller);
-  if (!commandDevice)
+  this->Internal->PendingCommandMutex->Lock();
+  for (std::deque<vtkSmartPointer<vtkSlicerOpenIGTLinkCommand>>::iterator commandIt = this->Internal->PendingCommands.begin(); commandIt != this->Internal->PendingCommands.end(); ++commandIt)
     {
-    vtkErrorMacro("Could not find command device.");
-    return;
-    }
-
-  // Look for queries that are no longer waiting
-  igtlio::CommandDevice::QUERY_STATUS queryStatus;
-  std::vector<igtlio::CommandDevice::QueryType> queries = commandDevice->GetQueries();
-  igtlio::CommandDevice* responseDevice = nullptr;
-  for (std::vector<igtlio::CommandDevice::QueryType>::iterator queryIt = queries.begin(); queryIt != queries.end(); ++queryIt)
-    {
-    igtlio::CommandDevice::QueryType query = (*queryIt);
-    queryStatus = query.status;
-    if (queryStatus == igtlio::CommandDevice::QUERY_STATUS_WAITING)
+    if (strcmp((*commandIt)->GetDeviceID(),device_id.c_str()) == 0 &&
+        strcmp((*commandIt)->GetDeviceID(), commandName.c_str()) == 0)
       {
-      continue;
-      }
-
-    responseDevice = igtlio::CommandDevice::SafeDownCast(query.Response.GetPointer());
-    if (!responseDevice)
-      {
-      continue;
-      }
-
-    // Find the matching command matching the received response from the command device
-    int queryID = responseDevice->GetContent().id;
-    vtkSlicerOpenIGTLinkIFCommand* command = nullptr;
-    for (std::vector<vtkSlicerOpenIGTLinkIFCommand*>::iterator commandIt = this->PendingCommands.begin();
-      commandIt != this->PendingCommands.end(); ++commandIt)
-      {
-      if (queryID == (*commandIt)->GetQueryID())
-        {
-        command = (*commandIt);
-        break;
-        }
-      }
-
-    if (!command)
-      {
-      continue;
-      }
-
-    // The current command has been recieved, removing from the list of pending commands
-    this->PendingCommandMutex->Lock();
-    this->PendingCommands.erase(std::remove(this->PendingCommands.begin(), this->PendingCommands.end(), command), this->PendingCommands.end());
-    this->PendingCommandMutex->Unlock();
-
-    vtkSlicerOpenIGTLinkIFCommand::CommandStatus commandStatus = this->Internal->ConvertIGTLIOQueryStatusToIGTLIFCommandStatus(queryStatus);
-    command->SetStatus(commandStatus);
-    if (responseDevice)
-      {
-      command->SetResponseText(responseDevice->GetContent().content.c_str());
-      command->InvokeEvent(vtkSlicerOpenIGTLinkIFCommand::CommandCompletedEvent);
+      vtkSmartPointer<vtkSlicerOpenIGTLinkCommand> command = (*commandIt);
+      const char* responseText = content.c_str();
+      command->SetResponseText(responseText);
       }
     }
+  this->Internal->PendingCommandMutex->Unlock();
+  this->Internal->SendCommandResponse(device_id, commandName, content);
 }
 
 //---------------------------------------------------------------------------
