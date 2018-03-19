@@ -7,7 +7,7 @@
 // IF module includes
 #include "vtkMRMLIGTLConnectorNode.h"
 
-#include "vtkSlicerOpenIGTLinkIFCommand.h"
+#include "vtkSlicerOpenIGTLinkCommand.h"
 
 // VTK includes
 #include <vtkTimerLog.h>
@@ -37,7 +37,7 @@ public:
   
   void onCommandReceivedEventFunc(vtkObject* caller, unsigned long eid, void *calldata)
   {
-  vtkSlicerOpenIGTLinkIFCommand* command = reinterpret_cast<vtkSlicerOpenIGTLinkIFCommand*>(calldata);
+  vtkSlicerOpenIGTLinkCommand* command = reinterpret_cast<vtkSlicerOpenIGTLinkCommand*>(calldata);
   const char* commandName = command->GetCommandName();
   command->SetResponseText(ResponseString.c_str());
   ConnectorNode->SendCommandResponse(command);
@@ -46,23 +46,18 @@ public:
   testSuccessful +=1;
   }
   
-  void onCommanResponseReceivedEventFunc(vtkObject* caller, unsigned long eid,  void *calldata)
+  void onCommandResponseReceivedEventFunc(vtkObject* caller, unsigned long eid,  void *calldata)
   {
   std::cout << "*** COMMAND response received from server:" << std::endl;
-  vtkSmartPointer<igtlio::CommandDevice> serverDevice = reinterpret_cast<igtlio::CommandDevice*>(calldata);
-  std::vector<igtlio::CommandDevice::QueryType> queries = serverDevice->GetQueries();
-  if (queries.size()==1)
+  vtkSlicerOpenIGTLinkCommand* command = reinterpret_cast<vtkSlicerOpenIGTLinkCommand*>(calldata);
+  std::cout << command->GetResponseText() << std::endl;
+  if (ResponseString.compare(command->GetResponseText()) == 0)
     {
-    igtlio::CommandDevicePointer commandDevice = reinterpret_cast<igtlio::CommandDevice*>(queries[0].Response.GetPointer());
-    std::cout << commandDevice->GetContent().content << std::endl;
-    if (ResponseString.compare(commandDevice->GetContent().content) == 0)
-      {
-      testSuccessful +=1;
-      }
+    testSuccessful +=1;
     }
   }
   int testSuccessful = 0;
-  std::string ResponseString = "<Command Name=\"Get\" Status=\"SUCCESS\" >\n <Result success=\"true\"> <Parameter Name=\"Depth\" /> </Result>\n</Command>";
+  std::string ResponseString = "<Command>\n <Result success=\"true\"> <Parameter Name=\"Depth\" /> </Result>\n</Command>";
   vtkMRMLIGTLConnectorNode* ConnectorNode = NULL;
   
 protected:
@@ -87,7 +82,7 @@ int vtkMRMLConnectorCommandSendAndReceiveTest(int argc, char * argv [] )
   serverConnectorNode->Start();
   igtl::Sleep(20);
   vtkSmartPointer<vtkMRMLIGTLConnectorNode> clientConnectorNode = vtkMRMLIGTLConnectorNode::New();
-  clientConnectorNode->AddObserver(clientConnectorNode->CommandResponseReceivedEvent, commandServerObsever, &CommandObserver::onCommanResponseReceivedEventFunc);
+  clientConnectorNode->AddObserver(clientConnectorNode->CommandResponseReceivedEvent, commandServerObsever, &CommandObserver::onCommandResponseReceivedEventFunc);
   clientConnectorNode->SetTypeClient("localhost", port);
   clientConnectorNode->Start();
   
@@ -115,9 +110,8 @@ int vtkMRMLConnectorCommandSendAndReceiveTest(int argc, char * argv [] )
     }
   
   std::string device_name = "TestDevice";
-  // TODO: Command name is expected to be stored as attribute of Command element. Probably this would need to be changed
-  // and command name should be read from the command name field of the message instead.
-  clientConnectorNode->SendCommand(device_name,"Get", "<Command Name=\"Get\">\n <Parameter Name=\"Depth\" />\n </Command>", false);
+
+  clientConnectorNode->SendCommand(device_name,"Get", "<Command>\n <Parameter Name=\"Depth\" />\n </Command>", false);
   
   // Make sure the Server receive the command message.
   starttime = vtkTimerLog::GetUniversalTime();
@@ -138,7 +132,7 @@ int vtkMRMLConnectorCommandSendAndReceiveTest(int argc, char * argv [] )
   serverConnectorNode->Stop();
   clientConnectorNode->Delete();
   serverConnectorNode->Delete();
-  //Condition only holds when both onCommandReceivedEventFunc and onCommanResponseReceivedEventFunc are called.
+  //Condition only holds when both onCommandReceivedEventFunc and onCommandResponseReceivedEventFunc are called.
   
   std::cout<<"Test variable value: "<<commandServerObsever->testSuccessful<<std::endl;
   if (commandServerObsever->testSuccessful==2)

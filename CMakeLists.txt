@@ -38,6 +38,8 @@ endif()
 #-----------------------------------------------------------------------------
 # Extension modules
 add_subdirectory(OpenIGTLinkIF)
+add_subdirectory(OpenIGTLinkRemote)
+add_subdirectory(PlusRemote)
 ## NEXT_MODULE
 
 #-----------------------------------------------------------------------------

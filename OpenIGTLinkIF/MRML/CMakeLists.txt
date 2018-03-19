@@ -8,7 +8,6 @@ set(${KIT}_INCLUDE_DIRECTORIES
   ${CMAKE_CURRENT_SOURCE_DIR}/../Logic
   ${CMAKE_CURRENT_BINARY_DIR}/../Logic
   ${OpenIGTLinkIO_INCLUDE_DIRS}
-  ${vtkSlicerOpenIGTLinkIFModuleCommand_INCLUDE_DIRS}
   )
 
 set(${KIT}_SRCS
@@ -25,6 +24,8 @@ if(OpenIGTLink_PROTOCOL_VERSION GREATER 1)
     vtkMRMLIGTLTrackingDataQueryNode.cxx
     vtkMRMLIGTLTrackingDataBundleNode.cxx
     vtkMRMLIGTLSensorNode.cxx
+    vtkSlicerOpenIGTLinkCommand.cxx
+    vtkSlicerOpenIGTLinkCommand.h
     )
 endif()
 
@@ -41,7 +42,6 @@ set(${KIT}_TARGET_LIBRARIES
   SlicerBaseLogic
   vtkSlicerAnnotationsModuleMRML
   vtkSlicerMarkupsModuleMRML
-  vtkSlicerOpenIGTLinkIFModuleCommand
   )
 
 #-----------------------------------------------------------------------------

@@ -31,7 +31,6 @@ set(OpenIGTLinkIO_DIR "" CACHE PATH "OpenIGTLinkIO directory")
 find_package(OpenIGTLinkIO REQUIRED PATHS ${OpenIGTLinkIO_DIR})
 
 #-----------------------------------------------------------------------------
-add_subdirectory(Command)
 add_subdirectory(MRML)
 add_subdirectory(Logic)
 add_subdirectory(Widgets)
@@ -49,8 +48,6 @@ set(MODULE_INCLUDE_DIRECTORIES
   ${CMAKE_CURRENT_BINARY_DIR}/MRML
   ${CMAKE_CURRENT_SOURCE_DIR}/Widgets
   ${CMAKE_CURRENT_BINARY_DIR}/Widgets
-  ${CMAKE_CURRENT_SOURCE_DIR}/Command
-  ${CMAKE_CURRENT_BINARY_DIR}/Command
   )
 
 set(MODULE_SRCS
@@ -68,7 +65,6 @@ set(MODULE_UI_SRCS
 set(MODULE_TARGET_LIBRARIES
   vtkSlicerOpenIGTLinkIFModuleLogic
   vtkSlicerOpenIGTLinkIFModuleMRML
-  vtkSlicerOpenIGTLinkIFModuleCommand
   qSlicerOpenIGTLinkIFModuleWidgets
   ${MRML_LIBRARIES}
   )
