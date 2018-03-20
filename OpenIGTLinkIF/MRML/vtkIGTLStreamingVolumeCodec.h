@@ -24,11 +24,11 @@ public:
   void ProcessLinkedDeviceModifiedEvents( vtkObject *caller, unsigned long event, void *callData );
 
   virtual std::string GetDeviceType() const;
-  virtual int UncompressedDataFromStream(std::string bitStreamData, bool checkCRC);
+  virtual int UncompressedDataFromStream(vtkUnsignedCharArray* bitStreamData, bool checkCRC);
 
-  virtual std::string GetCompressedStreamFromData();
+  virtual vtkUnsignedCharArray* GetCompressedStreamFromData();
 
-  std::string GetStreamFromContentUsingDefaultDevice();
+  vtkUnsignedCharArray* GetStreamFromContentUsingDefaultDevice();
 
   int LinkIGTLIOVideoDevice(igtlio::Device* device);
   int LinkIGTLIOImageDevice(igtlio::Device* device);

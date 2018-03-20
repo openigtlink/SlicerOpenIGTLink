@@ -18,6 +18,9 @@
 
 //-----------------------------------------------------------------------------
 #include "qSlicerCoreApplication.h"
+#include "vtkSlicerVolumesLogic.h"
+#include <qSlicerCoreApplication.h>
+#include <qSlicerModuleManager.h>
 
 // OpenIGTLinkIF MRML includes
 #include "qSlicerOpenIGTLinkIFModule.h"
@@ -26,7 +29,9 @@
 // OpenIGTLinkIF Logic includes
 #include <vtkSlicerOpenIGTLinkIFLogic.h>
 
+//MRML include
 #include "vtkMRMLIGTLConnectorNode.h"
+#include "vtkIGTLStreamingVolumeCodec.h"
 
 
 //-----------------------------------------------------------------------------
@@ -117,6 +122,14 @@ QStringList qSlicerOpenIGTLinkIFModule::categories() const
 void qSlicerOpenIGTLinkIFModule::setup()
 {
   this->Superclass::setup();
+  qSlicerAbstractCoreModule* volumesModule =
+    qSlicerCoreApplication::application()->moduleManager()->module("Volumes");
+  vtkSlicerVolumesLogic* volumesLogic  = vtkSlicerVolumesLogic::SafeDownCast(volumesModule->logic());
+  vtkStreamingVolumeCodecFactory* codecFactory = volumesLogic->GetCodecFactory();
+  vtkIGTLStreamingVolumeCodec* codec =  vtkIGTLStreamingVolumeCodec::New();
+  codecFactory->RegisterStreamingVolumeCodec(codec->GetDeviceType(), (vtkStreamingVolumeCodecFactory::PointerToCodecBaseNew)&vtkIGTLStreamingVolumeCodec::New);
+  codec->Delete();
+  codec = NULL;
 }
 
 //-----------------------------------------------------------------------------

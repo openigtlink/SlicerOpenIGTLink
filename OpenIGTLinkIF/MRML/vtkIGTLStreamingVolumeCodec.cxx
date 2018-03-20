@@ -23,6 +23,9 @@ vtkIGTLStreamingVolumeCodec::vtkIGTLStreamingVolumeCodec()
   this->DefaultVideoDevice = igtlio::VideoDevice::New();
   this->LinkedDevice = NULL;
   this->CompressImageDeviceContent = false;
+  this->Content->frame = vtkUnsignedCharArray::New();
+  this->Content->keyFrame = vtkUnsignedCharArray::New();
+  
 }
 
 //---------------------------------------------------------------------------
@@ -72,22 +75,21 @@ void vtkIGTLStreamingVolumeCodec::CopyVideoMessageIntoKeyFrameMSG(igtl::VideoMes
 {
   igtl_header* h_key = (igtl_header*) keyFrameMsg->GetPackPointer();
   igtl_header_convert_byte_order(h_key);
-  char * messageString = new char[keyFrameMsg->GetPackSize()];
-  memcpy(messageString, (char*)h_key, IGTL_HEADER_SIZE);
-  memcpy(messageString+IGTL_HEADER_SIZE, keyFrameMsg->GetPackBodyPointer(), keyFrameMsg->GetPackSize() - IGTL_HEADER_SIZE);
-  Content->keyFrame.resize(keyFrameMsg->GetPackSize());
-  Content->keyFrame.assign(messageString, keyFrameMsg->GetPackSize());
+  Content->keyFrame->SetNumberOfTuples(keyFrameMsg->GetPackSize());
+  char * keyFramePointer = reinterpret_cast<char*>(Content->keyFrame->GetPointer(0));
+  memcpy(keyFramePointer, (char*)h_key, IGTL_HEADER_SIZE);
+  memcpy(keyFramePointer+IGTL_HEADER_SIZE, keyFrameMsg->GetPackBodyPointer(), keyFrameMsg->GetPackSize() - IGTL_HEADER_SIZE);
+  
 }
 
 void vtkIGTLStreamingVolumeCodec::CopyVideoMessageIntoFrameMSG(igtl::VideoMessage::Pointer frameMsg)
 {
   igtl_header* h_key = (igtl_header*) frameMsg->GetPackPointer();
   igtl_header_convert_byte_order(h_key);
-  char * messageString = new char[frameMsg->GetPackSize()];
-  memcpy(messageString, (char*)h_key, IGTL_HEADER_SIZE);
-  memcpy(messageString+IGTL_HEADER_SIZE, frameMsg->GetPackBodyPointer(), frameMsg->GetPackSize() - IGTL_HEADER_SIZE);
-  Content->frame.resize(frameMsg->GetPackSize());
-  Content->frame.assign(messageString, frameMsg->GetPackSize());
+  Content->frame->SetNumberOfTuples(frameMsg->GetPackSize());
+  char * framePointer = reinterpret_cast<char*>(Content->frame->GetPointer(0));
+  memcpy(framePointer, (char*)h_key, IGTL_HEADER_SIZE);
+  memcpy(framePointer+IGTL_HEADER_SIZE, frameMsg->GetPackBodyPointer(), frameMsg->GetPackSize() - IGTL_HEADER_SIZE);
 }
 
 int vtkIGTLStreamingVolumeCodec::LinkIGTLIOVideoDevice(igtlio::Device* device)
@@ -118,9 +120,8 @@ int vtkIGTLStreamingVolumeCodec::LinkIGTLIOImageDevice(igtlio::Device* device)
   deviceContent.image = modifiedDevice->GetContent().image;
   DefaultVideoDevice->SetContent(deviceContent);
   this->Content->image = modifiedDevice->GetContent().image;
-  std::string frameMessage(this->GetStreamFromContentUsingDefaultDevice()); // in this line FrameMSG is updated.
-  this->Content->keyFrame.resize(frameMessage.length());
-  this->Content->keyFrame.assign(frameMessage, frameMessage.length());
+  this->GetStreamFromContentUsingDefaultDevice(); // in this line FrameMSG is updated.
+  this->Content->keyFrame->DeepCopy(this->Content->frame);
   Content->keyFrameUpdated = true;
   modifiedDevice->AddObserver(modifiedDevice->GetDeviceContentModifiedEvent(), this, &vtkIGTLStreamingVolumeCodec::ProcessLinkedDeviceModifiedEvents);
   this->LinkedDevice = device;
@@ -128,7 +129,7 @@ int vtkIGTLStreamingVolumeCodec::LinkIGTLIOImageDevice(igtlio::Device* device)
 }
 
 //---------------------------------------------------------------------------
-int vtkIGTLStreamingVolumeCodec::UncompressedDataFromStream(std::string bitStreamData, bool checkCRC)
+int vtkIGTLStreamingVolumeCodec::UncompressedDataFromStream(vtkUnsignedCharArray* bitStreamData, bool checkCRC)
 {
   //To do : use the buffer to update Content.image
    if (this->LinkedDevice == NULL && this->DefaultVideoDevice == NULL)
@@ -136,19 +137,19 @@ int vtkIGTLStreamingVolumeCodec::UncompressedDataFromStream(std::string bitStrea
       vtkWarningMacro("Video Devices are NULL, message not generated.")
       return 0;
     }
-  if (bitStreamData.size()<=0)
+  if (bitStreamData == NULL)
     {
     vtkWarningMacro("message size equal to zero.")
     return 0;
     }
   igtl::MessageHeader::Pointer headerMsg = igtl::MessageHeader::New();
   headerMsg->InitPack();
-  memcpy(headerMsg->GetPackPointer(), bitStreamData.c_str(), headerMsg->GetPackSize());
+  memcpy(headerMsg->GetPackPointer(), bitStreamData->GetPointer(0), headerMsg->GetPackSize());
   headerMsg->Unpack();
   igtl::MessageBase::Pointer buffer = igtl::MessageBase::New();
   buffer->SetMessageHeader(headerMsg);
   buffer->AllocatePack();
-  memcpy(buffer->GetPackBodyPointer(), bitStreamData.c_str()+IGTL_HEADER_SIZE, buffer->GetPackBodySize());
+  memcpy(buffer->GetPackBodyPointer(), bitStreamData->GetPointer(0)+IGTL_HEADER_SIZE, buffer->GetPackBodySize());
   if (strcmp(headerMsg->GetDeviceType(), igtlio::ImageConverter::GetIGTLTypeName()) == 0 ||
       this->LinkedDevice == NULL ||
       this->LinkedDevice->GetDeviceType().compare(igtlio::ImageConverter::GetIGTLTypeName()) == 0)
@@ -179,17 +180,17 @@ int vtkIGTLStreamingVolumeCodec::UncompressedDataFromStream(std::string bitStrea
 
 //---------------------------------------------------------------------------
 
-std::string vtkIGTLStreamingVolumeCodec::GetCompressedStreamFromData()
+vtkUnsignedCharArray* vtkIGTLStreamingVolumeCodec::GetCompressedStreamFromData()
 {
   return this->GetStreamFromContentUsingDefaultDevice();
 }
 
-std::string vtkIGTLStreamingVolumeCodec::GetStreamFromContentUsingDefaultDevice()
+vtkUnsignedCharArray* vtkIGTLStreamingVolumeCodec::GetStreamFromContentUsingDefaultDevice()
 {
   if (!Content->image)
     {
     vtkWarningMacro("Image is NULL, message not generated.")
-    return "";
+    return NULL;
     }
   igtlio::VideoConverter::ContentData deviceContent = DefaultVideoDevice->GetContent();
   deviceContent.image = Content->image;
@@ -198,11 +199,10 @@ std::string vtkIGTLStreamingVolumeCodec::GetStreamFromContentUsingDefaultDevice(
   if (videoMessage.GetPointer() == NULL)
     {
     vtkWarningMacro("Encoding failed, message not generated.")
-    return "";
+    return NULL;
     }
   this->CopyVideoMessageIntoFrameMSG(videoMessage);
-  std::string compressedBitStream(Content->frame);
-  return compressedBitStream;
+  return Content->frame;
 }
 
 //---------------------------------------------------------------------------
