@@ -2,7 +2,6 @@
 
 //OpenIGTLink includes
 #include "igtlOSUtil.h"
-#include "igtlioCommandDevice.h"
 
 // IF module includes
 #include "vtkMRMLIGTLConnectorNode.h"
@@ -17,7 +16,6 @@
 #include <vtkObjectFactory.h>
 #include <vtkWeakPointer.h>
 #include <vtkCallbackCommand.h>
-#include "igtlioImageDevice.h"
 #include "vtkMRMLCoreTestingMacros.h"
 #include "vtkTestingOutputWindow.h"
 
@@ -38,7 +36,6 @@ public:
   void onCommandReceivedEventFunc(vtkObject* caller, unsigned long eid, void *calldata)
   {
   vtkSlicerOpenIGTLinkCommand* command = reinterpret_cast<vtkSlicerOpenIGTLinkCommand*>(calldata);
-  const char* commandName = command->GetCommandName();
   command->SetResponseText(ResponseString.c_str());
   ConnectorNode->SendCommandResponse(command);
   std::cout << "*** COMMAND received from client:" << std::endl;
@@ -56,13 +53,16 @@ public:
     testSuccessful +=1;
     }
   }
-  int testSuccessful = 0;
-  std::string ResponseString = "<Command>\n <Result success=\"true\"> <Parameter Name=\"Depth\" /> </Result>\n</Command>";
-  vtkMRMLIGTLConnectorNode* ConnectorNode = NULL;
+  int testSuccessful;
+  std::string ResponseString;
+  vtkMRMLIGTLConnectorNode* ConnectorNode;
   
 protected:
   CommandObserver()
   {
+  testSuccessful = 0;
+  ConnectorNode = NULL;
+  ResponseString = "<Command>\n <Result success=\"true\"> <Parameter Name=\"Depth\" /> </Result>\n</Command>";
   };
   
 };
@@ -105,6 +105,10 @@ int vtkMRMLConnectorCommandSendAndReceiveTest(int argc, char * argv [] )
     if (clientConnectorNode->GetState() == vtkMRMLIGTLConnectorNode::StateOff)
       {
       std::cout << "FAILURE to connect to server" << std::endl;
+      clientConnectorNode->Stop();
+      serverConnectorNode->Stop();
+      clientConnectorNode->Delete();
+      serverConnectorNode->Delete();
       return EXIT_FAILURE;
       }
     }

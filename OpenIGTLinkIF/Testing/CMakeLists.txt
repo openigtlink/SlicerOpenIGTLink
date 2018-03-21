@@ -3,11 +3,11 @@ set(KIT ${PROJECT_NAME})
 #-----------------------------------------------------------------------------
 set(${KIT}_TEST_SRCS
   vtkMRMLConnectorCommandSendAndReceiveTest.cxx
-  #vtkMRMLConnectorImageSendAndReceiveTest.cxx
+  vtkMRMLConnectorImageSendAndReceiveTest.cxx
   )
-if(Slicer_USE_VP9)
+if(SlicerOpenIGTLink_USE_VP9)
   LIST(APPEND ${KIT}_TEST_SRCS
-   #vtkMRMLConnectorVideoSendAndReceiveTest.cxx
+    vtkMRMLConnectorVideoSendAndReceiveTest.cxx
   )
 endif()
 #-----------------------------------------------------------------------------
@@ -35,3 +35,8 @@ target_link_libraries(${KIT}CxxTests ${${KIT}_TARGET_LIBRARIES})
 
 #-----------------------------------------------------------------------------
 simple_test(vtkMRMLConnectorCommandSendAndReceiveTest)
+simple_test(vtkMRMLConnectorImageSendAndReceiveTest)
+if(SlicerOpenIGTLink_USE_VP9)
+  simple_test(vtkMRMLConnectorVideoSendAndReceiveTest)
+endif()
+

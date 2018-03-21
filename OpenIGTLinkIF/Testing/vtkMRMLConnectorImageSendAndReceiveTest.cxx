@@ -2,7 +2,7 @@
 
 //OpenIGTLink includes
 #include "igtlOSUtil.h"
-#include "igtlioImageDevice.h"
+#include "igtlioDevice.h"
 
 // IF module includes
 #include "vtkMRMLIGTLConnectorNode.h"
@@ -12,63 +12,54 @@
 #include <vtksys/SystemTools.hxx>
 #include <vtkSmartPointer.h>
 #include <vtkObject.h>
+#include <vtkObjectFactory.h>
 #include <vtkWeakPointer.h>
 #include <vtkCallbackCommand.h>
-#include <vtkImageData.h>
 #include <vtkMRMLVectorVolumeNode.h>
-
+#include "vtkImageData.h"
 #include "vtkMRMLCoreTestingMacros.h"
 #include "vtkTestingOutputWindow.h"
 
-vtkSmartPointer<vtkImageData> CreateTestImage()
-{
-  vtkSmartPointer<vtkImageData> image = vtkSmartPointer<vtkImageData>::New();
-  image->SetSpacing(1.5, 1.2, 1);
-  image->SetExtent(0, 19, 0, 49, 0, 1);
-  image->AllocateScalars(VTK_UNSIGNED_CHAR, 3);
 
-  int scalarSize = image->GetScalarSize();
-  unsigned char* ptr = reinterpret_cast<unsigned char*>(image->GetScalarPointer());
-  unsigned char color = 0;
-  std::fill(ptr, ptr+scalarSize, color++);
-
-  return image;
-}
-
-class ImageObserver:vtkObject
+class ImageObserver: public vtkObject
 {
 public:
   static ImageObserver *New(){
   VTK_STANDARD_NEW_BODY(ImageObserver);
   };
   vtkTypeMacro(ImageObserver, vtkObject);
+  ~ImageObserver(){};
   void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE
   {
     vtkObject::PrintSelf(os, indent);
   };
-  void SetSendImage(vtkSmartPointer<vtkImageData> image){this->SendImage = image;};
-  void onImagedReceivedEventFunc(vtkObject* caller, unsigned long eid, void *calldata)
+  void onImagedReceivedEventFunc(vtkObject* caller, unsigned long eid,  void *calldata)
   {
-    std::cout << "*** COMMAND response received from server" << std::endl;
-    igtlio::ImageDevicePointer imageDevice = reinterpret_cast<igtlio::ImageDevice*>(calldata);
-    ImageObserver* imageOb = reinterpret_cast<ImageObserver*>(calldata);
-    vtkSmartPointer<vtkImageData> sendImage = imageOb->GetSendImage();
-    vtkSmartPointer<vtkImageData> receivedImage = imageDevice->GetContent().image;
-    if (1)
-      {
-      testSuccessful +=1;
-      }
+    std::cout << "*** Image received from server" << std::endl;
+    testSuccessful +=1;
   };
-  vtkSmartPointer<vtkImageData> GetSendImage(){return this->SendImage;};
-  vtkSmartPointer<class vtkCallbackCommand> ImageReceivedEventCallback;
-  int testSuccessful ;
+  int testSuccessful;
+  
+  vtkSmartPointer<vtkImageData> CreateTestImage()
+  {
+    vtkSmartPointer<vtkImageData> image = vtkSmartPointer<vtkImageData>::New();
+    image->SetSpacing(1.5, 1.2, 1);
+    image->SetExtent(0, 19, 0, 49, 0, 1);
+    image->AllocateScalars(VTK_UNSIGNED_CHAR, 3);
+
+    int scalarSize = image->GetScalarSize();
+    unsigned char* ptr = reinterpret_cast<unsigned char*>(image->GetScalarPointer());
+    unsigned char color = 0;
+    std::fill(ptr, ptr+scalarSize, color++);
+
+    return image;
+  };
+
 protected:
   ImageObserver()
   {
   testSuccessful = 0;
   };
-  vtkSmartPointer<vtkImageData> SendImage;
-  ~ImageObserver(){};
 };
 
 int vtkMRMLConnectorImageSendAndReceiveTest(int argc, char * argv [] )
@@ -78,14 +69,14 @@ int vtkMRMLConnectorImageSendAndReceiveTest(int argc, char * argv [] )
   vtkMRMLIGTLConnectorNode * serverConnectorNode = vtkMRMLIGTLConnectorNode::New();
   // The connector type, server port, and etc,  are set by the qSlicerIGTLConnectorPropertyWidget
   // To make the test simple, just set the port directly.
-  serverConnectorNode->SetTypeServer(18944);
+  serverConnectorNode->SetTypeServer(18945);
   serverConnectorNode->Start();
   serverConnectorNode->SetScene(scene);
   igtl::Sleep(20);
   vtkSmartPointer<vtkMRMLIGTLConnectorNode> clientConnectorNode = vtkMRMLIGTLConnectorNode::New();
-  ImageObserver* imageClientObsever = ImageObserver::New();
-  clientConnectorNode->AddObserver(clientConnectorNode->NewDeviceEvent, imageClientObsever->ImageReceivedEventCallback);
-  clientConnectorNode->SetTypeClient("localhost", 18944);
+  vtkSmartPointer<ImageObserver> imageClientObsever = ImageObserver::New();
+  clientConnectorNode->AddObserver(clientConnectorNode->NewDeviceEvent, imageClientObsever, &ImageObserver::onImagedReceivedEventFunc);
+  clientConnectorNode->SetTypeClient("localhost", 18945);
   clientConnectorNode->Start();
   
   // Make sure the server and client are connected.
@@ -107,16 +98,30 @@ int vtkMRMLConnectorImageSendAndReceiveTest(int argc, char * argv [] )
     if (clientConnectorNode->GetState() == vtkMRMLIGTLConnectorNode::StateOff)
     {
       std::cout << "FAILURE to connect to server" << std::endl;
+      clientConnectorNode->Stop();
+      serverConnectorNode->Stop();
+      clientConnectorNode->Delete();
+      serverConnectorNode->Delete();
+      scene->Delete();
       return EXIT_FAILURE;
     }
   }
   
   std::string device_name = "TestDevice";
-  vtkSmartPointer<vtkImageData> testImage = CreateTestImage();
-  imageClientObsever->SetSendImage(testImage);
+  vtkSmartPointer<vtkImageData> testImage = imageClientObsever->CreateTestImage();
   vtkSmartPointer<vtkMRMLVectorVolumeNode> volumeNode = vtkSmartPointer<vtkMRMLVectorVolumeNode>::New();
   volumeNode->SetAndObserveImageData(testImage);
   scene->AddNode(volumeNode);
+  igtlio::DevicePointer imageDevice = reinterpret_cast<igtlio::Device*>(serverConnectorNode->CreateDeviceForOutgoingMRMLNode(volumeNode));
+  if (strcmp(imageDevice->GetDeviceType().c_str(), "IMAGE")!=0)
+    {
+    clientConnectorNode->Stop();
+    serverConnectorNode->Stop();
+    clientConnectorNode->Delete();
+    serverConnectorNode->Delete();
+    scene->Delete();
+    return EXIT_FAILURE;
+    }
   serverConnectorNode->PushNode(volumeNode);
   
   // Make sure the Client receive the response message.
@@ -129,11 +134,15 @@ int vtkMRMLConnectorImageSendAndReceiveTest(int argc, char * argv [] )
   vtksys::SystemTools::Delay(5000);
   clientConnectorNode->Stop();
   serverConnectorNode->Stop();
-  
+  clientConnectorNode->Delete();
+  serverConnectorNode->Delete();
+  scene->Delete();
   //Condition only holds when both onCommandReceivedEventFunc and onCommanResponseReceivedEventFunc are called.
-  if (imageClientObsever->testSuccessful==2)
+  if (imageClientObsever->testSuccessful==1)
     {
+    imageClientObsever->Delete();
     return EXIT_SUCCESS;
     }
+  imageClientObsever->Delete();
   return EXIT_FAILURE;
 }

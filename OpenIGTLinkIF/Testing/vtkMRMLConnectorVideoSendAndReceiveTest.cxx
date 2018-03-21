@@ -2,7 +2,7 @@
 
 //OpenIGTLink includes
 #include "igtlOSUtil.h"
-#include "igtlioCommandDevice.h"
+#include "igtlioDevice.h"
 
 // IF module includes
 #include "vtkMRMLIGTLConnectorNode.h"
@@ -12,84 +12,69 @@
 #include <vtksys/SystemTools.hxx>
 #include <vtkSmartPointer.h>
 #include <vtkObject.h>
+#include <vtkObjectFactory.h>
 #include <vtkWeakPointer.h>
 #include <vtkCallbackCommand.h>
-
+#include "vtkMRMLBitStreamNode.h"
+#include "vtkImageData.h"
 #include "vtkMRMLCoreTestingMacros.h"
 #include "vtkTestingOutputWindow.h"
 
-static int testSuccessful = 0;
-static std::string ResponseString = "<Command>\n <Result success=true> <Parameter Name=”Depth” /> </Result>\n </Command>";
-
-void onCommandReceivedEventFunc(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata)
-{
-  vtkMRMLIGTLConnectorNode* connectorNode = vtkMRMLIGTLConnectorNode::SafeDownCast(caller);
-  igtlio::CommandDevice* clientDevice = reinterpret_cast<igtlio::CommandDevice*>(calldata);
-  connectorNode->SendCommandResponse(clientDevice->GetDeviceName(), "Get", ResponseString);
-  std::cout << "*** COMMAND received from client" << std::endl;
-  testSuccessful +=1;
-}
-
-void onCommanResponseReceivedEventFunc(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata)
-{
-  std::cout << "*** COMMAND response received from server" << std::endl;
-  igtlio::CommandDevice* serverDevice = reinterpret_cast<igtlio::CommandDevice*>(calldata);
-  std::vector<igtlio::CommandDevice::QueryType> queries = serverDevice->GetQueries();
-  if (queries.size()==1)
-    {
-    igtlio::CommandDevicePointer commandDevice = reinterpret_cast<igtlio::CommandDevice*>(queries[0].Response.GetPointer());
-    std::cout<<commandDevice->GetContent().content;
-    if (ResponseString.compare(commandDevice->GetContent().content) == 0)
-      {
-      testSuccessful +=1;
-      }
-    }
-}
-
-class CommandObserver:vtkObject
+class VideoObserver: public vtkObject
 {
 public:
-  static CommandObserver *New(){
-  VTK_STANDARD_NEW_BODY(CommandObserver);
+  static VideoObserver *New(){
+  VTK_STANDARD_NEW_BODY(VideoObserver);
   };
-  vtkTypeMacro(CommandObserver, vtkObject);
+  vtkTypeMacro(VideoObserver, vtkObject);
+  ~VideoObserver(){};
   void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE
   {
     vtkObject::PrintSelf(os, indent);
   };
-  
-  vtkSmartPointer<class vtkCallbackCommand> CommandReceivedEventCallback;
-  vtkSmartPointer<class vtkCallbackCommand> CommandResponseReceivedEventCallback;
-protected:
-  CommandObserver()
+  void onVideoReceivedEventFunc(vtkObject* caller, unsigned long eid,  void *calldata)
   {
-    CommandReceivedEventCallback = vtkSmartPointer<vtkCallbackCommand>::New();
-    CommandReceivedEventCallback->SetCallback(onCommandReceivedEventFunc);
-    CommandReceivedEventCallback->SetClientData(this);
-    CommandResponseReceivedEventCallback = vtkSmartPointer<vtkCallbackCommand>::New();
-    CommandResponseReceivedEventCallback->SetCallback(onCommanResponseReceivedEventFunc);
-    CommandResponseReceivedEventCallback->SetClientData(this);
+    std::cout << "*** Video received from server" << std::endl;
+    testSuccessful +=1;
   };
-  ~CommandObserver(){};
+  int testSuccessful;
+  vtkSmartPointer<vtkImageData> CreateTestImage()
+  {
+    vtkSmartPointer<vtkImageData> image = vtkSmartPointer<vtkImageData>::New();
+    image->SetSpacing(1.5, 1.2, 1);
+    image->SetExtent(0, 19, 0, 49, 0, 1);
+    image->AllocateScalars(VTK_UNSIGNED_CHAR, 3);
+
+    int scalarSize = image->GetScalarSize();
+    unsigned char* ptr = reinterpret_cast<unsigned char*>(image->GetScalarPointer());
+    unsigned char color = 0;
+    std::fill(ptr, ptr+scalarSize, color++);
+
+    return image;
+  };
+protected:
+  VideoObserver()
+  {
+  testSuccessful = 0;
+  };
 };
 
 int vtkMRMLConnectorVideoSendAndReceiveTest(int argc, char * argv [] )
 {
+  vtkSmartPointer<vtkMRMLScene> scene = vtkMRMLScene::New();
   // Setup the Server and client, as well as the event observers.
   vtkMRMLIGTLConnectorNode * serverConnectorNode = vtkMRMLIGTLConnectorNode::New();
-  CommandObserver* commandServerObsever = CommandObserver::New();
-  serverConnectorNode->AddObserver(serverConnectorNode->CommandReceivedEvent, commandServerObsever->CommandReceivedEventCallback);
   // The connector type, server port, and etc,  are set by the qSlicerIGTLConnectorPropertyWidget
   // To make the test simple, just set the port directly.
-  serverConnectorNode->SetTypeServer(18944);
+  serverConnectorNode->SetTypeServer(18946);
   serverConnectorNode->Start();
+  serverConnectorNode->SetScene(scene);
   igtl::Sleep(20);
-  vtkMRMLIGTLConnectorNode * clientConnectorNode = vtkMRMLIGTLConnectorNode::New();
-  CommandObserver* commandClientObsever = CommandObserver::New();
-  clientConnectorNode->AddObserver(clientConnectorNode->CommandResponseReceivedEvent, commandClientObsever->CommandResponseReceivedEventCallback);
-  clientConnectorNode->SetTypeClient("localhost", 18944);
+  vtkSmartPointer<vtkMRMLIGTLConnectorNode> clientConnectorNode = vtkMRMLIGTLConnectorNode::New();
+  vtkSmartPointer<VideoObserver> videoClientObsever = VideoObserver::New();
+  clientConnectorNode->AddObserver(clientConnectorNode->NewDeviceEvent, videoClientObsever, &VideoObserver::onVideoReceivedEventFunc);
+  clientConnectorNode->SetTypeClient("localhost", 18946);
   clientConnectorNode->Start();
-  
   // Make sure the server and client are connected.
   double timeout = 5;
   double starttime = vtkTimerLog::GetUniversalTime();
@@ -109,20 +94,30 @@ int vtkMRMLConnectorVideoSendAndReceiveTest(int argc, char * argv [] )
     if (clientConnectorNode->GetState() == vtkMRMLIGTLConnectorNode::StateOff)
     {
       std::cout << "FAILURE to connect to server" << std::endl;
+      clientConnectorNode->Stop();
+      serverConnectorNode->Stop();
+      clientConnectorNode->Delete();
+      serverConnectorNode->Delete();
+      scene->Delete();
       return EXIT_FAILURE;
     }
   }
-  
   std::string device_name = "TestDevice";
-  clientConnectorNode->SendCommand(device_name,"Get", "<Command>\n <Parameter Name=\"Depth\" />\n </Command>", false);
-  
-  // Make sure the Server receive the command message.
-  starttime = vtkTimerLog::GetUniversalTime();
-  while (vtkTimerLog::GetUniversalTime() - starttime < timeout)
+  vtkSmartPointer<vtkImageData> testImage = videoClientObsever->CreateTestImage();
+  vtkSmartPointer<vtkMRMLBitStreamNode> volumeNode = vtkSmartPointer<vtkMRMLBitStreamNode>::New();
+  volumeNode->SetAndObserveImageData(testImage);
+  scene->AddNode(volumeNode);
+  igtlio::DevicePointer videoDevice = reinterpret_cast<igtlio::Device*>(serverConnectorNode->CreateDeviceForOutgoingMRMLNode(volumeNode));
+  if (strcmp(videoDevice->GetDeviceType().c_str(), "VIDEO")!=0)
     {
-    serverConnectorNode->PeriodicProcess();
-    vtksys::SystemTools::Delay(5);
+    clientConnectorNode->Stop();
+    serverConnectorNode->Stop();
+    clientConnectorNode->Delete();
+    serverConnectorNode->Delete();
+    scene->Delete();
+    return EXIT_FAILURE;
     }
+  serverConnectorNode->PushNode(volumeNode);
   
   // Make sure the Client receive the response message.
   starttime = vtkTimerLog::GetUniversalTime();
@@ -131,13 +126,18 @@ int vtkMRMLConnectorVideoSendAndReceiveTest(int argc, char * argv [] )
     clientConnectorNode->PeriodicProcess();
     vtksys::SystemTools::Delay(5);
     }
+  vtksys::SystemTools::Delay(5000);
   clientConnectorNode->Stop();
   serverConnectorNode->Stop();
-  
+  clientConnectorNode->Delete();
+  serverConnectorNode->Delete();
+  scene->Delete();
   //Condition only holds when both onCommandReceivedEventFunc and onCommanResponseReceivedEventFunc are called.
-  if (testSuccessful==2)
+  if (videoClientObsever->testSuccessful==1)
     {
+    videoClientObsever->Delete();
     return EXIT_SUCCESS;
     }
+  videoClientObsever->Delete();
   return EXIT_FAILURE;
 }

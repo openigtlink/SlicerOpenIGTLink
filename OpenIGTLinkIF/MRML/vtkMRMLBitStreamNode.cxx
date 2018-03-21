@@ -162,7 +162,10 @@ vtkMRMLBitStreamNode::vtkMRMLBitStreamNode()
 //-----------------------------------------------------------------------------
 vtkMRMLBitStreamNode::~vtkMRMLBitStreamNode()
 {
-  delete this->Internal;
+  if(this->Internal)
+    {
+    this->Internal->Delete();
+    }
 }
 
 void vtkMRMLBitStreamNode::ProcessMRMLEvents(vtkObject *caller, unsigned long event, void *callData )

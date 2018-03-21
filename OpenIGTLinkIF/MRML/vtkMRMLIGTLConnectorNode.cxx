@@ -114,7 +114,7 @@ public:
   //----------------------------------------------------------------
 
   /// List of commands sent using SendCommand()
-  std::deque<vtkSmartPointer<vtkSlicerOpenIGTLinkCommand>> PendingCommands;
+  std::deque<vtkSmartPointer<vtkSlicerOpenIGTLinkCommand> > PendingCommands;
   vtkMutexLock* PendingCommandMutex;
 
 };
@@ -128,7 +128,7 @@ vtkMRMLIGTLConnectorNode::vtkInternal::vtkInternal(vtkMRMLIGTLConnectorNode* ext
 {
   this->IOConnector = igtlio::Connector::New();
 
-  this->PendingCommands = std::deque<vtkSmartPointer<vtkSlicerOpenIGTLinkCommand>>();
+  this->PendingCommands = std::deque<vtkSmartPointer<vtkSlicerOpenIGTLinkCommand> >();
   this->PendingCommandMutex = vtkMutexLock::New();
 }
 
@@ -619,7 +619,7 @@ igtlio::CommandDevicePointer vtkMRMLIGTLConnectorNode::vtkInternal::SendCommandR
   if (!device)
     {
     vtkErrorWithObjectMacro(this->External, "Could not find device specified!");
-    return nullptr;
+    return NULL;
     }
 
   igtlio::CommandConverter::ContentData contentdata = device->GetContent();
@@ -686,7 +686,7 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ReceiveCommandResponse(igtlio::Comma
     // Find the matching command matching the received response from the command device
     int queryID = queryDevice->GetContent().id;
     this->PendingCommandMutex->Lock();
-    for (std::deque<vtkSmartPointer<vtkSlicerOpenIGTLinkCommand>>::iterator commandIt = this->PendingCommands.begin();
+    for (std::deque<vtkSmartPointer<vtkSlicerOpenIGTLinkCommand> >::iterator commandIt = this->PendingCommands.begin();
       commandIt != this->PendingCommands.end(); ++commandIt)
       {
       if (queryID == (*commandIt)->GetQueryID())
@@ -1191,7 +1191,7 @@ void vtkMRMLIGTLConnectorNode::OnNodeReferenceAdded(vtkMRMLNodeReference *refere
         }
       if(device == NULL)
         {
-        //If no device is found, add a device using the first device type, such as prefer "IMAGE" over "VIDEO".
+        //If no device is found, add a device using the first device type, such as prefer "IMAGE" over "VIDEO" for ScalarVolumeNode.
         device = this->Internal->IOConnector->GetDeviceFactory()->create(deviceTypes[0], key.name);
         device->SetMessageDirection(igtlio::Device::MESSAGE_DIRECTION_OUT);
         if (device)
@@ -1331,7 +1331,7 @@ bool vtkMRMLIGTLConnectorNode::RegisterIncomingMRMLNode(vtkMRMLNode* node, IGTLD
     this->Modified();
   }
   
-  return &this->Internal->IncomingMRMLNodeInfoMap[node->GetID()];
+  return true;
   
 }
 
@@ -1615,10 +1615,10 @@ void vtkMRMLIGTLConnectorNode::PushQuery(vtkMRMLIGTLQueryNode* node)
 //---------------------------------------------------------------------------
 void vtkMRMLIGTLConnectorNode::CancelCommand(std::string device_id, int query_id)
 {
-  vtkSmartPointer<vtkSlicerOpenIGTLinkCommand> command = nullptr;
+  vtkSmartPointer<vtkSlicerOpenIGTLinkCommand> command = NULL;
 
   this->Internal->PendingCommandMutex->Lock();
-  for (std::deque<vtkSmartPointer<vtkSlicerOpenIGTLinkCommand>>::iterator commandIt = this->Internal->PendingCommands.begin();
+  for (std::deque<vtkSmartPointer<vtkSlicerOpenIGTLinkCommand> >::iterator commandIt = this->Internal->PendingCommands.begin();
        commandIt != this->Internal->PendingCommands.end(); ++commandIt)
     {
     if (device_id.compare((*commandIt)->GetDeviceID()) == 0 &&
@@ -1879,7 +1879,7 @@ void vtkMRMLIGTLConnectorNode::SendCommandResponse(vtkSlicerOpenIGTLinkCommand* 
 void vtkMRMLIGTLConnectorNode::SendCommandResponse(std::string device_id, std::string commandName, std::string content)
 {
   this->Internal->PendingCommandMutex->Lock();
-  for (std::deque<vtkSmartPointer<vtkSlicerOpenIGTLinkCommand>>::iterator commandIt = this->Internal->PendingCommands.begin(); commandIt != this->Internal->PendingCommands.end(); ++commandIt)
+  for (std::deque<vtkSmartPointer<vtkSlicerOpenIGTLinkCommand> >::iterator commandIt = this->Internal->PendingCommands.begin(); commandIt != this->Internal->PendingCommands.end(); ++commandIt)
     {
     if (strcmp((*commandIt)->GetDeviceID(),device_id.c_str()) == 0 &&
         strcmp((*commandIt)->GetDeviceID(), commandName.c_str()) == 0)
@@ -1994,6 +1994,9 @@ IGTLDevicePointer vtkMRMLIGTLConnectorNode::CreateDeviceForOutgoingMRMLNode(vtkM
     }
     if (device == NULL)
     {
+      //If no device is found, add a device using the first device type, such as prefer "IMAGE" over "VIDEO" for ScalarVolumeNode.
+      //"VIDEO" over "IMAGE" for Streaming volume node
+      key.type = deviceTypes[0];
       device = this->Internal->IOConnector->GetDeviceFactory()->create(key.type, key.name);
       if (device)
       {
