@@ -2,10 +2,11 @@
 
 //OpenIGTLink includes
 #include "igtlOSUtil.h"
-#include "igtlioCommandDevice.h"
 
 // IF module includes
 #include "vtkMRMLIGTLConnectorNode.h"
+
+#include "vtkSlicerOpenIGTLinkCommand.h"
 
 // VTK includes
 #include <vtkTimerLog.h>
@@ -15,7 +16,6 @@
 #include <vtkObjectFactory.h>
 #include <vtkWeakPointer.h>
 #include <vtkCallbackCommand.h>
-#include "igtlioImageDevice.h"
 #include "vtkMRMLCoreTestingMacros.h"
 #include "vtkTestingOutputWindow.h"
 
@@ -35,54 +35,55 @@ public:
   
   void onCommandReceivedEventFunc(vtkObject* caller, unsigned long eid, void *calldata)
   {
-  vtkSmartPointer<vtkMRMLIGTLConnectorNode> connectorNode = vtkMRMLIGTLConnectorNode::SafeDownCast(caller);
-  igtlio::CommandDevicePointer clientDevice = reinterpret_cast<igtlio::CommandDevice*>(calldata);
-  connectorNode->SendCommandResponse(clientDevice->GetDeviceName(), "Get", ResponseString);
-  std::cout << "*** COMMAND received from client" << std::endl;
+  vtkSlicerOpenIGTLinkCommand* command = reinterpret_cast<vtkSlicerOpenIGTLinkCommand*>(calldata);
+  command->SetResponseText(ResponseString.c_str());
+  ConnectorNode->SendCommandResponse(command);
+  std::cout << "*** COMMAND received from client:" << std::endl;
+  std::cout << command->GetCommandText() << std::endl;
   testSuccessful +=1;
   }
   
-  void onCommanResponseReceivedEventFunc(vtkObject* caller, unsigned long eid,  void *calldata)
+  void onCommandResponseReceivedEventFunc(vtkObject* caller, unsigned long eid,  void *calldata)
   {
-  std::cout << "*** COMMAND response received from server" << std::endl;
-  vtkSmartPointer<igtlio::CommandDevice> serverDevice = reinterpret_cast<igtlio::CommandDevice*>(calldata);
-  std::vector<igtlio::CommandDevice::QueryType> queries = serverDevice->GetQueries();
-  if (queries.size()==1)
+  std::cout << "*** COMMAND response received from server:" << std::endl;
+  vtkSlicerOpenIGTLinkCommand* command = reinterpret_cast<vtkSlicerOpenIGTLinkCommand*>(calldata);
+  std::cout << command->GetResponseText() << std::endl;
+  if (ResponseString.compare(command->GetResponseText()) == 0)
     {
-    igtlio::CommandDevicePointer commandDevice = reinterpret_cast<igtlio::CommandDevice*>(queries[0].Response.GetPointer());
-    std::cout<<commandDevice->GetContent().content;
-    if (ResponseString.compare(commandDevice->GetContent().content) == 0)
-      {
-      testSuccessful +=1;
-      }
+    testSuccessful +=1;
     }
   }
   int testSuccessful;
-  std::string ResponseString = "<Command>\n <Result success=true> <Parameter Name=”Depth” /> </Result>\n </Command>";
+  std::string ResponseString;
+  vtkMRMLIGTLConnectorNode* ConnectorNode;
   
 protected:
   CommandObserver()
   {
   testSuccessful = 0;
-  ResponseString = "<Command>\n <Result success=true> <Parameter Name=”Depth” /> </Result>\n </Command>";
+  ConnectorNode = NULL;
+  ResponseString = "<Command>\n <Result success=\"true\"> <Parameter Name=\"Depth\" /> </Result>\n</Command>";
   };
   
 };
 
 int vtkMRMLConnectorCommandSendAndReceiveTest(int argc, char * argv [] )
 {
+  int port = 18955;
+
   // Setup the Server and client, as well as the event observers.
   vtkSmartPointer<CommandObserver> commandServerObsever = CommandObserver::New();
   vtkSmartPointer<vtkMRMLIGTLConnectorNode> serverConnectorNode = vtkMRMLIGTLConnectorNode::New();
+  commandServerObsever->ConnectorNode = serverConnectorNode.GetPointer();
   serverConnectorNode->AddObserver(serverConnectorNode->CommandReceivedEvent, commandServerObsever, &CommandObserver::onCommandReceivedEventFunc);
   // The connector type, server port, and etc,  are set by the qSlicerIGTLConnectorPropertyWidget
   // To make the test simple, just set the port directly.
-  serverConnectorNode->SetTypeServer(18944);
+  serverConnectorNode->SetTypeServer(port);
   serverConnectorNode->Start();
   igtl::Sleep(20);
   vtkSmartPointer<vtkMRMLIGTLConnectorNode> clientConnectorNode = vtkMRMLIGTLConnectorNode::New();
-  clientConnectorNode->AddObserver(clientConnectorNode->CommandResponseReceivedEvent, commandServerObsever, &CommandObserver::onCommanResponseReceivedEventFunc);
-  clientConnectorNode->SetTypeClient("localhost", 18944);
+  clientConnectorNode->AddObserver(clientConnectorNode->CommandResponseReceivedEvent, commandServerObsever, &CommandObserver::onCommandResponseReceivedEventFunc);
+  clientConnectorNode->SetTypeClient("localhost", port);
   clientConnectorNode->Start();
   
   // Make sure the server and client are connected.
@@ -104,11 +105,16 @@ int vtkMRMLConnectorCommandSendAndReceiveTest(int argc, char * argv [] )
     if (clientConnectorNode->GetState() == vtkMRMLIGTLConnectorNode::StateOff)
       {
       std::cout << "FAILURE to connect to server" << std::endl;
+      clientConnectorNode->Stop();
+      serverConnectorNode->Stop();
+      clientConnectorNode->Delete();
+      serverConnectorNode->Delete();
       return EXIT_FAILURE;
       }
     }
   
   std::string device_name = "TestDevice";
+
   clientConnectorNode->SendCommand(device_name,"Get", "<Command>\n <Parameter Name=\"Depth\" />\n </Command>", false);
   
   // Make sure the Server receive the command message.
@@ -130,7 +136,7 @@ int vtkMRMLConnectorCommandSendAndReceiveTest(int argc, char * argv [] )
   serverConnectorNode->Stop();
   clientConnectorNode->Delete();
   serverConnectorNode->Delete();
-  //Condition only holds when both onCommandReceivedEventFunc and onCommanResponseReceivedEventFunc are called.
+  //Condition only holds when both onCommandReceivedEventFunc and onCommandResponseReceivedEventFunc are called.
   
   std::cout<<"Test variable value: "<<commandServerObsever->testSuccessful<<std::endl;
   if (commandServerObsever->testSuccessful==2)

@@ -3,11 +3,11 @@ set(KIT ${PROJECT_NAME})
 #-----------------------------------------------------------------------------
 set(${KIT}_TEST_SRCS
   vtkMRMLConnectorCommandSendAndReceiveTest.cxx
-  #vtkMRMLConnectorImageSendAndReceiveTest.cxx
+  vtkMRMLConnectorImageSendAndReceiveTest.cxx
   )
-if(Slicer_USE_VP9)
+if(SlicerOpenIGTLink_USE_VP9)
   LIST(APPEND ${KIT}_TEST_SRCS
-   #vtkMRMLConnectorVideoSendAndReceiveTest.cxx
+    vtkMRMLConnectorVideoSendAndReceiveTest.cxx
   )
 endif()
 #-----------------------------------------------------------------------------
@@ -24,6 +24,10 @@ set(${KIT}_TARGET_LIBRARIES
   SlicerBaseLogic
   )
 
+# Add '--launcher-additional-settings' to launch command
+list(FIND Slicer_LAUNCH_COMMAND "--launch" launch_index)
+list(INSERT Slicer_LAUNCH_COMMAND ${launch_index} ${Slicer_ADDITIONAL_LAUNCHER_SETTINGS}) 
+
 #-----------------------------------------------------------------------------
 add_executable(${KIT}CxxTests ${Tests})
 set_target_properties(${KIT}CxxTests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${Slicer_BIN_DIR})
@@ -31,3 +35,8 @@ target_link_libraries(${KIT}CxxTests ${${KIT}_TARGET_LIBRARIES})
 
 #-----------------------------------------------------------------------------
 simple_test(vtkMRMLConnectorCommandSendAndReceiveTest)
+simple_test(vtkMRMLConnectorImageSendAndReceiveTest)
+if(SlicerOpenIGTLink_USE_VP9)
+  simple_test(vtkMRMLConnectorVideoSendAndReceiveTest)
+endif()
+

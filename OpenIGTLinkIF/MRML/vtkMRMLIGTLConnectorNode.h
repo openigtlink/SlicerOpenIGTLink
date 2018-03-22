@@ -31,6 +31,7 @@
 
 class vtkMRMLIGTLQueryNode;
 class vtkMutexLock;
+class vtkSlicerOpenIGTLinkCommand;
 
 typedef void* IGTLDevicePointer;
 
@@ -222,10 +223,25 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   ///  TODO: return a command object that can be observed
   void SendCommand(std::string device_id, std::string command, std::string content, bool blocking = true, double timeout_s = 5);
 
+  /// Sends the specified command and attaches an observer
+  /// Blocking behavior and device_id are set in the command object
+  /// Records the id of the command in the command object
+  /// Invokes a CommandResponse event on the command object when a response is received.
+  void SendCommand(vtkSlicerOpenIGTLinkCommand* command);
+
   /// Send a command response from the given device. Asynchronous.
   /// Precondition: The given device has received a query that is not yet responded to.
   /// TODO: return a command object that can be observed
   void SendCommandResponse(std::string device_id, std::string command, std::string content);
+
+  /// Send a commmand response from the specified command.
+  void SendCommandResponse(vtkSlicerOpenIGTLinkCommand* command);
+
+  /// Cancels the command in the specified device
+  void CancelCommand(std::string device_id, int command_id);
+
+  /// Cancels the specified command
+  void CancelCommand(vtkSlicerOpenIGTLinkCommand* command);
 
   //----------------------------------------------------------------
   // For OpenIGTLink time stamp access
@@ -288,7 +304,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   vtkGetStringMacro(OutgoingNodeReferenceRole);
   vtkSetStringMacro(OutgoingNodeReferenceMRMLAttributeName);
   vtkGetStringMacro(OutgoingNodeReferenceMRMLAttributeName);
-  
+
   private:
     class vtkInternal;
     vtkInternal * Internal;  
