@@ -13,21 +13,19 @@ vtkStandardNewMacro(vtkSlicerOpenIGTLinkCommand);
 
 //----------------------------------------------------------------------------
 vtkSlicerOpenIGTLinkCommand::vtkSlicerOpenIGTLinkCommand()
-: CommandName(NULL)
-, ID(NULL)
-, DeviceID(NULL)
+: CommandName("")
+, ID("")
+, DeviceID("")
 , CommandXML(NULL)
 , CommandTimeoutSec(10)
-, ExportedCommandText(NULL)
+, ExportedCommandText("")
 , ResponseXML(NULL)
-, ResponseTextInternal(NULL)
+, ResponseTextInternal("")
 , Status(CommandUnknown)
 , Direction(CommandOut)
 , Blocking(true)
+, CommandVersion(IGTL_HEADER_VERSION_1)
 {
-  this->SetID("");
-  this->SetDeviceID("");
-
   this->CommandXML = vtkXMLDataElement::New();
   this->CommandXML->SetName("Command");
 }
@@ -35,19 +33,16 @@ vtkSlicerOpenIGTLinkCommand::vtkSlicerOpenIGTLinkCommand()
 //----------------------------------------------------------------------------
 vtkSlicerOpenIGTLinkCommand::~vtkSlicerOpenIGTLinkCommand()
 {
-  this->SetID(NULL);
-  if (this->CommandXML)
+  if (this->CommandXML != NULL)
     {
     this->CommandXML->Delete();
     this->CommandXML=NULL;
     }
-  this->SetExportedCommandText(NULL);
-  if (this->ResponseXML)
+  if (this->ResponseXML != NULL)
     {
     this->ResponseXML->Delete();
     this->ResponseXML=NULL;
     }
-  this->SetResponseTextInternal(NULL);
 }
 
 //----------------------------------------------------------------------------
@@ -55,9 +50,9 @@ void vtkSlicerOpenIGTLinkCommand::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os, indent);
 
-  os << "ID: " << ( (this->GetID()) ? this->GetID() : "None" ) << "\n";
+  os << "ID: " << ( (!this->GetID().empty()) ? this->GetID() : "None" ) << "\n";
   os << "Status: " << vtkSlicerOpenIGTLinkCommand::StatusToString(this->GetStatus()) << "\n";
-  os << "CommandText: " << ( (this->GetCommandText()) ? this->GetCommandText() : "None" ) << "\n";
+  os << "CommandText: " << ( (!this->GetCommandText().empty()) ? this->GetCommandText() : "None" ) << "\n";
   os << "CommandXML: ";
   if (this->CommandXML)
     {
@@ -67,7 +62,7 @@ void vtkSlicerOpenIGTLinkCommand::PrintSelf(ostream& os, vtkIndent indent)
     {
     os << "None" << "\n";
     }
-  os << "ResponseText: " << ( (this->GetResponseText()) ? this->GetResponseText() : "None" ) << "\n";
+  os << "ResponseText: " << ( (!this->GetResponseText().empty()) ? this->GetResponseText() : "None" ) << "\n";
   os << "ResponseXML: ";
   if (this->ResponseXML)
     {
@@ -79,22 +74,23 @@ void vtkSlicerOpenIGTLinkCommand::PrintSelf(ostream& os, vtkIndent indent)
     }
   os << "DeviceId: " << this->GetDeviceID() << "\n";
   os << "CommandId: " << this->GetQueryID() << "\n";
+  os << "Version: " << this->GetCommandVersion() << "\n";
 }
 
 //----------------------------------------------------------------------------
-const char* vtkSlicerOpenIGTLinkCommand::GetCommandAttribute(const char* attName)
+std::string vtkSlicerOpenIGTLinkCommand::GetCommandAttribute(const std::string attName)
 {
-  return this->CommandXML->GetAttribute(attName);
+  return std::string(this->CommandXML->GetAttribute(attName.c_str()));
 }
 
 //----------------------------------------------------------------------------
-void vtkSlicerOpenIGTLinkCommand::SetCommandAttribute(const char* attName, const char* attValue)
+void vtkSlicerOpenIGTLinkCommand::SetCommandAttribute(const std::string attName, const std::string attValue)
 {
-  this->CommandXML->SetAttribute(attName, attValue);
+  this->CommandXML->SetAttribute(attName.c_str(), attValue.c_str());
 }
 
 //----------------------------------------------------------------------------
-const char* vtkSlicerOpenIGTLinkCommand::GetCommandText()
+std::string vtkSlicerOpenIGTLinkCommand::GetCommandText()
 {
   std::ostringstream os;
   this->CommandXML->PrintXML(os, vtkIndent(0));
@@ -103,15 +99,15 @@ const char* vtkSlicerOpenIGTLinkCommand::GetCommandText()
 }
 
 //----------------------------------------------------------------------------
-bool vtkSlicerOpenIGTLinkCommand::SetCommandText(const char* text)
+bool vtkSlicerOpenIGTLinkCommand::SetCommandText(const std::string text)
 {
-  if (text==NULL)
+  if (text.empty())
     {
     vtkErrorMacro("Failed to set OpenIGTLink command from text: empty input");
     return false;
     }
 
-  vtkSmartPointer<vtkXMLDataElement> parsedElem = vtkSmartPointer<vtkXMLDataElement>::Take(vtkXMLUtilities::ReadElementFromString(text));
+  vtkSmartPointer<vtkXMLDataElement> parsedElem = vtkSmartPointer<vtkXMLDataElement>::Take(vtkXMLUtilities::ReadElementFromString(text.c_str()));
   if (parsedElem == NULL)
   {
     vtkErrorMacro("Failed to set OpenIGTLink command from text: not an XML string: "<<text);
@@ -130,7 +126,7 @@ int vtkSlicerOpenIGTLinkCommand::GetNumberOfResponses()
 }
 
 //----------------------------------------------------------------------------
-const char* vtkSlicerOpenIGTLinkCommand::GetResponseMessage(int responseID/*=0*/)
+std::string vtkSlicerOpenIGTLinkCommand::GetResponseMessage(int responseID/*=0*/)
 {
   if (this->ResponseXML == nullptr)
     {
@@ -141,8 +137,8 @@ const char* vtkSlicerOpenIGTLinkCommand::GetResponseMessage(int responseID/*=0*/
     {
     // We might expect the response message to be stored in XML as:
     // <Command Message="MESSAGE_TEXT"></Command>
-    const char* responseAttribute = this->GetResponseAttribute("Message");
-    if (responseAttribute)
+    std::string responseAttribute = this->GetResponseAttribute("Message");
+    if (!responseAttribute.empty())
       {
       return responseAttribute;
       }
@@ -175,23 +171,32 @@ const char* vtkSlicerOpenIGTLinkCommand::GetResponseMessage(int responseID/*=0*/
 }
 
 //----------------------------------------------------------------------------
-const char* vtkSlicerOpenIGTLinkCommand::GetResponseAttribute(const char* attName)
+std::string vtkSlicerOpenIGTLinkCommand::GetResponseAttribute(const std::string attName)
 {
   if (this->ResponseXML==NULL)
     {
     return NULL;
     }
-  return this->ResponseXML->GetAttribute(attName);
+
+  const char* responseAttribute= this->ResponseXML->GetAttribute(attName.c_str());
+  if (responseAttribute)
+    {
+    return std::string(responseAttribute);
+    }
+  else
+    {
+    return "";
+    }
 }
 
 //----------------------------------------------------------------------------
-const char* vtkSlicerOpenIGTLinkCommand::GetResponseText()
+std::string vtkSlicerOpenIGTLinkCommand::GetResponseText()
 {
   return this->ResponseTextInternal;
 }
 
 //----------------------------------------------------------------------------
-void vtkSlicerOpenIGTLinkCommand::SetResponseText(const char* text)
+void vtkSlicerOpenIGTLinkCommand::SetResponseText(const std::string text)
 {
   this->SetResponseTextInternal(text);
 
@@ -201,25 +206,11 @@ void vtkSlicerOpenIGTLinkCommand::SetResponseText(const char* text)
     this->ResponseXML=NULL;
     }
 
-  if (text==NULL)
-  {
-    this->SetStatus(CommandFail);
-    return;
-  }
-
-  this->ResponseXML = vtkXMLUtilities::ReadElementFromString(text);
-  if (this->ResponseXML == NULL)
-  {
-    // The response is not XML
-    vtkWarningMacro("OpenIGTLink command response is not XML: "<<text);
-    this->SetStatus(CommandFail);
-    return;
-  }
-
+  this->ResponseXML = vtkXMLUtilities::ReadElementFromString(text.c_str());
 }
 
 //----------------------------------------------------------------------------
-const char* vtkSlicerOpenIGTLinkCommand::StatusToString(int status)
+std::string vtkSlicerOpenIGTLinkCommand::StatusToString(int status)
 {
   switch (status)
   {
@@ -263,4 +254,82 @@ bool vtkSlicerOpenIGTLinkCommand::IsFailed()
     this->Status == CommandFail ||
     this->Status == CommandExpired ||
     this->Status == CommandCancelled;
+}
+
+//----------------------------------------------------------------------------
+void vtkSlicerOpenIGTLinkCommand::SetMetaDataElement(const std::string key, IANA_ENCODING_TYPE encoding, const std::string value)
+{
+  this->MetaData[key] = std::pair<IANA_ENCODING_TYPE, std::string>(encoding, value);
+}
+
+//----------------------------------------------------------------------------
+void vtkSlicerOpenIGTLinkCommand::SetMetaDataElement(const std::string key, const std::string value)
+{
+  this->MetaData[key] = std::pair<IANA_ENCODING_TYPE, std::string>(IANA_TYPE_US_ASCII, value);
+}
+
+//----------------------------------------------------------------------------
+bool vtkSlicerOpenIGTLinkCommand::GetMetaDataElement(const std::string key, IANA_ENCODING_TYPE& outEncoding, std::string& outValue)
+{
+  if (this->MetaData.find(key) == this->MetaData.end())
+  {
+    return false;
+  }
+
+  outEncoding = this->MetaData[key].first;
+  outValue = this->MetaData[key].second;
+
+  return true;
+}
+
+//----------------------------------------------------------------------------
+void vtkSlicerOpenIGTLinkCommand::ClearMetaData()
+{
+  this->MetaData.clear();
+}
+
+//----------------------------------------------------------------------------
+void vtkSlicerOpenIGTLinkCommand::SetReponseMetaDataElement(const std::string key, IANA_ENCODING_TYPE encoding, const std::string value)
+{
+  this->SetCommandVersion(IGTL_HEADER_VERSION_2);
+  this->ResponseMetaData[key] = std::pair<IANA_ENCODING_TYPE, std::string>(encoding, value);
+}
+
+//----------------------------------------------------------------------------
+void vtkSlicerOpenIGTLinkCommand::SetReponseMetaDataElement(const std::string key, const std::string value)
+{
+  this->SetCommandVersion(IGTL_HEADER_VERSION_2);
+  this->ResponseMetaData[key] = std::pair<IANA_ENCODING_TYPE, std::string>(IANA_TYPE_US_ASCII, value);
+}
+
+//----------------------------------------------------------------------------
+bool vtkSlicerOpenIGTLinkCommand::GetReponseMetaDataElement(const std::string key, IANA_ENCODING_TYPE& outEncoding, std::string& outValue)
+{
+  if (this->ResponseMetaData.find(key) == this->ResponseMetaData.end())
+  {
+    return false;
+  }
+
+  outEncoding = this->ResponseMetaData[key].first;
+  outValue = this->ResponseMetaData[key].second;
+
+  return true;
+}
+
+//----------------------------------------------------------------------------
+igtl::MessageBase::MetaDataMap vtkSlicerOpenIGTLinkCommand::GetResponseMetaData() const
+{
+  return this->ResponseMetaData;
+}
+
+//----------------------------------------------------------------------------
+void vtkSlicerOpenIGTLinkCommand::ClearResponseMetaData()
+{
+  this->ResponseMetaData.clear();
+}
+
+//----------------------------------------------------------------------------
+igtl::MessageBase::MetaDataMap vtkSlicerOpenIGTLinkCommand::GetMetaData()
+{
+  return this->MetaData;
 }

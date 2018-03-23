@@ -55,6 +55,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
     RemovedDeviceEvent= 118951,
     CommandReceivedEvent = 119001, // COMMAND device got a query, COMMAND received
     CommandResponseReceivedEvent = 119002, // COMMAND device got a response, RTS_COMMAND received
+    CommandExpiredEvent = 119003, // COMMAND device expired before response was received
   };
 
   enum

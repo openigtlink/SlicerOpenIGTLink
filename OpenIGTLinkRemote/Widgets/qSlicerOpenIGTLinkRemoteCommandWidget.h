@@ -48,8 +48,13 @@ public:
 
 protected slots:
 
-  void OnSendCommandClicked();
+  void onSendCommandClicked();
   void onQueryResponseReceived();
+
+  void onAddMetaDataClicked();
+  void onRemoveMetaDataClicked();
+
+  void onVersionButtonClicked();
 
 protected:
 

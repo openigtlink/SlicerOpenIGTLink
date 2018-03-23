@@ -27,6 +27,9 @@
 
 #include "vtkCommand.h"
 
+// IGTL includes
+#include <igtlMessageBase.h>
+
 class vtkXMLDataElement;
 
 /// \ingroup Slicer_QtModules_ExtensionTemplate
@@ -67,12 +70,12 @@ public:
   // Common command information (both command and response)
 
   /// Unique identifier of the command.
-  vtkGetStringMacro(ID);
-  vtkSetStringMacro(ID);
+  vtkSetMacro(ID, std::string);
+  vtkGetMacro(ID, std::string);
 
   /// Unique identifier of the device used by the command.
-  vtkGetStringMacro(DeviceID);
-  vtkSetStringMacro(DeviceID);
+  vtkGetMacro(DeviceID, std::string);
+  vtkSetMacro(DeviceID, std::string);
 
   /// Unique identifier of the command that is being sent/received.
   vtkSetMacro(QueryID, int);
@@ -82,24 +85,27 @@ public:
   vtkGetMacro(Status, int);
   vtkSetMacro(Status, int);
 
+  vtkGetMacro(CommandVersion, int);
+  vtkSetMacro(CommandVersion, int);
+
   /// Convert status enum to human-readable string
-  static const char* StatusToString(int status);
+  static std::string StatusToString(int status);
 
   // Command information
 
   /// Set command name (required)
-  vtkSetStringMacro(CommandName);
-  vtkGetStringMacro(CommandName);
+  vtkSetMacro(CommandName, std::string);
+  vtkGetMacro(CommandName, std::string);
 
   /// Set optional command attributes
-  const char* GetCommandAttribute(const char* attName);
-  void SetCommandAttribute(const char* attName, const char* attValue);
+  std::string GetCommandAttribute(const std::string attName);
+  void SetCommandAttribute(const std::string attName, const std::string attValue);
 
   /// Generate command XML string from ID, name, and attributes
-  virtual const char* GetCommandText();
+  virtual std::string GetCommandText();
 
   /// Set command name and attributes from an XML string. Returns with true on success.
-  virtual bool SetCommandText(const char* text);
+  virtual bool SetCommandText(const std::string text);
 
   /// If >0 then commands expires after the specified timeout (state changes from Waiting to Expired).
   /// Default timeout is 10 seconds, as most commands should return with a result immediately.
@@ -111,7 +117,7 @@ public:
   vtkSetMacro(Blocking, bool);
   vtkBooleanMacro(Blocking, bool);
 
-  // Direction of the commmand.
+  // Direction of the command.
   vtkGetMacro(Direction, int);
   vtkSetMacro(Direction, int);
   void SetDirectionIn() { this->Direction = CommandIn; };
@@ -125,17 +131,17 @@ public:
   int GetNumberOfResponses();
 
   /// Get the message string from the response (stored in Message attribute)
-  const char* GetResponseMessage(int responseID=0);
+  std::string GetResponseMessage(int responseID = 0);
 
   /// Get custom response attributes
-  const char* GetResponseAttribute(const char* attName);
+  std::string GetResponseAttribute(const std::string attName);
 
   /// Get the raw command response text that was set using SetResponseText.
   /// It contains the response text as it received it, so it is valid even if XML parsing of the text failed.
-  const char* GetResponseText();
+  std::string GetResponseText();
   /// Set the command response from XML. Updates response message, status, and attributes.
   /// In case of XML parsing error, the state is set to CommandFail.
-  virtual void SetResponseText(const char* text);
+  virtual void SetResponseText(const std::string text);
 
   /// Get the response as an XML element. Returns NULL if the response text was not set or was invalid.
   vtkGetMacro(ResponseXML, vtkXMLDataElement*);
@@ -152,6 +158,18 @@ public:
   /// Returns true if command execution is completed but not successfully
   bool IsFailed();
 
+  void SetMetaDataElement(const std::string key, IANA_ENCODING_TYPE encoding, const std::string value);
+  void SetMetaDataElement(const std::string key, const std::string value);
+  bool GetMetaDataElement(const std::string key, IANA_ENCODING_TYPE& outEncoding, std::string& outValue);
+  igtl::MessageBase::MetaDataMap GetMetaData();
+  void ClearMetaData();
+
+  void SetReponseMetaDataElement(const std::string key, IANA_ENCODING_TYPE encoding, const std::string value);
+  void SetReponseMetaDataElement(const std::string key, const std::string value);
+  bool GetReponseMetaDataElement(const std::string key, IANA_ENCODING_TYPE& outEncoding, std::string& outValue);
+  igtl::MessageBase::MetaDataMap GetResponseMetaData() const;
+  void ClearResponseMetaData();
+
 protected:
   vtkSlicerOpenIGTLinkCommand();
   virtual ~vtkSlicerOpenIGTLinkCommand();
@@ -159,11 +177,11 @@ protected:
   /// Helper method for storing the returned command text.
   /// The exported command text is stored as a member variable to allow returning it
   /// as a simple const char pointer
-  vtkSetStringMacro(ExportedCommandText);
+  vtkSetMacro(ExportedCommandText, std::string);
 
   /// Helper functions for storing the raw response text.
-  vtkGetStringMacro(ResponseTextInternal);
-  vtkSetStringMacro(ResponseTextInternal);
+  vtkSetMacro(ResponseTextInternal, std::string);
+  vtkGetMacro(ResponseTextInternal, std::string);
 
 
 private:
@@ -171,25 +189,29 @@ private:
   void operator=(const vtkSlicerOpenIGTLinkCommand&);               // Not implemented
 
   // Name of the Command to be sent
-  char* CommandName;
+  std::string                     CommandName;
   // ID of the vtkSlicerOpenIGTLinkCommand object
-  char* ID;
+  std::string                     ID;
   // ID of the device sending the command
-  char* DeviceID;
+  std::string                     DeviceID;
   // ID of the Query contained in the command device
-  int QueryID;
+  int                             QueryID;
 
-  int Status;
-  double CommandTimeoutSec;
-  bool Blocking;
+  int                             CommandVersion;
 
-  vtkXMLDataElement* CommandXML;
-  vtkXMLDataElement* ResponseXML;
-  char* ExportedCommandText;
-  char* ResponseTextInternal;
+  int                             Status;
+  double                          CommandTimeoutSec;
+  bool                            Blocking;
 
-  int Direction;
+  vtkXMLDataElement*              CommandXML;
+  vtkXMLDataElement*              ResponseXML;
+  std::string                     ExportedCommandText;
+  std::string                     ResponseTextInternal;
 
+  int                             Direction;
+
+  igtl::MessageBase::MetaDataMap  MetaData;
+  igtl::MessageBase::MetaDataMap  ResponseMetaData;
 };
 
 #endif
