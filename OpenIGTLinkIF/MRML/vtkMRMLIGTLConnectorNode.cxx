@@ -96,7 +96,7 @@ public:
   /// Returns vtkSlicerOpenIGTLinkCommand if found, otherwise, returns nullptr.
   void ReceiveCommandResponse(igtlio::CommandDevice* commandDevice);
 
-  vtkMRMLNode* GetOrAddMRMLNodeforDevice(igtlio::Device* device);
+  vtkSmartPointer<vtkMRMLNode> GetOrAddMRMLNodeforDevice(igtlio::DevicePointer device);
 
   vtkMRMLIGTLConnectorNode* External;
   igtlio::Connector* IOConnector;
@@ -268,7 +268,7 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
           bitStreamNode->SetAndObserveImageData(imageDevice->GetContent().image);
           bitStreamNode->SetIJKToRASMatrix(imageDevice->GetContent().transform);
           bitStreamNode->Modified();
-          vtkIGTLStreamingVolumeCodec* device = static_cast<vtkIGTLStreamingVolumeCodec*> (bitStreamNode->GetCompressionCodec());
+          vtkSmartPointer<vtkIGTLStreamingVolumeCodec> device = static_cast<vtkIGTLStreamingVolumeCodec*> (bitStreamNode->GetCompressionCodec().GetPointer());
           //igtlio::VideoDevice* device = static_cast<igtlio::VideoDevice*>(bitStreamNode->GetVideoMessageDevice());
           vtkImageData* srcImageData = imageDevice->GetContent().image;
           int numComponents = srcImageData->GetNumberOfScalarComponents();
@@ -277,7 +277,7 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
           igtl::ImageMessage::Pointer temImageMsg = igtl::ImageMessage::New();
           int scalarTypeSize = temImageMsg->GetScalarSize(srcImageData->GetScalarType());
           long dataSize = size[0] * size[1] * size[2] * scalarTypeSize*numComponents;
-          memcpy(device->GetContent()->image->GetScalarPointer(), imageDevice->GetContent().image->GetScalarPointer(), dataSize);
+          memcpy(device->GetContent().image->GetScalarPointer(), imageDevice->GetContent().image->GetScalarPointer(), dataSize);
           device->GetStreamFromContentUsingDefaultDevice();
         }
 #endif
@@ -346,7 +346,7 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
 }
 
 //----------------------------------------------------------------------------
-vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetOrAddMRMLNodeforDevice(igtlio::Device* device)
+vtkSmartPointer<vtkMRMLNode> vtkMRMLIGTLConnectorNode::vtkInternal::GetOrAddMRMLNodeforDevice(igtlio::DevicePointer device)
 {
   if (device)
   {
@@ -398,7 +398,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetOrAddMRMLNodeforDevice(ig
     int numberOfComponents = 1;
     vtkSmartPointer<vtkImageData> image;
     std::string deviceName = "";
-    igtlio::ImageDevice* imageDevice = reinterpret_cast<igtlio::ImageDevice*>(device);
+    igtlio::ImageDevice* imageDevice = reinterpret_cast<igtlio::ImageDevice*>(device.GetPointer());
     igtlio::ImageConverter::ContentData content = imageDevice->GetContent();
     numberOfComponents = content.image->GetNumberOfScalarComponents(); //to improve the io module to be able to cope with video data
     image = content.image;
@@ -424,11 +424,11 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetOrAddMRMLNodeforDevice(ig
     this->External->GetScene()->AddNode(volumeNode);
 #if defined(OpenIGTLink_ENABLE_VIDEOSTREAMING)
     vtkMRMLStreamingVolumeNode * tempNode = vtkMRMLStreamingVolumeNode::SafeDownCast(volumeNode);
-    vtkIGTLStreamingVolumeCodec* compressionDevice = vtkIGTLStreamingVolumeCodec::New();
+    vtkSmartPointer<vtkIGTLStreamingVolumeCodec> compressionDevice = vtkSmartPointer<vtkIGTLStreamingVolumeCodec>::New();
     compressionDevice->LinkIGTLIOImageDevice(reinterpret_cast<igtlio::Device*>(imageDevice));
     tempNode->ObserveOutsideCompressionCodec(compressionDevice);
-    vtkImageData* imageData = compressionDevice->GetContent()->image.GetPointer();
-    vtkImageData* srcImageData = imageDevice->GetContent().image;
+    vtkSmartPointer<vtkImageData> imageData = compressionDevice->GetContent().image.GetPointer();
+    vtkSmartPointer<vtkImageData> srcImageData = imageDevice->GetContent().image;
     int size[3];
     srcImageData->GetDimensions(size);
     imageData->SetDimensions(size[0], size[1], size[2]);
@@ -480,7 +480,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetOrAddMRMLNodeforDevice(ig
 #if defined(OpenIGTLink_ENABLE_VIDEOSTREAMING)
   else if (strcmp(device->GetDeviceType().c_str(), "VIDEO") == 0)
   {
-    igtlio::VideoDevice* videoDevice = reinterpret_cast<igtlio::VideoDevice*>(device);
+    igtlio::VideoDevicePointer videoDevice = reinterpret_cast<igtlio::VideoDevice*>(device.GetPointer());
     igtlio::VideoConverter::ContentData content = videoDevice->GetContent();
     int numberOfComponents = content.image->GetNumberOfScalarComponents(); //to improve the io module to be able to cope with video data
     vtkSmartPointer<vtkImageData> image = content.image;
@@ -491,7 +491,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetOrAddMRMLNodeforDevice(ig
     bitStreamNode->SetName(deviceName.c_str());
     bitStreamNode->SetDescription("Received by OpenIGTLink");
     this->External->GetScene()->AddNode(bitStreamNode);
-    vtkIGTLStreamingVolumeCodec* compressionDevice = vtkIGTLStreamingVolumeCodec::New();
+    vtkSmartPointer<vtkIGTLStreamingVolumeCodec> compressionDevice = vtkSmartPointer<vtkIGTLStreamingVolumeCodec>::New();
     compressionDevice->LinkIGTLIOVideoDevice(videoDevice);
     bitStreamNode->ObserveOutsideCompressionCodec(compressionDevice);
     vtkSmartPointer<vtkMRMLVolumeDisplayNode> displayNode;
@@ -545,7 +545,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetOrAddMRMLNodeforDevice(ig
   }
   else if (strcmp(device->GetDeviceType().c_str(), "POLYDATA") == 0)
   {
-    igtlio::PolyDataDevice* polyDevice = reinterpret_cast<igtlio::PolyDataDevice*>(device);
+    igtlio::PolyDataDevice* polyDevice = reinterpret_cast<igtlio::PolyDataDevice*>(device.GetPointer());
     igtlio::PolyDataConverter::ContentData content = polyDevice->GetContent();
 
     vtkSmartPointer<vtkMRMLModelNode> modelNode = NULL;
@@ -577,7 +577,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetOrAddMRMLNodeforDevice(ig
   }
   else if (strcmp(device->GetDeviceType().c_str(), "STRING") == 0)
   {
-    igtlio::StringDevice* modifiedDevice = reinterpret_cast<igtlio::StringDevice*>(device);
+    igtlio::StringDevice* modifiedDevice = reinterpret_cast<igtlio::StringDevice*>(device.GetPointer());
     vtkSmartPointer<vtkMRMLTextNode> textNode = vtkSmartPointer<vtkMRMLTextNode>::New();
     textNode->SetEncoding(modifiedDevice->GetContent().encoding);
     textNode->SetText(modifiedDevice->GetContent().string_msg.c_str());
@@ -1314,7 +1314,7 @@ void vtkMRMLIGTLConnectorNode::OnNodeReferenceModified(vtkMRMLNodeReference *ref
 }
 
 //---------------------------------------------------------------------------
-bool vtkMRMLIGTLConnectorNode::RegisterIncomingMRMLNode(vtkMRMLNode* node, IGTLDevicePointer device)
+bool vtkMRMLIGTLConnectorNode::RegisterIncomingMRMLNode(vtkSmartPointer<vtkMRMLNode> node, IGTLDevicePointer device)
 {
 
   if (!node)
@@ -1342,10 +1342,10 @@ bool vtkMRMLIGTLConnectorNode::RegisterIncomingMRMLNode(vtkMRMLNode* node, IGTLD
 
 
 //---------------------------------------------------------------------------
-void vtkMRMLIGTLConnectorNode::UnregisterIncomingMRMLNode(vtkMRMLNode* node)
+void vtkMRMLIGTLConnectorNode::UnregisterIncomingMRMLNode(vtkSmartPointer<vtkMRMLNode> node)
 {
   
-  if (!node)
+  if (!node.GetPointer())
   {
     return;
   }
@@ -1390,7 +1390,7 @@ unsigned int vtkMRMLIGTLConnectorNode::GetNumberOfOutgoingMRMLNodes()
 
 
 //---------------------------------------------------------------------------
-vtkMRMLNode* vtkMRMLIGTLConnectorNode::GetOutgoingMRMLNode(unsigned int i)
+vtkSmartPointer<vtkMRMLNode> vtkMRMLIGTLConnectorNode::GetOutgoingMRMLNode(unsigned int i)
 {
   if (i < (unsigned int)this->GetNumberOfNodeReferences(this->GetOutgoingNodeReferenceRole()))
     {
@@ -1979,7 +1979,7 @@ IGTLDevicePointer vtkMRMLIGTLConnectorNode::GetDevice(const std::string& deviceT
 */
 
 //---------------------------------------------------------------------------
-IGTLDevicePointer vtkMRMLIGTLConnectorNode::CreateDeviceForOutgoingMRMLNode(vtkMRMLNode* dnode)
+IGTLDevicePointer vtkMRMLIGTLConnectorNode::CreateDeviceForOutgoingMRMLNode(vtkSmartPointer<vtkMRMLNode> dnode)
 {
   vtkSmartPointer<igtlio::Device> device = NULL;
   vtkInternal::MessageDeviceMapType::iterator iter = this->Internal->OutgoingMRMLIDToDeviceMap.find(dnode->GetID());

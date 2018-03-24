@@ -149,11 +149,11 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   // Description:
   // Register MRML node for incoming data.
   // Returns true on success.
-  bool RegisterIncomingMRMLNode(vtkMRMLNode* node, IGTLDevicePointer device);
+  bool RegisterIncomingMRMLNode(vtkSmartPointer<vtkMRMLNode> node, IGTLDevicePointer device);
   
   // Description:
   // Unregister MRML node for incoming data.
-  void UnregisterIncomingMRMLNode(vtkMRMLNode* node);
+  void UnregisterIncomingMRMLNode(vtkSmartPointer<vtkMRMLNode> node);
   
   // Description:
   // Get number of registered outgoing MRML nodes:
@@ -161,7 +161,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   
   // Description:
   // Get Nth outgoing MRML nodes:
-  vtkMRMLNode* GetOutgoingMRMLNode(unsigned int i);
+  vtkSmartPointer<vtkMRMLNode> GetOutgoingMRMLNode(unsigned int i);
 
   IGTLDevicePointer GetDeviceFromOutgoingMRMLNode(const char* outgoingNodeID);
   IGTLDevicePointer GetDeviceFromIncomingMRMLNode(const char* incomingNodeID);
@@ -169,7 +169,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   //IGTLDevicePointer GetDevice(const std::string& deviceType, const std::string& deviceName);
 
   // Get device for outgoing MRML node. If a device has not been created then it is created.
-  IGTLDevicePointer CreateDeviceForOutgoingMRMLNode(vtkMRMLNode* dnode);
+  IGTLDevicePointer CreateDeviceForOutgoingMRMLNode(vtkSmartPointer<vtkMRMLNode> dnode);
   
   // Description:
   // Get number of registered outgoing MRML nodes:
