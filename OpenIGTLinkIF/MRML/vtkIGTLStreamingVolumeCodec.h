@@ -22,6 +22,8 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkIGTLStreamingVolumeCodec : 
 public:
 
   void ProcessLinkedDeviceModifiedEvents( vtkObject *caller, unsigned long event, void *callData );
+  
+  virtual vtkStreamingVolumeCodec* CreateCodecInstance() VTK_OVERRIDE;
 
   virtual std::string GetDeviceType() const;
   virtual int UncompressedDataFromStream(vtkSmartPointer<vtkUnsignedCharArray> bitStreamData, bool checkCRC);

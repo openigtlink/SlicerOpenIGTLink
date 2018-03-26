@@ -268,7 +268,7 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
           bitStreamNode->SetAndObserveImageData(imageDevice->GetContent().image);
           bitStreamNode->SetIJKToRASMatrix(imageDevice->GetContent().transform);
           bitStreamNode->Modified();
-          vtkSmartPointer<vtkIGTLStreamingVolumeCodec> device = static_cast<vtkIGTLStreamingVolumeCodec*> (bitStreamNode->GetCompressionCodec().GetPointer());
+          vtkSmartPointer<vtkIGTLStreamingVolumeCodec> device = static_cast<vtkIGTLStreamingVolumeCodec*> (bitStreamNode->GetCompressionCodec());
           //igtlio::VideoDevice* device = static_cast<igtlio::VideoDevice*>(bitStreamNode->GetVideoMessageDevice());
           vtkImageData* srcImageData = imageDevice->GetContent().image;
           int numComponents = srcImageData->GetNumberOfScalarComponents();

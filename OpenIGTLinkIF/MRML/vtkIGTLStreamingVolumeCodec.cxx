@@ -16,15 +16,16 @@
 #include "igtlioImageDevice.h"
 
 //---------------------------------------------------------------------------
-vtkStandardNewMacro(vtkIGTLStreamingVolumeCodec);
+vtkMRMLCodecNewMacro(vtkIGTLStreamingVolumeCodec);
 //---------------------------------------------------------------------------
 vtkIGTLStreamingVolumeCodec::vtkIGTLStreamingVolumeCodec()
 {
   this->DefaultVideoDevice = igtlio::VideoDevicePointer::New();
   this->LinkedDevice = NULL;
   this->CompressImageDeviceContent = false;
-  this->Content.frame = vtkSmartPointer<vtkUnsignedCharArray>::New();
-  this->Content.keyFrame = vtkSmartPointer<vtkUnsignedCharArray>::New();
+  this->Content.image = NULL;
+  this->Content.frame = NULL;
+  this->Content.keyFrame = NULL;
   
 }
 
@@ -47,46 +48,43 @@ void vtkIGTLStreamingVolumeCodec::ProcessLinkedDeviceModifiedEvents( vtkObject *
    {
     igtlio::VideoDevicePointer videoDevice = reinterpret_cast<igtlio::VideoDevice*>(caller);
     this->CopyVideoMessageIntoFrameMSG(videoDevice->GetCompressedIGTLMessage());
-    if(videoDevice->GetContent().keyFrameUpdated)
-      {
-      this->CopyVideoMessageIntoKeyFrameMSG(videoDevice->GetKeyFrameMessage());
-      Content.keyFrameUpdated = true;
-      }
+    this->CopyVideoMessageIntoKeyFrameMSG(videoDevice->GetKeyFrameMessage());
+    Content.keyFrameUpdated = videoDevice->GetContent().keyFrameUpdated;
     }
   else if(modifiedDevice->GetDeviceType().compare(igtlio::ImageConverter::GetIGTLTypeName()) == 0 )
     {
     if (CompressImageDeviceContent)
       {
       igtlio::ImageDevicePointer imageDevice = reinterpret_cast<igtlio::ImageDevice*>(caller);
-      this->Content.deviceName = std::string(imageDevice->GetDeviceName());
+      this->Content.codecName = std::string(imageDevice->GetDeviceName());
       this->Content.image = imageDevice->GetContent().image;
       this->GetStreamFromContentUsingDefaultDevice(); // inside this line FrameMSG is copied.
-      if(DefaultVideoDevice->GetContent().keyFrameUpdated)
-        {
-        this->CopyVideoMessageIntoKeyFrameMSG(DefaultVideoDevice->GetKeyFrameMessage());
-        Content.keyFrameUpdated = true;
-        }
+      this->CopyVideoMessageIntoKeyFrameMSG(DefaultVideoDevice->GetKeyFrameMessage());
+      Content.keyFrameUpdated = DefaultVideoDevice->GetContent().keyFrameUpdated;
       }
     }
-    this->InvokeEvent(DeviceModifiedEvent);
+    this->InvokeEvent(CodecModifiedEvent);
 }
 
 void vtkIGTLStreamingVolumeCodec::CopyVideoMessageIntoKeyFrameMSG(igtl::VideoMessage::Pointer keyFrameMsg)
 {
+  if (this->Content.keyFrame == NULL)
+    this->Content.keyFrame = vtkSmartPointer<vtkUnsignedCharArray>::New();
   igtl_header* h_key = (igtl_header*) keyFrameMsg->GetPackPointer();
   igtl_header_convert_byte_order(h_key);
   Content.keyFrame->SetNumberOfTuples(keyFrameMsg->GetPackSize());
   char * keyFramePointer = reinterpret_cast<char*>(Content.keyFrame->GetPointer(0));
   memcpy(keyFramePointer, (char*)h_key, IGTL_HEADER_SIZE);
   memcpy(keyFramePointer+IGTL_HEADER_SIZE, keyFrameMsg->GetPackBodyPointer(), keyFrameMsg->GetPackSize() - IGTL_HEADER_SIZE);
-  
 }
 
 void vtkIGTLStreamingVolumeCodec::CopyVideoMessageIntoFrameMSG(igtl::VideoMessage::Pointer frameMsg)
 {
+  if (this->Content.frame == NULL)
+    this->Content.frame = vtkSmartPointer<vtkUnsignedCharArray>::New();
   igtl_header* h_key = (igtl_header*) frameMsg->GetPackPointer();
   igtl_header_convert_byte_order(h_key);
-  Content.frame->SetNumberOfTuples(frameMsg->GetPackSize());
+  this->Content.frame->SetNumberOfTuples(frameMsg->GetPackSize());
   char * framePointer = reinterpret_cast<char*>(Content.frame->GetPointer(0));
   memcpy(framePointer, (char*)h_key, IGTL_HEADER_SIZE);
   memcpy(framePointer+IGTL_HEADER_SIZE, frameMsg->GetPackBodyPointer(), frameMsg->GetPackSize() - IGTL_HEADER_SIZE);
@@ -96,15 +94,12 @@ int vtkIGTLStreamingVolumeCodec::LinkIGTLIOVideoDevice(igtlio::DevicePointer dev
 {
   igtlio::VideoDevicePointer modifiedDevice = reinterpret_cast<igtlio::VideoDevice*>(device.GetPointer());
   this->Content.codecType= std::string(modifiedDevice->GetContent().videoMessage->GetCodecType());
-  this->Content.deviceName = std::string(modifiedDevice->GetDeviceName());
+  this->Content.codecName = std::string(modifiedDevice->GetDeviceName());
   this->Content.keyFrameUpdated = modifiedDevice->GetContent().keyFrameUpdated;
   this->Content.image = modifiedDevice->GetContent().image;
   this->CopyVideoMessageIntoFrameMSG(modifiedDevice->GetCompressedIGTLMessage());
-  if(modifiedDevice->GetContent().keyFrameUpdated)
-    {
-    this->CopyVideoMessageIntoKeyFrameMSG(modifiedDevice->GetKeyFrameMessage());
-    Content.keyFrameUpdated = true;
-    }
+  this->CopyVideoMessageIntoKeyFrameMSG(modifiedDevice->GetKeyFrameMessage());
+  Content.keyFrameUpdated = modifiedDevice->GetContent().keyFrameUpdated;
   modifiedDevice->AddObserver(modifiedDevice->GetDeviceContentModifiedEvent(), this, &vtkIGTLStreamingVolumeCodec::ProcessLinkedDeviceModifiedEvents);
   this->LinkedDevice = device;
   return 0;
@@ -115,14 +110,12 @@ int vtkIGTLStreamingVolumeCodec::LinkIGTLIOImageDevice(igtlio::DevicePointer dev
   igtlio::ImageDevice* modifiedDevice = reinterpret_cast<igtlio::ImageDevice*>(device.GetPointer());
   
   this->Content.codecType = DefaultVideoDevice->GetContent().codecName;
-  this->Content.deviceName = std::string(modifiedDevice->GetDeviceName());
+  this->Content.codecName = std::string(modifiedDevice->GetDeviceName());
   igtlio::VideoConverter::ContentData deviceContent = DefaultVideoDevice->GetContent();
   deviceContent.image = modifiedDevice->GetContent().image;
   DefaultVideoDevice->SetContent(deviceContent);
   this->Content.image = modifiedDevice->GetContent().image;
   this->GetStreamFromContentUsingDefaultDevice(); // in this line FrameMSG is updated.
-  this->Content.keyFrame->DeepCopy(this->Content.frame);
-  Content.keyFrameUpdated = true;
   modifiedDevice->AddObserver(modifiedDevice->GetDeviceContentModifiedEvent(), this, &vtkIGTLStreamingVolumeCodec::ProcessLinkedDeviceModifiedEvents);
   this->LinkedDevice = device;
   return 0;
@@ -139,6 +132,10 @@ int vtkIGTLStreamingVolumeCodec::UncompressedDataFromStream(vtkSmartPointer<vtkU
     }
   if (bitStreamData == NULL)
     {
+    return 0;
+    }
+  if (bitStreamData->GetNumberOfValues() == 0)
+    {
     vtkWarningMacro("message size equal to zero.")
     return 0;
     }
@@ -154,7 +151,8 @@ int vtkIGTLStreamingVolumeCodec::UncompressedDataFromStream(vtkSmartPointer<vtkU
       this->LinkedDevice == NULL ||
       this->LinkedDevice->GetDeviceType().compare(igtlio::ImageConverter::GetIGTLTypeName()) == 0)
     {
-    if (this->DefaultVideoDevice->ReceiveIGTLMessage(buffer, checkCRC))
+    this->DefaultVideoDevice->SetDeviceName(buffer->GetDeviceName());
+    if (this->DefaultVideoDevice->ReceiveIGTLMessage(buffer, false))
       {
       this->Content.image = DefaultVideoDevice->GetContent().image;
       this->Modified();
@@ -192,6 +190,13 @@ vtkSmartPointer<vtkUnsignedCharArray> vtkIGTLStreamingVolumeCodec::GetStreamFrom
     vtkWarningMacro("Image is NULL, message not generated.")
     return NULL;
     }
+  if (Content.image->GetDimensions()[0] == 0 ||
+      Content.image->GetDimensions()[1] == 0 ||
+      Content.image->GetDimensions()[2] == 0)
+    {
+    vtkWarningMacro("Image dimensions wrong, message not generated.")
+    return NULL;
+    }
   igtlio::VideoConverter::ContentData deviceContent = DefaultVideoDevice->GetContent();
   deviceContent.image = Content.image;
   DefaultVideoDevice->SetContent(deviceContent);
@@ -202,6 +207,11 @@ vtkSmartPointer<vtkUnsignedCharArray> vtkIGTLStreamingVolumeCodec::GetStreamFrom
     return NULL;
     }
   this->CopyVideoMessageIntoFrameMSG(videoMessage);
+  if(DefaultVideoDevice->GetContent().keyFrameUpdated)
+    {
+    this->CopyVideoMessageIntoKeyFrameMSG(videoMessage);
+    }
+  this->Content.keyFrameUpdated = DefaultVideoDevice->GetContent().keyFrameUpdated;
   return Content.frame;
 }
 

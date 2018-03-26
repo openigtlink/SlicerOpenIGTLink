@@ -124,12 +124,9 @@ void qSlicerOpenIGTLinkIFModule::setup()
   this->Superclass::setup();
   qSlicerAbstractCoreModule* volumesModule =
     qSlicerCoreApplication::application()->moduleManager()->module("Volumes");
-  vtkSlicerVolumesLogic* volumesLogic  = vtkSlicerVolumesLogic::SafeDownCast(volumesModule->logic());
-  vtkStreamingVolumeCodecFactory* codecFactory = volumesLogic->GetCodecFactory();
-  vtkIGTLStreamingVolumeCodec* codec =  vtkIGTLStreamingVolumeCodec::New();
-  codecFactory->RegisterStreamingVolumeCodec(codec->GetDeviceType(), (vtkStreamingVolumeCodecFactory::PointerToCodecBaseNew)&vtkIGTLStreamingVolumeCodec::New);
-  codec->Delete();
-  codec = NULL;
+  vtkSmartPointer<vtkSlicerVolumesLogic> volumesLogic  = vtkSlicerVolumesLogic::SafeDownCast(volumesModule->logic());
+  vtkSmartPointer<vtkStreamingVolumeCodecFactory> codecFactory = volumesLogic->GetCodecFactory();
+  codecFactory->RegisterStreamingCodec(vtkSmartPointer<vtkIGTLStreamingVolumeCodec>::New());
 }
 
 //-----------------------------------------------------------------------------
