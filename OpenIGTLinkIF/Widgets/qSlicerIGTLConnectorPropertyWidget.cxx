@@ -51,6 +51,8 @@ void qSlicerIGTLConnectorPropertyWidgetPrivate::init()
                    q, SLOT(updateIGTLConnectorNode()));
   QObject::connect(&this->ConnectorTypeButtonGroup, SIGNAL(buttonClicked(int)),
                    q, SLOT(updateIGTLConnectorNode()));
+  QObject::connect(this->UseStreamingVolumeCheckBox, SIGNAL(toggled(bool)),
+                   q, SLOT(updateIGTLConnectorNode()));
 
   this->ConnectorNotDefinedRadioButton->setVisible(false);
   this->ConnectorTypeButtonGroup.addButton(this->ConnectorNotDefinedRadioButton, vtkMRMLIGTLConnectorNode::TypeNotDefined);
@@ -117,6 +119,7 @@ void setTypeEnabled(qSlicerIGTLConnectorPropertyWidgetPrivate * d, bool enabled)
   d->ConnectorTypeLabel->setEnabled(enabled);
   d->ConnectorServerRadioButton->setEnabled(enabled);
   d->ConnectorClientRadioButton->setEnabled(enabled);
+  d->UseStreamingVolumeCheckBox->setEnabled(enabled);
 }
 
 //------------------------------------------------------------------------------
@@ -156,6 +159,7 @@ void qSlicerIGTLConnectorPropertyWidget::onMRMLNodeModified()
   d->ConnectorNotDefinedRadioButton->setChecked(type == vtkMRMLIGTLConnectorNode::TypeNotDefined);
   d->ConnectorServerRadioButton->setChecked(type == vtkMRMLIGTLConnectorNode::TypeServer);
   d->ConnectorClientRadioButton->setChecked(type == vtkMRMLIGTLConnectorNode::TypeClient);
+  d->UseStreamingVolumeCheckBox->setChecked(d->IGTLConnectorNode->GetUseStreamingVolume());
 
   setStateEnabled(d, type != vtkMRMLIGTLConnectorNode::TypeNotDefined);
 
@@ -207,7 +211,7 @@ void qSlicerIGTLConnectorPropertyWidget::updateIGTLConnectorNode()
   d->IGTLConnectorNode->SetServerPort(d->ConnectorPortEdit->text().toInt());
   d->IGTLConnectorNode->SetPersistent(d->PersistentStateCheckBox->isChecked());
   //d->IGTLConnectorNode->SetLogErrorIfServerConnectionFailed(d->LogConnectionErrorCheckBox->isChecked());
-
+  d->IGTLConnectorNode->SetUseStreamingVolume(d->UseStreamingVolumeCheckBox->isChecked());
   d->IGTLConnectorNode->DisableModifiedEventOff();
   d->IGTLConnectorNode->InvokePendingModifiedEvent();
 }

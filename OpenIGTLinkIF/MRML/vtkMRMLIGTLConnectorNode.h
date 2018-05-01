@@ -113,6 +113,9 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   void SetServerHostname(std::string hostname);
   void SetServerPort(int port);
 
+  void SetUseStreamingVolume(bool useStreamingVolume);
+  bool GetUseStreamingVolume();
+
   int Start();
 
   int Stop();
@@ -308,6 +311,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   private:
     class vtkInternal;
     vtkInternal * Internal;  
+    bool UseStreamingVolume;
 };
 
 #endif
