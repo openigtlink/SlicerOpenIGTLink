@@ -364,14 +364,14 @@ void qMRMLIGTLIOModel::updateIOTreeBranch(vtkMRMLIGTLConnectorNode* node, QStand
         QStandardItem* item2 = new QStandardItem;
         item2->setData("io"+QString(inode->GetID()), qMRMLSceneModel::UIDRole);
         item2->setFlags(Qt::ItemIsEnabled|Qt::ItemIsSelectable);
-        vtkSmartPointer<igtlio::Device> device = NULL;
+        vtkSmartPointer<igtlioDevice> device = NULL;
         if (dir == qMRMLIGTLIOModel::INCOMING)
           {
-          device = static_cast<igtlio::Device*>(node->GetDeviceFromIncomingMRMLNode(inode->GetID()));
+          device = static_cast<igtlioDevice*>(node->GetDeviceFromIncomingMRMLNode(inode->GetID()));
           }
         else
           {
-          device = static_cast<igtlio::Device*>(node->GetDeviceFromOutgoingMRMLNode(inode->GetID()));
+          device = static_cast<igtlioDevice*>(node->GetDeviceFromOutgoingMRMLNode(inode->GetID()));
           }
         if (device != NULL)
         {
