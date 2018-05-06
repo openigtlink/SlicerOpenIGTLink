@@ -112,7 +112,7 @@ int vtkMRMLConnectorImageSendAndReceiveTest(int argc, char * argv [] )
   vtkSmartPointer<vtkMRMLVectorVolumeNode> volumeNode = vtkSmartPointer<vtkMRMLVectorVolumeNode>::New();
   volumeNode->SetAndObserveImageData(testImage);
   scene->AddNode(volumeNode);
-  igtlio::DevicePointer imageDevice = reinterpret_cast<igtlio::Device*>(serverConnectorNode->CreateDeviceForOutgoingMRMLNode(volumeNode));
+  igtlioDevicePointer imageDevice = reinterpret_cast<igtlioDevice*>(serverConnectorNode->CreateDeviceForOutgoingMRMLNode(volumeNode));
   if (strcmp(imageDevice->GetDeviceType().c_str(), "IMAGE")!=0)
     {
     clientConnectorNode->Stop();
