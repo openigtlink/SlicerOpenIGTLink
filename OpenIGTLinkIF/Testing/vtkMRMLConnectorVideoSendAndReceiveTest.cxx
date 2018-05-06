@@ -107,7 +107,7 @@ int vtkMRMLConnectorVideoSendAndReceiveTest(int argc, char * argv [] )
   vtkSmartPointer<vtkMRMLBitStreamNode> volumeNode = vtkSmartPointer<vtkMRMLBitStreamNode>::New();
   volumeNode->SetAndObserveImageData(testImage);
   scene->AddNode(volumeNode);
-  igtlio::DevicePointer videoDevice = reinterpret_cast<igtlio::Device*>(serverConnectorNode->CreateDeviceForOutgoingMRMLNode(volumeNode));
+  igtlioDevicePointer videoDevice = reinterpret_cast<igtlioDevice*>(serverConnectorNode->CreateDeviceForOutgoingMRMLNode(volumeNode));
   if (strcmp(videoDevice->GetDeviceType().c_str(), "VIDEO")!=0)
     {
     clientConnectorNode->Stop();

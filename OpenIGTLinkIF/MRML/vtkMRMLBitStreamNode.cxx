@@ -28,12 +28,12 @@ public:
   vtkInternal(vtkMRMLBitStreamNode* external);
   ~vtkInternal();
 
-  void SetVideoMessageDevice(igtlio::VideoDevice* inDevice)
+  void SetVideoMessageDevice(igtlioVideoDevice* inDevice)
   {
     this->videoDevice = inDevice;
   };
 
-  igtlio::VideoDevice* GetVideoMessageDevice()
+  igtlioVideoDevice* GetVideoMessageDevice()
   {
     return this->videoDevice;
   }
@@ -68,7 +68,7 @@ public:
     return ImageMessageBuffer;
   };
 
-  int ObserveOutsideVideoDevice(igtlio::VideoDevice* device);
+  int ObserveOutsideVideoDevice(igtlioVideoDevice* device);
 
   void DecodeMessageStream(igtl::VideoMessage::Pointer videoMessage);
 
@@ -78,7 +78,7 @@ public:
   igtl::VideoMessage::Pointer KeyFrameBuffer;
   igtl::ImageMessage::Pointer ImageMessageBuffer;
 
-  igtlio::VideoDevicePointer videoDevice;
+  igtlioVideoDevicePointer videoDevice;
 };
 
 //----------------------------------------------------------------------------
@@ -106,7 +106,7 @@ vtkMRMLBitStreamNode::vtkInternal::~vtkInternal()
 }
 
 //---------------------------------------------------------------------------
-int vtkMRMLBitStreamNode::vtkInternal::ObserveOutsideVideoDevice(igtlio::VideoDevice* device)
+int vtkMRMLBitStreamNode::vtkInternal::ObserveOutsideVideoDevice(igtlioVideoDevice* device)
 {
   if (device)
   {
@@ -176,13 +176,13 @@ void vtkMRMLBitStreamNode::ProcessMRMLEvents(vtkObject *caller, unsigned long ev
 
 void vtkMRMLBitStreamNode::ProcessDeviceModifiedEvents( vtkObject *caller, unsigned long event, void *callData )
 {
-  igtlio::VideoDevice* modifiedDevice = reinterpret_cast<igtlio::VideoDevice*>(caller);
+  igtlioVideoDevice* modifiedDevice = reinterpret_cast<igtlioVideoDevice*>(caller);
   if (modifiedDevice == NULL)
     {
     // we are only interested in proxy node modified events
     return;
     }
-  if (event != igtlio::VideoDevice::VideoModifiedEvent)
+  if (event != igtlioVideoDevice::VideoModifiedEvent)
     {
     return;
     }
@@ -215,9 +215,9 @@ void vtkMRMLBitStreamNode::SetUpVideoDeviceByName(const char* name)
       this->SetName(name);
     //------
     //video device initialization
-    this->Internal->videoDevice = igtlio::VideoDevicePointer::New();
+    this->Internal->videoDevice = igtlioVideoDevicePointer::New();
     this->Internal->videoDevice->SetDeviceName(this->GetName());
-    igtlio::VideoConverter::ContentData contentdata = this->Internal->videoDevice->GetContent();
+    igtlioVideoConverter::ContentData contentdata = this->Internal->videoDevice->GetContent();
     contentdata.image =  vtkSmartPointer<vtkImageData>::New();
     this->Internal->videoDevice->SetContent(contentdata);
     this->SetAndObserveImageData(this->Internal->videoDevice->GetContent().image);
@@ -272,6 +272,6 @@ IGTLDevicePointer vtkMRMLBitStreamNode::GetVideoMessageDevice()
 //----------------------------------------------------------------------------
 int vtkMRMLBitStreamNode::ObserveOutsideVideoDevice(IGTLDevicePointer devicePtr)
 {
-  igtlio::VideoDevice* device = static_cast<igtlio::VideoDevice*>(devicePtr);
+  igtlioVideoDevice* device = static_cast<igtlioVideoDevice*>(devicePtr);
   return this->Internal->ObserveOutsideVideoDevice(device);
 }
