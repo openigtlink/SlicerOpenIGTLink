@@ -55,6 +55,7 @@ vtkMRMLPlusRemoteLauncherNode::vtkMRMLPlusRemoteLauncherNode()
   , ServerLauncherPort(vtkMRMLPlusRemoteLauncherNode::DefaultPort)
   , ServerState(vtkMRMLPlusRemoteLauncherNode::ServerOff)
   , LogLevel(vtkMRMLPlusRemoteLauncherNode::LogLevelInfo)
+  , CurrentErrorLevel(vtkMRMLPlusRemoteLauncherNode::LogLevelInfo)
 {
   this->SetServerLauncherHostname("localhost");
 }
@@ -118,7 +119,7 @@ void vtkMRMLPlusRemoteLauncherNode::ReadXMLAttributes(const char** atts)
         {
           stateValue = vtkMRMLPlusRemoteLauncherNode::ServerOff;
         }
-      this->SetServerLauncherPort(stateValue);
+      this->SetServerState(stateValue);
       }
     }
 

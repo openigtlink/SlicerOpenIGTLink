@@ -69,6 +69,7 @@ public slots:
 
   /// Update widget state from the MRML scene
   virtual void updateWidgetFromMRML();
+  virtual void updateStatusIcon();
 
   ///
   void onConnectCheckBoxChanged(bool checked);

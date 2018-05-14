@@ -2,8 +2,12 @@
   <qresource>
     <file>Icons/PlusLauncherRemoteDisconnected.png</file>
     <file>Icons/PlusLauncherRemoteNotConnected.png</file>
-    <file>Icons/PlusLauncherRemoteWaitForConnection.png</file>
+    <file>Icons/PlusLauncherRemoteWait.png</file>
+    <file>Icons/PlusLauncherRemoteWaitWarning.png</file>
+    <file>Icons/PlusLauncherRemoteWaitError.png</file>
     <file>Icons/PlusLauncherRemoteConnect.png</file>
+    <file>Icons/PlusLauncherRemoteConnectWarning.png</file>
+    <file>Icons/PlusLauncherRemoteConnectError.png</file>
     <file>Icons/PlusLauncherRemoteRunning.png</file>
     <file>Icons/PlusLauncherRemoteRunningWarning.png</file>
     <file>Icons/PlusLauncherRemoteRunningError.png</file>
