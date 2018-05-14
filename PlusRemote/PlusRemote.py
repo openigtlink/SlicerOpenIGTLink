@@ -82,6 +82,18 @@ class PlusRemoteWidget(ScriptedLoadableModuleWidget):
     self.parameterNodeSelector.setToolTip( "Pick parameter set" )
     defaultParametersLayout.addRow("Parameter set: ", self.parameterNodeSelector)
 
+    plusLauncherRemoteCollapsibleButton = ctk.ctkCollapsibleButton()
+    plusLauncherRemoteCollapsibleButton.text = "Plus Server Launcher"
+    self.layout.addWidget(plusLauncherRemoteCollapsibleButton)
+
+    self.plusLauncherRemoteWidget = slicer.qMRMLPlusLauncherRemoteWidget()
+    #self.plusLauncherRemoteWidget.setAdvancedOptionsVisible(False)
+    self.plusLauncherRemoteWidget.setMRMLScene(slicer.mrmlScene)
+    self.plusLauncherRemoteReferenceID = 'PlusLauncherRemoteParameters'
+
+    plusLauncherRemoteLayout = qt.QFormLayout(plusLauncherRemoteCollapsibleButton)
+    plusLauncherRemoteLayout.addRow(self.plusLauncherRemoteWidget)
+
     # Parameters
     parametersCollapsibleButton = ctk.ctkCollapsibleButton()
     parametersCollapsibleButton.text = "Parameters"
@@ -590,6 +602,18 @@ class PlusRemoteWidget(ScriptedLoadableModuleWidget):
       # Set up default values for new nodes
       self.logic.setDefaultParameters(self.parameterNode)
       self.parameterNodeObserver = self.parameterNode.AddObserver('currentNodeChanged(vtkMRMLNode*)', self.updateGuiFromParameterNode)
+
+      self.plusRemoteLauncherReferenceID = "PlusRemoteLauncher"
+      plusRemoteSingletonSuffix = "_PlusRemoteLauncher"
+      plusRemoteLauncherSingletonTag = self.parameterNode.GetName() + plusRemoteSingletonSuffix
+      plusRemoteLauncherNode = slicer.mrmlScene.GetSingletonNode(plusRemoteLauncherSingletonTag, "vtkMRMLPlusRemoteLauncherNode")
+
+      if (plusRemoteLauncherNode is None):
+        plusRemoteLauncherNode = slicer.vtkMRMLPlusRemoteLauncherNode()
+        plusRemoteLauncherNode.SetSingletonTag(plusRemoteLauncherSingletonTag)
+        plusRemoteLauncherNode = slicer.mrmlScene.AddNode(plusRemoteLauncherNode)
+        self.parameterNode.SetNodeReferenceID(self.plusRemoteLauncherReferenceID, plusRemoteLauncherNode.GetID())
+      self.plusLauncherRemoteWidget.setParameterSetNode(plusRemoteLauncherNode)
     self.updateGuiFromParameterNode()
 
   def updateGuiFromParameterNode(self):

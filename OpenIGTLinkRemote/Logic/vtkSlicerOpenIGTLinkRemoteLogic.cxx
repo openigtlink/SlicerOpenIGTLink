@@ -212,30 +212,40 @@ bool vtkSlicerOpenIGTLinkRemoteLogic::SendCommand(vtkSlicerOpenIGTLinkCommand* c
   command->SetStatus(vtkSlicerOpenIGTLinkCommand::CommandWaiting);
   command->SetID(commandId.c_str());
 
-  vtkMRMLIGTLQueryNode* commandQueryNode = GetCommandQueryNode(command);
-  std::string commandDeviceName = "CMD_"+commandId;
-  std::string responseDeviceName = "ACK_"+commandId;
-  commandQueryNode->SetIGTLName("STRING");
-  commandQueryNode->SetIGTLDeviceName( responseDeviceName.c_str() );
-  commandQueryNode->SetQueryStatus(vtkMRMLIGTLQueryNode::STATUS_PREPARED);
-  commandQueryNode->SetQueryType(vtkMRMLIGTLQueryNode::TYPE_NOT_DEFINED);
-  commandQueryNode->SetAttribute("CommandDeviceName", commandDeviceName.c_str());
-  commandQueryNode->SetAttribute("CommandString", command->GetCommandText());
-  commandQueryNode->SetTimeOut(command->GetCommandTimeoutSec());
-
-  // Also update the corresponding response data node ID's name to avoid creation of a new response node
-  // (the existing response node will be updated).
-  vtkMRMLTextNode* responseDataNode = vtkMRMLTextNode::SafeDownCast(commandQueryNode->GetResponseDataNode());
-  if (responseDataNode!=NULL)
+  if (command->GetCommandVersion() == IGTL_HEADER_VERSION_1)
   {
-    responseDataNode->SetName(responseDeviceName.c_str());
-    responseDataNode->SetText(NULL);
+    vtkMRMLIGTLQueryNode* commandQueryNode = GetCommandQueryNode(command);
+    std::string commandDeviceName = "CMD_" + commandId;
+    std::string responseDeviceName = "ACK_" + commandId;
+    commandQueryNode->SetIGTLName("STRING");
+    commandQueryNode->SetIGTLDeviceName(responseDeviceName.c_str());
+    commandQueryNode->SetQueryStatus(vtkMRMLIGTLQueryNode::STATUS_PREPARED);
+    commandQueryNode->SetQueryType(vtkMRMLIGTLQueryNode::TYPE_NOT_DEFINED);
+    commandQueryNode->SetAttribute("CommandDeviceName", commandDeviceName.c_str());
+    commandQueryNode->SetAttribute("CommandString", command->GetCommandText().c_str());
+    commandQueryNode->SetTimeOut(command->GetCommandTimeoutSec());
+
+    // Also update the corresponding response data node ID's name to avoid creation of a new response node
+    // (the existing response node will be updated).
+    vtkMRMLTextNode* responseDataNode = vtkMRMLTextNode::SafeDownCast(commandQueryNode->GetResponseDataNode());
+    if (responseDataNode != NULL)
+    {
+      responseDataNode->SetName(responseDeviceName.c_str());
+      responseDataNode->SetText(NULL);
+    }
+
+    // Sends the command string and register the query node
+    connectorNode->PushQuery(commandQueryNode);
+
+    return true;
+  }
+  else if (command->GetCommandVersion() == IGTL_HEADER_VERSION_2)
+  {
+    connectorNode->SendCommand(command);
+    return true;
   }
   
-  // Sends the command string and register the query node
-  connectorNode->PushQuery(commandQueryNode);
-  
-  return true;
+  return false;
 }
 
 //----------------------------------------------------------------------------
