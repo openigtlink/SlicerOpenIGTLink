@@ -92,12 +92,14 @@ public:
   QPixmap IconDisconnected;
   QPixmap IconNotConnected;
   QPixmap IconConnected;
+  QPixmap IconConnectedWarning;
+  QPixmap IconConnectedError;
   QPixmap IconWaiting;
+  QPixmap IconWaitingWarning;
+  QPixmap IconWaitingError;
   QPixmap IconRunning;
   QPixmap IconRunningWarning;
   QPixmap IconRunningError;
-
-  int CurrentErrorLevel;
 
   bool WasPreviouslyConnected;
 };
@@ -109,7 +111,11 @@ qMRMLPlusLauncherRemoteWidgetPrivate::qMRMLPlusLauncherRemoteWidgetPrivate(qMRML
   , IconDisconnected(QPixmap(":/Icons/PlusLauncherRemoteDisconnected.png"))
   , IconNotConnected(QPixmap(":/Icons/PlusLauncherRemoteNotConnected.png"))
   , IconConnected(QPixmap(":/Icons/PlusLauncherRemoteConnect.png"))
-  , IconWaiting(QPixmap(":/Icons/PlusLauncherRemoteWaitForConnection.png"))
+  , IconConnectedWarning(QPixmap(":/Icons/PlusLauncherRemoteConnectWarning.png"))
+  , IconConnectedError(QPixmap(":/Icons/PlusLauncherRemoteConnectError.png"))
+  , IconWaiting(QPixmap(":/Icons/PlusLauncherRemoteWait.png"))
+  , IconWaitingWarning(QPixmap(":/Icons/PlusLauncherRemoteWaitWarning.png"))
+  , IconWaitingError(QPixmap(":/Icons/PlusLauncherRemoteWaitError.png"))
   , IconRunning(QPixmap(":/Icons/PlusLauncherRemoteRunning.png"))
   , IconRunningWarning(QPixmap(":/Icons/PlusLauncherRemoteRunningWarning.png"))
   , IconRunningError(QPixmap(":/Icons/PlusLauncherRemoteRunningError.png"))
@@ -129,8 +135,6 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::init()
   this->setupUi(q);
 
   this->ConfigFileSelectorComboBox->addAttribute("vtkMRMLTextNode", CONFIG_FILE_NODE_ATTRIBUTE.c_str());
-
-  this->CurrentErrorLevel = vtkMRMLPlusRemoteLauncherNode::LogLevelInfo;
 
   this->StartServerCallback = vtkSmartPointer<vtkCallbackCommand>::New();
   this->StartServerCallback->SetCallback(qMRMLPlusLauncherRemoteWidgetPrivate::onStartServerResponse);
@@ -226,15 +230,17 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::onStartServerResponse(vtkObject* call
 
   if (startServerCommand->IsSucceeded())
   {
-    if (startServerCommand->GetResponseXML())
+    vtkXMLDataElement* responseXML = startServerCommand->GetResponseXML();
+    if (responseXML)
     {
-      vtkXMLDataElement* resultElement = startServerCommand->GetResponseXML()->FindNestedElementWithName("Result");
+      vtkXMLDataElement* resultElement = responseXML->FindNestedElementWithName("Result");
       if (resultElement)
       {
-        std::string servers = resultElement->GetAttribute("Servers");
-        if (!servers.empty())
+        const char* servers = resultElement->GetAttribute("Servers");
+        if (servers)
         {
-          d->connectToStartedServers(servers);
+          std::string serverString = servers;
+          d->connectToStartedServers(serverString);
         }
       }
     }
@@ -334,9 +340,7 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::onCommandReceived(vtkObject* caller, 
   if (command->GetCommandName() == "Echo")
   {
     return;
-    //command->GetCommandText();
   }
-  //command->SetResponseText("<Command><Result Success=\"TRUE\"/></Command>");
 
   vtkMRMLIGTLConnectorNode* connectorNode = d->ParameterSetNode->GetLauncherConnectorNode();
   if (connectorNode)
@@ -391,6 +395,11 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::onLogMessageCommand(vtkXMLDataElement
 {
   Q_Q(qMRMLPlusLauncherRemoteWidget);
 
+  if (!this->ParameterSetNode)
+  {
+    return;
+  }
+
   for (int i = 0; i < messageCommand->GetNumberOfNestedElements(); ++i)
   {
     vtkXMLDataElement* nestedElement = messageCommand->GetNestedElement(i);
@@ -428,21 +437,15 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::onLogMessageCommand(vtkXMLDataElement
     message << "</font>";
 
     bool logLevelChanged = false;
-    if (logLevel < this->CurrentErrorLevel)
+    if (logLevel < this->ParameterSetNode->GetCurrentErrorLevel())
     {
-      this->CurrentErrorLevel = logLevel;
-      logLevelChanged = true;
+      this->ParameterSetNode->SetCurrentErrorLevel(logLevel);
     }
 
     // TODO: tracking position behavior:: see QPlusStatusIcon::ParseMessage
     this->ServerLogTextEdit->moveCursor(QTextCursor::End);
     this->ServerLogTextEdit->insertHtml(QString::fromStdString(message.str()));
     this->ServerLogTextEdit->moveCursor(QTextCursor::End);
-
-    if (logLevelChanged)
-    {
-      q->updateWidgetFromMRML();
-    }
 
   }
 
@@ -579,7 +582,7 @@ void qMRMLPlusLauncherRemoteWidget::updateWidgetFromMRML()
 {
   Q_D(qMRMLPlusLauncherRemoteWidget);
 
-  std::string tooltipSuffix = " Click to view log";
+  std::string tooltipSuffix = "\nClick to view log";
   if (!this->mrmlScene() || this->mrmlScene()->IsClosing() || !d->ParameterSetNode)
   {
     bool checkBoxSignals = d->LauncherConnectCheckBox->blockSignals(true);
@@ -587,8 +590,9 @@ void qMRMLPlusLauncherRemoteWidget::updateWidgetFromMRML()
     d->LauncherConnectCheckBox->setChecked(false);
     d->LauncherConnectCheckBox->blockSignals(checkBoxSignals);
     d->LauncherStatusButton->setIcon(d->IconDisconnected);
-    d->LauncherStatusButton->setToolTip(QString::fromStdString("Launcher disconnected. " + tooltipSuffix));
+    d->LauncherStatusButton->setToolTip(QString::fromStdString("Launcher disconnected." + tooltipSuffix));
     d->ConfigFileTextEdit->setText("");
+    d->StartStopServerButton->setEnabled(false);
     return;
   }
 
@@ -608,6 +612,7 @@ void qMRMLPlusLauncherRemoteWidget::updateWidgetFromMRML()
   d->LauncherConnectCheckBox->setEnabled(true);
   d->LauncherConnectCheckBox->setChecked(connectionEnabled);
   d->LauncherConnectCheckBox->blockSignals(checkBoxSignals);
+  d->StartStopServerButton->setEnabled(true);
 
   d->HostnameLineEdit->setEnabled(!connectionEnabled);
 
@@ -621,65 +626,6 @@ void qMRMLPlusLauncherRemoteWidget::updateWidgetFromMRML()
     d->ConfigFileTextEdit->setText("");
   }
 
-  bool connected = state == vtkMRMLIGTLConnectorNode::StateConnected;
-  if (connectionEnabled)
-  {
-
-    if (connected)
-    {
-      if (!d->WasPreviouslyConnected)
-      {
-        d->WasPreviouslyConnected = true;
-        this->subscribeToLogMessages();
-      }
-
-      int serverState = d->ParameterSetNode->GetServerState();
-      switch (serverState)
-      {
-        case vtkMRMLPlusRemoteLauncherNode::ServerRunning:
-          if (d->CurrentErrorLevel == vtkMRMLPlusRemoteLauncherNode::LogLevelInfo)
-          {
-            d->LauncherStatusButton->setIcon(d->IconRunning);
-            d->LauncherStatusButton->setToolTip(QString::fromStdString("Server runnning." + tooltipSuffix));
-          }
-          else if (d->CurrentErrorLevel == vtkMRMLPlusRemoteLauncherNode::LogLevelError)
-          {
-            d->LauncherStatusButton->setIcon(d->IconRunningError);
-            d->LauncherStatusButton->setToolTip(QString::fromStdString("Server runnning. Error detected. " + tooltipSuffix));
-          }
-          else if (d->CurrentErrorLevel == vtkMRMLPlusRemoteLauncherNode::LogLevelWarning)
-            d->LauncherStatusButton->setIcon(d->IconRunningWarning);
-            d->LauncherStatusButton->setToolTip(QString::fromStdString("Server runnning. Warning detected. " + tooltipSuffix));
-          break;
-        case vtkMRMLPlusRemoteLauncherNode::ServerStarting:
-          d->LauncherStatusButton->setIcon(d->IconWaiting);
-          d->LauncherStatusButton->setToolTip(QString::fromStdString("Server starting. " + tooltipSuffix));
-          break;
-        case vtkMRMLPlusRemoteLauncherNode::ServerStopping:
-          d->LauncherStatusButton->setIcon(d->IconWaiting);
-          d->LauncherStatusButton->setToolTip(QString::fromStdString("Server stopping. " + tooltipSuffix));
-          break;
-        case vtkMRMLPlusRemoteLauncherNode::ServerOff:
-        default:
-          d->LauncherStatusButton->setIcon(d->IconConnected);
-          d->LauncherStatusButton->setToolTip(QString::fromStdString("Launcher connected. " + tooltipSuffix));
-          break;
-      }
-    }
-    else
-    {
-      d->WasPreviouslyConnected = false;
-      d->LauncherStatusButton->setIcon(d->IconNotConnected);
-      d->LauncherStatusButton->setToolTip(QString::fromStdString("Launcher not connected. " + tooltipSuffix));
-    }
-
-  }
-  else
-  {
-    d->LauncherStatusButton->setIcon(d->IconDisconnected);
-    d->LauncherStatusButton->setToolTip(QString::fromStdString("Launcher disconnected. " + tooltipSuffix));
-  }
-
   bool configFileSelected = configFileNode != NULL;
 
   std::string hostname = d->ParameterSetNode->GetServerLauncherHostname();
@@ -690,8 +636,27 @@ void qMRMLPlusLauncherRemoteWidget::updateWidgetFromMRML()
   d->HostnameLineEdit->setText(QString::fromStdString(hostnameAndPort.str()));
   d->HostnameLineEdit->setCursorPosition(cursorPosition);
 
-  ///
+  std::string logIconMessage = "";
+
+  // Attempt to subscribe to log messages if connected
   int serverState = d->ParameterSetNode->GetServerState();
+  bool connected = state == vtkMRMLIGTLConnectorNode::StateConnected;
+  if (connected)
+  {
+    if (!d->WasPreviouslyConnected)
+    {
+      d->WasPreviouslyConnected = true;
+      this->subscribeToLogMessages();
+    }
+  }
+  else
+  {
+    serverState = vtkMRMLPlusRemoteLauncherNode::ServerOff;
+    d->ParameterSetNode->SetServerState(serverState);
+    d->WasPreviouslyConnected = false;
+  }
+
+  // Adjust buttons based on server state, and construct log button message
   switch (serverState)
   {
   case vtkMRMLPlusRemoteLauncherNode::ServerRunning:
@@ -699,18 +664,21 @@ void qMRMLPlusLauncherRemoteWidget::updateWidgetFromMRML()
     d->StartStopServerButton->setText("Stop server");
     d->ConfigFileSelectorComboBox->setDisabled(true);
     d->LogLevelComboBox->setDisabled(true);
+    logIconMessage = "Server running.";
     break;
   case vtkMRMLPlusRemoteLauncherNode::ServerStarting:
     d->StartStopServerButton->setDisabled(true);
     d->StartStopServerButton->setText("Launching...");
     d->ConfigFileSelectorComboBox->setDisabled(true);
     d->LogLevelComboBox->setDisabled(true);
+    logIconMessage = "Server starting.";
     break;
   case vtkMRMLPlusRemoteLauncherNode::ServerStopping:
     d->StartStopServerButton->setDisabled(true);
     d->StartStopServerButton->setText("Stopping...");
     d->ConfigFileSelectorComboBox->setDisabled(true);
     d->LogLevelComboBox->setDisabled(true);
+    logIconMessage = "Server stopping.";
     break;
   case vtkMRMLPlusRemoteLauncherNode::ServerOff:
   default:
@@ -718,13 +686,126 @@ void qMRMLPlusLauncherRemoteWidget::updateWidgetFromMRML()
     d->StartStopServerButton->setText("Launch server");
     d->ConfigFileSelectorComboBox->setEnabled(true);
     d->LogLevelComboBox->setEnabled(true);
+    if (state == vtkMRMLIGTLConnectorNode::StateConnected)
+    {
+      logIconMessage = "Launcher connected.";
+    }
+    else if (state == vtkMRMLIGTLConnectorNode::StateWaitConnection)
+    {
+      logIconMessage = "Launcher not connected.";
+    }
+    else
+    {
+      logIconMessage = "Launcher disconnected.";
+    }
     break;
   }
+
+  // Finish status message
+  int errorLevel = d->ParameterSetNode->GetCurrentErrorLevel();
+  switch (errorLevel)
+  {
+    case vtkMRMLPlusRemoteLauncherNode::LogLevelError:
+      logIconMessage += " Error detected.";
+      break;
+    case vtkMRMLPlusRemoteLauncherNode::LogLevelWarning:
+      logIconMessage += " Warning detected.";
+      break;
+    default:
+      break;
+  }
+  logIconMessage += tooltipSuffix;
+  d->LauncherStatusButton->setToolTip(QString::fromStdString(logIconMessage));
+
+  // Set correct icon
+  this->updateStatusIcon();
 
   d->ConfigFileSelectorComboBox->setCurrentNode(d->ParameterSetNode->GetCurrentConfigNode());
   d->LogLevelComboBox->setCurrentIndex(d->LogLevelComboBox->findData(d->ParameterSetNode->GetLogLevel()));
 
   d->ParameterSetNode->EndModify(disabledModify);
+}
+
+//-----------------------------------------------------------------------------
+void qMRMLPlusLauncherRemoteWidget::updateStatusIcon()
+{
+  Q_D(qMRMLPlusLauncherRemoteWidget);
+
+  int connectionEnabled = vtkMRMLIGTLConnectorNode::StateOff;
+  int serverState = vtkMRMLPlusRemoteLauncherNode::ServerOff;
+  int errorLevel = vtkMRMLPlusRemoteLauncherNode::LogLevelInfo;
+
+  int state = vtkMRMLIGTLConnectorNode::StateOff;
+  if (d->ParameterSetNode)
+  {
+    vtkMRMLIGTLConnectorNode* launcherConnectorNode = d->ParameterSetNode->GetLauncherConnectorNode();
+    if (launcherConnectorNode)
+    {
+      state = launcherConnectorNode->GetState();
+    }
+    serverState = d->ParameterSetNode->GetServerState();
+    errorLevel = d->ParameterSetNode->GetCurrentErrorLevel();
+  }
+
+  if (state == vtkMRMLIGTLConnectorNode::StateOff)
+  {
+    d->LauncherStatusButton->setIcon(d->IconDisconnected);
+  }
+  else if (errorLevel >= vtkMRMLPlusRemoteLauncherNode::LogLevelInfo)
+  {
+    switch (serverState)
+    {
+      case vtkMRMLPlusRemoteLauncherNode::ServerOff:
+        d->LauncherStatusButton->setIcon(d->IconConnected);
+        break;
+      case vtkMRMLPlusRemoteLauncherNode::ServerRunning:
+        d->LauncherStatusButton->setIcon(d->IconRunning);
+        break;
+      case vtkMRMLPlusRemoteLauncherNode::ServerStarting:
+      case vtkMRMLPlusRemoteLauncherNode::ServerStopping:
+        d->LauncherStatusButton->setIcon(d->IconWaiting);
+        break;
+      default:
+        break;
+    }
+  }
+  else if (errorLevel == vtkMRMLPlusRemoteLauncherNode::LogLevelWarning)
+  {
+    switch (serverState)
+    {
+    case vtkMRMLPlusRemoteLauncherNode::ServerOff:
+      d->LauncherStatusButton->setIcon(d->IconConnectedWarning);
+      break;
+    case vtkMRMLPlusRemoteLauncherNode::ServerRunning:
+      d->LauncherStatusButton->setIcon(d->IconRunningWarning);
+      break;
+    case vtkMRMLPlusRemoteLauncherNode::ServerStarting:
+    case vtkMRMLPlusRemoteLauncherNode::ServerStopping:
+      d->LauncherStatusButton->setIcon(d->IconWaitingWarning);
+      break;
+    default:
+      break;
+    }
+  }
+  else if (errorLevel == vtkMRMLPlusRemoteLauncherNode::LogLevelError)
+  {
+    switch (serverState)
+    {
+    case vtkMRMLPlusRemoteLauncherNode::ServerOff:
+      d->LauncherStatusButton->setIcon(d->IconConnectedError);
+      break;
+    case vtkMRMLPlusRemoteLauncherNode::ServerRunning:
+      d->LauncherStatusButton->setIcon(d->IconRunningError);
+      break;
+    case vtkMRMLPlusRemoteLauncherNode::ServerStarting:
+    case vtkMRMLPlusRemoteLauncherNode::ServerStopping:
+      d->LauncherStatusButton->setIcon(d->IconWaitingError);
+      break;
+    default:
+      break;
+    }
+  }
+    
 }
 
 //-----------------------------------------------------------------------------
@@ -988,7 +1069,10 @@ void qMRMLPlusLauncherRemoteWidget::onClearLogButton()
 {
   Q_D(qMRMLPlusLauncherRemoteWidget);
   d->ServerLogTextEdit->setPlainText("");
-  d->CurrentErrorLevel = vtkMRMLPlusRemoteLauncherNode::LogLevelInfo;
+  if (d->ParameterSetNode)
+  {
+    d->ParameterSetNode->SetCurrentErrorLevel(vtkMRMLPlusRemoteLauncherNode::LogLevelInfo);
+  }
   this->updateWidgetFromMRML();
 }
 

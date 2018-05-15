@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>345</width>
-    <height>212</height>
+    <height>286</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -86,19 +86,19 @@
       </widget>
      </item>
      <item>
-      <widget class="qMRMLNodeComboBox" name="ConfigFileSelectorComboBox">
+      <widget class="qMRMLNodeComboBox" name="ConfigFileSelectorComboBox" native="true">
        <property name="enabled">
         <bool>false</bool>
        </property>
        <property name="focusPolicy">
         <enum>Qt::WheelFocus</enum>
        </property>
-       <property name="nodeTypes">
+       <property name="nodeTypes" stdset="0">
         <stringlist>
          <string>vtkMRMLTextNode</string>
         </stringlist>
        </property>
-       <property name="addEnabled">
+       <property name="addEnabled" stdset="0">
         <bool>false</bool>
        </property>
       </widget>
@@ -190,12 +190,20 @@
      <property name="title">
       <string>Config File</string>
      </property>
-     <property name="collapsed">
+     <property name="collapsed" stdset="0">
       <bool>true</bool>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_5">
       <item>
-       <widget class="QTextEdit" name="ConfigFileTextEdit"/>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="QTextEdit" name="ConfigFileTextEdit">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
     </widget>

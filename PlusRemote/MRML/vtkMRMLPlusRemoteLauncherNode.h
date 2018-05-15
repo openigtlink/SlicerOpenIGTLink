@@ -47,7 +47,6 @@ public:
     ServerRunning,
     ServerStarting,
     ServerStopping,
-    Server_Last
   };
 
   static vtkMRMLPlusRemoteLauncherNode *New();
@@ -90,6 +89,9 @@ public:
   vtkGetMacro(LogLevel, int);
   vtkSetMacro(LogLevel, int);
 
+  vtkGetMacro(CurrentErrorLevel, int);
+  vtkSetMacro(CurrentErrorLevel, int);
+
   /// Get launcher connector node
   vtkMRMLIGTLConnectorNode* GetLauncherConnectorNode();
   /// Set and observe launcher connector node
@@ -106,6 +108,7 @@ private:
   char* ServerLauncherHostname;
   int ServerLauncherPort;
   int LogLevel;
+  int CurrentErrorLevel;
 
   static const int DefaultPort = 18904;
 };
