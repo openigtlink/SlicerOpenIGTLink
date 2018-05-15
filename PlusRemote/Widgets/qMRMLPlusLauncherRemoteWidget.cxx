@@ -751,6 +751,10 @@ void qMRMLPlusLauncherRemoteWidget::updateStatusIcon()
   {
     d->LauncherStatusButton->setIcon(d->IconDisconnected);
   }
+  else if (state == vtkMRMLIGTLConnectorNode::StateWaitConnection)
+  {
+    d->LauncherStatusButton->setIcon(d->IconNotConnected);
+  }
   else if (errorLevel >= vtkMRMLPlusRemoteLauncherNode::LogLevelInfo)
   {
     switch (serverState)
