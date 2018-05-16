@@ -33,6 +33,14 @@ if(NOT DEFINED OpenIGTLinkIO_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj
     QUIET
     )
 
+  set(PYTHON_VARS)
+  if (VTK_WRAP_PYTHON)
+    list(APPEND PYTHON_VARS
+    -DPYTHON_LIBRARY:FILEPATH=${PYTHON_LIBRARY}
+    -DPYTHON_INCLUDE_DIR:FILEPATH=${PYTHON_INCLUDE_DIR}
+    )
+  endif()
+
   ExternalProject_Add(${proj}
     ${${proj}_EP_ARGS}
     GIT_REPOSITORY ${${CMAKE_PROJECT_NAME}_${proj}_GIT_REPOSITORY}
@@ -60,6 +68,7 @@ if(NOT DEFINED OpenIGTLinkIO_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj
       # Dependencies
       -DOpenIGTLink_DIR:PATH=${OpenIGTLink_DIR}
       -DVTK_DIR:PATH=${VTK_DIR}
+      ${PYTHON_VARS}
     INSTALL_COMMAND ""
     DEPENDS
       ${${proj}_DEPENDS}
