@@ -72,16 +72,18 @@ void qSlicerOpenIGTLinkRemoteCommandWidget::setup()
 
   for (int c = 0; c < d->tableWidget_metaData->horizontalHeader()->count(); ++c)
   {
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     d->tableWidget_metaData->horizontalHeader()->setSectionResizeMode(c, QHeaderView::Stretch);
     d->tableWidget_responseMetaData->horizontalHeader()->setSectionResizeMode(c, QHeaderView::Stretch);
+#else 
+    d->tableWidget_metaData->horizontalHeader()->setResizeMode(c, QHeaderView::Stretch);
+    d->tableWidget_responseMetaData->horizontalHeader()->setResizeMode(c, QHeaderView::Stretch);
+#endif
   }
-
-  connect( d->pushButton_addMetaData, &QPushButton::clicked, this, &qSlicerOpenIGTLinkRemoteCommandWidget::onAddMetaDataClicked );
-  connect( d->pushButton_removeMetaData, &QPushButton::clicked, this, &qSlicerOpenIGTLinkRemoteCommandWidget::onRemoveMetaDataClicked );
-
-  connect( d->radioButton_versionString, &QRadioButton::clicked, this, &qSlicerOpenIGTLinkRemoteCommandWidget::onVersionButtonClicked );
-  connect( d->radioButton_versionCommand, &QRadioButton::clicked, this, &qSlicerOpenIGTLinkRemoteCommandWidget::onVersionButtonClicked );
-
+  connect( d->pushButton_addMetaData, SIGNAL( clicked() ), this, SLOT( onAddMetaDataClicked() ) );
+  connect( d->pushButton_removeMetaData, SIGNAL( clicked() ), this, SLOT( onRemoveMetaDataClicked() ) );
+  connect( d->radioButton_versionString, SIGNAL( clicked() ), this, SLOT( onVersionButtonClicked() ) );
+  connect( d->radioButton_versionCommand, SIGNAL( clicked() ), this, SLOT( onVersionButtonClicked() ) );
   connect( d->SendCommandButton, SIGNAL( clicked() ), this, SLOT( onSendCommandClicked() ) );
   qvtkConnect(d->command, vtkSlicerOpenIGTLinkCommand::CommandCompletedEvent, this, SLOT(onQueryResponseReceived()));
 }
@@ -112,13 +114,10 @@ qSlicerOpenIGTLinkRemoteCommandWidget::~qSlicerOpenIGTLinkRemoteCommandWidget()
     this->CommandLogic->UnRegister(NULL);
     this->CommandLogic = NULL;
   }
-
-  disconnect( d->pushButton_addMetaData, &QPushButton::clicked, this, &qSlicerOpenIGTLinkRemoteCommandWidget::onAddMetaDataClicked );
-  disconnect( d->pushButton_removeMetaData, &QPushButton::clicked, this, &qSlicerOpenIGTLinkRemoteCommandWidget::onRemoveMetaDataClicked );
-
-  disconnect( d->radioButton_versionString, &QRadioButton::clicked, this, &qSlicerOpenIGTLinkRemoteCommandWidget::onVersionButtonClicked );
-  disconnect( d->radioButton_versionCommand, &QRadioButton::clicked, this, &qSlicerOpenIGTLinkRemoteCommandWidget::onVersionButtonClicked );
-
+  disconnect( d->pushButton_addMetaData, SIGNAL(clicked()), this, SLOT(onAddMetaDataClicked()) );
+  disconnect( d->pushButton_removeMetaData, SIGNAL(clicked()), this, SLOT(onRemoveMetaDataClicked()) );
+  disconnect( d->radioButton_versionString, SIGNAL(clicked()), this, SLOT(onVersionButtonClicked()) );
+  disconnect( d->radioButton_versionCommand, SIGNAL(clicked()), this, SLOT(onVersionButtonClicked()) );
   disconnect( d->SendCommandButton, SIGNAL(clicked()), this, SLOT(onSendCommandClicked()) );
 }
 

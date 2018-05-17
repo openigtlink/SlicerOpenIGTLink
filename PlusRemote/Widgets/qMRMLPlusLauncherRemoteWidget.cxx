@@ -1001,8 +1001,11 @@ void qMRMLPlusLauncherRemoteWidget::onLogLevelChanged(int index)
   {
     return;
   }
-
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
   int logLevel = d->LogLevelComboBox->currentData().toInt();
+#else
+  int logLevel = d->LogLevelComboBox->itemData(d->LogLevelComboBox->currentIndex()).toInt();
+#endif
   d->ParameterSetNode->SetLogLevel(logLevel);
 }
 
