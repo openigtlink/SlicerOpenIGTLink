@@ -12,8 +12,10 @@
 #include "qSlicerOpenIGTLinkRemoteCommandWidget.h"
 #include "ui_qSlicerOpenIGTLinkRemoteCommandWidget.h"
 
+// OpenIGTLinkIO includes
+#include <igtlioCommand.h>
+
 // Other includes
-#include "vtkSlicerOpenIGTLinkCommand.h"
 #include "vtkSlicerOpenIGTLinkRemoteLogic.h"
 
 // Slicer includes
@@ -36,7 +38,7 @@ public:
   
   vtkSlicerOpenIGTLinkRemoteLogic * logic();
 
-  vtkSmartPointer<vtkSlicerOpenIGTLinkCommand> command;
+  igtlioCommandPointer command;
 };
 
 
@@ -85,7 +87,7 @@ void qSlicerOpenIGTLinkRemoteCommandWidget::setup()
   connect( d->radioButton_versionString, SIGNAL( clicked() ), this, SLOT( onVersionButtonClicked() ) );
   connect( d->radioButton_versionCommand, SIGNAL( clicked() ), this, SLOT( onVersionButtonClicked() ) );
   connect( d->SendCommandButton, SIGNAL( clicked() ), this, SLOT( onSendCommandClicked() ) );
-  qvtkConnect(d->command, vtkSlicerOpenIGTLinkCommand::CommandCompletedEvent, this, SLOT(onQueryResponseReceived()));
+  qvtkConnect(d->command, igtlioCommand::CommandCompletedEvent, this, SLOT(onQueryResponseReceived()));
 }
 
 
@@ -99,7 +101,7 @@ qSlicerOpenIGTLinkRemoteCommandWidget::qSlicerOpenIGTLinkRemoteCommandWidget( QW
 {
   Q_D(qSlicerOpenIGTLinkRemoteCommandWidget);
 
-  d->command = vtkSmartPointer<vtkSlicerOpenIGTLinkCommand>::New();
+  d->command = vtkSmartPointer<igtlioCommand>::New();
   this->setup();
 }
 
@@ -107,7 +109,7 @@ qSlicerOpenIGTLinkRemoteCommandWidget::qSlicerOpenIGTLinkRemoteCommandWidget( QW
 qSlicerOpenIGTLinkRemoteCommandWidget::~qSlicerOpenIGTLinkRemoteCommandWidget()
 {
   Q_D(qSlicerOpenIGTLinkRemoteCommandWidget);
-  qvtkDisconnect(d->command, vtkSlicerOpenIGTLinkCommand::CommandCompletedEvent, this, SLOT(onQueryResponseReceived()));
+  qvtkDisconnect(d->command, igtlioCommand::CommandCompletedEvent, this, SLOT(onQueryResponseReceived()));
   this->setMRMLScene(NULL);
   if ( this->CommandLogic != NULL )
   {
@@ -127,7 +129,7 @@ void qSlicerOpenIGTLinkRemoteCommandWidget::onSendCommandClicked()
   Q_D(qSlicerOpenIGTLinkRemoteCommandWidget);
 
   // Cancel previous command if it was already in progress
-  if (d->command->GetStatus() == vtkSlicerOpenIGTLinkCommand::CommandWaiting)
+  if (d->command->GetStatus() == igtlioCommandStatus::CommandWaiting)
   {
     qDebug("qSlicerOpenIGTLinkRemoteCommandWidget::sendCommand: previous command was already in progress, cancelling it now.");
     d->logic()->CancelCommand( d->command );
@@ -155,7 +157,7 @@ void qSlicerOpenIGTLinkRemoteCommandWidget::onSendCommandClicked()
       return;
     }
 
-    d->command->SetCommandName(d->lineEdit_commandName->text().toStdString());
+    d->command->SetName(d->lineEdit_commandName->text().toStdString());
     for (int i = 0; i < d->tableWidget_metaData->rowCount(); i++)
     {
       QTableWidgetItem *keyItem = d->tableWidget_metaData->item(i, 0);
@@ -166,24 +168,27 @@ void qSlicerOpenIGTLinkRemoteCommandWidget::onSendCommandClicked()
         continue;
       }
 
-      d->command->SetMetaDataElement(keyItem->text().toStdString(), valueItem->text().toStdString());
+      d->command->SetCommandMetaDataElement(keyItem->text().toStdString(), valueItem->text().toStdString());
     }
   }
 
   // Removed until command version support is re-added
-  d->command->SetCommandVersion(d->radioButton_versionCommand->isChecked() ? IGTL_HEADER_VERSION_2 : IGTL_HEADER_VERSION_1);
+  //d->command->SetCommandVersion(d->radioButton_versionCommand->isChecked() ? IGTL_HEADER_VERSION_2 : IGTL_HEADER_VERSION_1);
   
   // Logic sends command message.
-  if (d->command->SetCommandText(d->CommandTextEdit->toPlainText().toStdString().c_str()))
-  {
-    d->logic()->SendCommand( d->command, connectorNode->GetID());
-    onQueryResponseReceived();
-  }
-  else
-  {
-    d->ResponseTextEdit->setPlainText( "Command cannot be sent: XML parsing failed" );
-  }
-  
+  //if (d->command->SetCommandContent(d->CommandTextEdit->toPlainText().toStdString().c_str()))
+  //{
+  //  d->logic()->SendCommand( d->command, connectorNode->GetID());
+  //  onQueryResponseReceived();
+  //}
+  //else
+  //{
+  //  d->ResponseTextEdit->setPlainText( "Command cannot be sent: XML parsing failed" );
+  //}
+
+  d->command->SetCommandContent(d->CommandTextEdit->toPlainText().toStdString());
+  d->logic()->SendCommand(d->command, connectorNode->GetID());
+
 }
 
 //------------------------------------------------------------------------------
@@ -202,22 +207,19 @@ void qSlicerOpenIGTLinkRemoteCommandWidget::onQueryResponseReceived()
   std::string parameters;
   int status = d->command->GetStatus();
 
-  QString responseGroupBoxTitle="Response details for command ID: "+QString::fromStdString(d->command->GetID())+"";
+  QString responseGroupBoxTitle="Response details for command ID: "+QString::number(d->command->GetCommandId())+"";
   d->responseGroupBox->setTitle(responseGroupBoxTitle);
-  std::string displayedText = !d->command->GetResponseMessage().empty() ? d->command->GetResponseMessage() : "";
-  if (d->command->GetResponseXML() == NULL)
-  {
-    displayedText = !d->command->GetResponseText().empty() ? d->command->GetResponseText() : "";
-  }
-  if (status == vtkSlicerOpenIGTLinkCommand::CommandSuccess)
+  std::string displayedText = !d->command->GetResponseContent().empty() ? d->command->GetResponseContent() : "";
+
+  if (status == igtlioCommandStatus::CommandResponseReceived)
   {
     d->ResponseTextEdit->setPlainText(QString(displayedText.c_str()));
   }
-  else if (status == vtkSlicerOpenIGTLinkCommand::CommandWaiting)
+  else if (status == igtlioCommandStatus::CommandWaiting)
   {
     d->ResponseTextEdit->setPlainText("Waiting for response...");
   }
-  else if (status == vtkSlicerOpenIGTLinkCommand::CommandExpired)
+  else if (status == igtlioCommandStatus::CommandExpired)
   {
     d->ResponseTextEdit->setPlainText("Command timed out");
   }
@@ -227,14 +229,15 @@ void qSlicerOpenIGTLinkRemoteCommandWidget::onQueryResponseReceived()
   }
 
   d->tableWidget_responseMetaData->clear();
+  d->tableWidget_responseMetaData->setRowCount(0);
   igtl::MessageBase::MetaDataMap metaData = d->command->GetResponseMetaData();
   for (igtl::MessageBase::MetaDataMap::iterator it = begin(metaData); it != end(metaData); ++it)
   {
     d->tableWidget_responseMetaData->insertRow(d->tableWidget_responseMetaData->rowCount());
-    d->tableWidget_metaData->setItem(0, d->tableWidget_metaData->rowCount() - 1, new QTableWidgetItem(QString::fromStdString(it->first)));
-    d->tableWidget_metaData->setItem(1, d->tableWidget_metaData->rowCount() - 1, new QTableWidgetItem(QString::fromStdString(it->second.second)));
+    d->tableWidget_responseMetaData->setItem(d->tableWidget_responseMetaData->rowCount() - 1, 0, new QTableWidgetItem(QString::fromStdString(it->first)));
+    d->tableWidget_responseMetaData->setItem(d->tableWidget_responseMetaData->rowCount() - 1, 1, new QTableWidgetItem(QString::fromStdString(it->second.second)));
   }
-  std::string fullResponseText = !d->command->GetResponseText().empty() ? d->command->GetResponseText() : "";
+  std::string fullResponseText = !d->command->GetResponseContent().empty() ? d->command->GetResponseContent() : "";
   d->FullResponseTextEdit->setPlainText(QString(fullResponseText.c_str()));
 }
 

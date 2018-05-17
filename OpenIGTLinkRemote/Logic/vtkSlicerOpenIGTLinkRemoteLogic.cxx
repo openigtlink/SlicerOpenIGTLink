@@ -2,7 +2,6 @@
 #include "vtkMRMLIGTLQueryNode.h"
 #include "vtkMRMLScene.h"
 #include "vtkMRMLTextNode.h"
-#include "vtkSlicerOpenIGTLinkCommand.h"
 #include "vtkSlicerOpenIGTLinkIFLogic.h"
 #include "vtkSlicerOpenIGTLinkRemoteLogic.h"
 
@@ -33,7 +32,7 @@ public:
   struct CommandInfo
   {
     vtkSmartPointer<vtkMRMLIGTLQueryNode> CommandQueryNode;
-    vtkSmartPointer<vtkSlicerOpenIGTLinkCommand> Command;
+    vtkSmartPointer<igtlioCommand> Command;
   };
   std::vector<CommandInfo> Commands;
 };
@@ -134,7 +133,7 @@ void vtkSlicerOpenIGTLinkRemoteLogic::DeleteCommandQueryNode(vtkMRMLIGTLQueryNod
 }
 
 //----------------------------------------------------------------------------
-vtkMRMLIGTLQueryNode* vtkSlicerOpenIGTLinkRemoteLogic::GetCommandQueryNode(vtkSlicerOpenIGTLinkCommand* command)
+vtkMRMLIGTLQueryNode* vtkSlicerOpenIGTLinkRemoteLogic::GetCommandQueryNode(igtlioCommand* command)
 {
   // If we find an unassigned command query node then use that
   for (std::vector<vtkSlicerOpenIGTLinkRemoteLogic::vtkInternal::CommandInfo>::iterator it=this->Internal->Commands.begin();
@@ -176,7 +175,7 @@ void vtkSlicerOpenIGTLinkRemoteLogic::ReleaseCommandQueryNode(vtkMRMLIGTLQueryNo
 }
 
 //----------------------------------------------------------------------------
-bool vtkSlicerOpenIGTLinkRemoteLogic::SendCommand(vtkSlicerOpenIGTLinkCommand* command, const char* connectorNodeId)
+bool vtkSlicerOpenIGTLinkRemoteLogic::SendCommand(igtlioCommand* command, const char* connectorNodeId)
 {
   if ( command == NULL )
   {
@@ -194,62 +193,62 @@ bool vtkSlicerOpenIGTLinkRemoteLogic::SendCommand(vtkSlicerOpenIGTLinkCommand* c
     vtkErrorMacro( "SendCommand could not cast MRML node to IGTLConnectorNode." );
     return false;
   }
-  if (command->GetStatus()==vtkSlicerOpenIGTLinkCommand::CommandWaiting)
+  if (command->GetStatus()==igtlioCommandStatus::CommandWaiting)
   {
     vtkWarningMacro( "vtkSlicerOpenIGTLinkRemoteLogic::SendCommand failed: command is already in progress" );
     return false;
   }
 
-  // Create a unique Id for this command message.
-  // The logic may only be used from the main thread, so there is no need
-  // for making the counter increment thread-safe.
-  (this->CommandCounter)++;
-  std::stringstream commandIdStream;
-  commandIdStream << this->CommandCounter;
-  std::string commandId = commandIdStream.str();
+  //if (command->GetCommandVersion() == IGTL_HEADER_VERSION_1)
+  //{
+  //  // Create a unique Id for this command message.
+  //  // The logic may only be used from the main thread, so there is no need
+  //  // for making the counter increment thread-safe.
+  //  (this->CommandCounter)++;
+  //  std::stringstream commandIdStream;
+  //  commandIdStream << this->CommandCounter;
+  //  std::string commandId = commandIdStream.str();
 
-  command->SetResponseText(NULL); // sets status to FAIL
-  command->SetStatus(vtkSlicerOpenIGTLinkCommand::CommandWaiting);
-  command->SetID(commandId.c_str());
+  //  command->SetResponseContent(""); // sets status to FAIL
+  //  command->SetStatus(igtlioCommandStatus::CommandWaiting);
+  //  //command->SetCommandId(commandId.c_str());
 
-  if (command->GetCommandVersion() == IGTL_HEADER_VERSION_1)
+  //  vtkMRMLIGTLQueryNode* commandQueryNode = GetCommandQueryNode(command);
+  //  std::string commandDeviceName = "CMD_" + commandId;
+  //  std::string responseDeviceName = "ACK_" + commandId;
+  //  commandQueryNode->SetIGTLName("STRING");
+  //  commandQueryNode->SetIGTLDeviceName(responseDeviceName.c_str());
+  //  commandQueryNode->SetQueryStatus(vtkMRMLIGTLQueryNode::STATUS_PREPARED);
+  //  commandQueryNode->SetQueryType(vtkMRMLIGTLQueryNode::TYPE_NOT_DEFINED);
+  //  commandQueryNode->SetAttribute("CommandDeviceName", commandDeviceName.c_str());
+  //  commandQueryNode->SetAttribute("CommandString", command->GetCommandContent().c_str());
+  //  commandQueryNode->SetTimeOut(command->GetTimeoutSec());
+
+  //  // Also update the corresponding response data node ID's name to avoid creation of a new response node
+  //  // (the existing response node will be updated).
+  //  vtkMRMLTextNode* responseDataNode = vtkMRMLTextNode::SafeDownCast(commandQueryNode->GetResponseDataNode());
+  //  if (responseDataNode != NULL)
+  //  {
+  //    responseDataNode->SetName(responseDeviceName.c_str());
+  //    responseDataNode->SetText(NULL);
+  //  }
+
+  //  // Sends the command string and register the query node
+  //  connectorNode->PushQuery(commandQueryNode);
+
+  //  return true;
+  //}
+  //else if (command->GetCommandVersion() == IGTL_HEADER_VERSION_2)
   {
-    vtkMRMLIGTLQueryNode* commandQueryNode = GetCommandQueryNode(command);
-    std::string commandDeviceName = "CMD_" + commandId;
-    std::string responseDeviceName = "ACK_" + commandId;
-    commandQueryNode->SetIGTLName("STRING");
-    commandQueryNode->SetIGTLDeviceName(responseDeviceName.c_str());
-    commandQueryNode->SetQueryStatus(vtkMRMLIGTLQueryNode::STATUS_PREPARED);
-    commandQueryNode->SetQueryType(vtkMRMLIGTLQueryNode::TYPE_NOT_DEFINED);
-    commandQueryNode->SetAttribute("CommandDeviceName", commandDeviceName.c_str());
-    commandQueryNode->SetAttribute("CommandString", command->GetCommandText().c_str());
-    commandQueryNode->SetTimeOut(command->GetCommandTimeoutSec());
-
-    // Also update the corresponding response data node ID's name to avoid creation of a new response node
-    // (the existing response node will be updated).
-    vtkMRMLTextNode* responseDataNode = vtkMRMLTextNode::SafeDownCast(commandQueryNode->GetResponseDataNode());
-    if (responseDataNode != NULL)
-    {
-      responseDataNode->SetName(responseDeviceName.c_str());
-      responseDataNode->SetText(NULL);
-    }
-
-    // Sends the command string and register the query node
-    connectorNode->PushQuery(commandQueryNode);
-
-    return true;
-  }
-  else if (command->GetCommandVersion() == IGTL_HEADER_VERSION_2)
-  {
-    connectorNode->SendCommand(command);
-    return true;
+  connectorNode->SendCommand(command);
+  return true;
   }
   
   return false;
 }
 
 //----------------------------------------------------------------------------
-bool vtkSlicerOpenIGTLinkRemoteLogic::CancelCommand(vtkSlicerOpenIGTLinkCommand* command)
+bool vtkSlicerOpenIGTLinkRemoteLogic::CancelCommand(igtlioCommand* command)
 {
   if (command==NULL)
   {
@@ -268,9 +267,9 @@ bool vtkSlicerOpenIGTLinkRemoteLogic::CancelCommand(vtkSlicerOpenIGTLinkCommand*
       }
       it->CommandQueryNode->SetQueryStatus(vtkMRMLIGTLQueryNode::STATUS_NOT_DEFINED);
       // Clean up command node
-      it->Command->SetStatus(vtkSlicerOpenIGTLinkCommand::CommandCancelled);
+      it->Command->SetStatus(igtlioCommandStatus::CommandCancelled);
       // Notify caller
-      it->Command->InvokeEvent(vtkSlicerOpenIGTLinkCommand::CommandCompletedEvent, it->CommandQueryNode);
+      it->Command->InvokeEvent(igtlioCommand::CommandCompletedEvent, it->CommandQueryNode);
       ReleaseCommandQueryNode(it->CommandQueryNode);
       return true;
     }
@@ -370,7 +369,7 @@ void vtkSlicerOpenIGTLinkRemoteLogic::ProcessMRMLNodesEvents(vtkObject* caller, 
     // to command object changes (e.g., a module may poll the status of a command
     // and submit new commands when it detects that a command is completed)
     vtkSmartPointer<vtkMRMLIGTLQueryNode> commandQueryNode;
-    vtkSmartPointer<vtkSlicerOpenIGTLinkCommand> command;
+    vtkSmartPointer<igtlioCommand> command;
     for (std::vector<vtkSlicerOpenIGTLinkRemoteLogic::vtkInternal::CommandInfo>::iterator it=this->Internal->Commands.begin();
       it!=this->Internal->Commands.end(); ++it)
     {
@@ -392,7 +391,7 @@ void vtkSlicerOpenIGTLinkRemoteLogic::ProcessMRMLNodesEvents(vtkObject* caller, 
     ReleaseCommandQueryNode(commandQueryNode);
     if (commandQueryNode->GetQueryStatus()==vtkMRMLIGTLQueryNode::STATUS_EXPIRED)
     {
-      command->SetStatus(vtkSlicerOpenIGTLinkCommand::CommandExpired);
+      command->SetStatus(igtlioCommandStatus::CommandExpired);
     }
     else
     {
@@ -400,14 +399,14 @@ void vtkSlicerOpenIGTLinkRemoteLogic::ProcessMRMLNodesEvents(vtkObject* caller, 
       if (responseNode)
       {
         // this sets status, too; because the success code is specified in the response text
-        command->SetResponseText(responseNode->GetText());
+        command->SetResponseContent(responseNode->GetText());
       }
       else
       {
-        command->SetStatus(vtkSlicerOpenIGTLinkCommand::CommandFail);
+        command->SetStatus(igtlioCommandStatus::CommandFailed);
       }
     }
-    command->InvokeEvent(vtkSlicerOpenIGTLinkCommand::CommandCompletedEvent, commandQueryNode);
+    command->InvokeEvent(igtlioCommand::CommandCompletedEvent, commandQueryNode);
     // We must return and do nothing else after InvokeEvent because the notified modules
     // might have changed the command list.
     return;

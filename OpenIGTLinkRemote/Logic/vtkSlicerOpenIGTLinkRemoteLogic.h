@@ -28,8 +28,8 @@
 #include <cstdlib>
 
 class vtkMRMLIGTLQueryNode;
-class vtkSlicerOpenIGTLinkCommand;
 class vtkSlicerOpenIGTLinkIFLogic;
+class igtlioCommand;
 
 /// \ingroup Slicer_QtModules_ExtensionTemplate
 class VTK_SLICER_OPENIGTLINKREMOTE_MODULE_LOGIC_EXPORT vtkSlicerOpenIGTLinkRemoteLogic :
@@ -44,8 +44,8 @@ public:
 
   /// Send an OpenIGTLink command
   /// OpenIGTLink STRING command query nodes are automatically created and associated
-  /// with the vtkSlicerOpenIGTLinkCommand. If the query node is responded then
-  /// the vtkSlicerOpenIGTLinkCommand is updated with the response.
+  /// with the igtlioCommand. If the query node is responded then
+  /// the igtlioCommand is updated with the response.
   /// For performance improvement reason, the query nodes are not removed from the scene
   /// but reused for sending the next command. The query nodes are invisible and not saved
   /// with the scene.
@@ -53,19 +53,19 @@ public:
   /// that was already in progress is not changed).
   ///
   /// Example usage from Python:
-  ///     cmd = slicer.modulelogic.vtkSlicerOpenIGTLinkCommand()
+  ///     cmd = igtlioLogicPython.igtlioCommand()
   ///     cmd.SetCommandName('RequestChannelIds')
   ///     slicer.modules.openigtlinkremote.logic().SendCommand(cmd, 'vtkMRMLIGTLConnectorNode1')
   ///   To get notification about command completion run these before SendCommand:
   ///     def notificationMethod(command,q):
   ///       print "Command completed: ", command.StatusToString(command.GetStatus())
-  ///     cmd.AddObserver(slicer.modulelogic.vtkSlicerOpenIGTLinkCommand.CommandCompletedEvent, notificationMethod)
-  bool SendCommand(vtkSlicerOpenIGTLinkCommand* command, const char* connectorNodeId);
+  ///     cmd.AddObserver(igtlioLogicPython.igtlioCommand.CommandCompletedEvent, notificationMethod)
+  bool SendCommand(igtlioCommand* command, const char* connectorNodeId);
 
   /// Cancel a command: removes from the OpenIGTLink connector's query queue, removes the
   /// association with the query node (so that it is reusable for sending another command),
   /// and sets the command state to cancelled.
-  bool CancelCommand(vtkSlicerOpenIGTLinkCommand* command);
+  bool CancelCommand(igtlioCommand* command);
 
 protected:
   vtkSlicerOpenIGTLinkRemoteLogic();
@@ -81,7 +81,7 @@ protected:
   /// Receives all the events fired by the nodes.
   virtual void ProcessMRMLNodesEvents(vtkObject* caller, unsigned long event, void * callData);
 
-  vtkMRMLIGTLQueryNode* GetCommandQueryNode(vtkSlicerOpenIGTLinkCommand* command);
+  vtkMRMLIGTLQueryNode* GetCommandQueryNode(igtlioCommand* command);
   void ReleaseCommandQueryNode(vtkMRMLIGTLQueryNode* commandQueryNode);
 
   /// Creates a command query node and corresponding response node.
