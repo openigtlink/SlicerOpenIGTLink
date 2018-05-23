@@ -35,7 +35,6 @@ class vtkMRMLIGTLConnectorNode;
 class vtkSlicerOpenIGTLinkCommand;
 class vtkMRMLPlusRemoteLauncherNode;
 class vtkMRMLNode;
-class vtkXMLDataElement;
 
 /// \ingroup Slicer_QtModules_PlusRemote
 class Q_SLICER_MODULE_PLUSREMOTE_WIDGETS_EXPORT qMRMLPlusLauncherRemoteWidget : public qMRMLWidget

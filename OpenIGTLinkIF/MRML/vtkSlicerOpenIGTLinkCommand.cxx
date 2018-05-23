@@ -1,10 +1,12 @@
 #include "vtkSlicerOpenIGTLinkCommand.h"
 
+// std includes
 #include <sstream>
 
+// VTK includes
 #include <vtkObjectFactory.h>
-#include <vtkXMLDataElement.h>
 #include <vtkSmartPointer.h>
+#include <vtkXMLDataElement.h>
 #include <vtkXMLUtilities.h>
 
 //----------------------------------------------------------------------------
@@ -26,23 +28,13 @@ vtkSlicerOpenIGTLinkCommand::vtkSlicerOpenIGTLinkCommand()
 , Blocking(true)
 , CommandVersion(IGTL_HEADER_VERSION_1)
 {
-  this->CommandXML = vtkXMLDataElement::New();
+  this->CommandXML = vtkSmartPointer<vtkXMLDataElement>::New();
   this->CommandXML->SetName("Command");
 }
 
 //----------------------------------------------------------------------------
 vtkSlicerOpenIGTLinkCommand::~vtkSlicerOpenIGTLinkCommand()
 {
-  if (this->CommandXML != NULL)
-    {
-    this->CommandXML->Delete();
-    this->CommandXML=NULL;
-    }
-  if (this->ResponseXML != NULL)
-    {
-    this->ResponseXML->Delete();
-    this->ResponseXML=NULL;
-    }
 }
 
 //----------------------------------------------------------------------------
@@ -114,7 +106,7 @@ bool vtkSlicerOpenIGTLinkCommand::SetCommandText(const std::string text)
     return false;
   }
 
-  this->CommandXML->DeepCopy(parsedElem);
+  this->CommandXML = parsedElem;
   return true;
 }
 
@@ -128,7 +120,7 @@ int vtkSlicerOpenIGTLinkCommand::GetNumberOfResponses()
 //----------------------------------------------------------------------------
 std::string vtkSlicerOpenIGTLinkCommand::GetResponseMessage(int responseID/*=0*/)
 {
-  if (this->ResponseXML == nullptr)
+  if (this->ResponseXML == NULL)
     {
     return "";
     }
@@ -153,15 +145,15 @@ std::string vtkSlicerOpenIGTLinkCommand::GetResponseMessage(int responseID/*=0*/
     return "";
     }
 
-  vtkXMLDataElement* nestedElement = this->ResponseXML->GetNestedElement(responseID);
+  vtkSmartPointer<vtkXMLDataElement> nestedElement = this->ResponseXML->GetNestedElement(responseID);
   if (!nestedElement)
     {
     vtkErrorMacro("Could not find requested command response");
     return "";
     }
 
-  const char* message = nestedElement->GetAttribute("Message");
-  if (message != nullptr)
+  std::string message = nestedElement->GetAttribute("Message");
+  if (!message.empty())
     {
     return nestedElement->GetCharacterData();
     }
@@ -200,13 +192,7 @@ void vtkSlicerOpenIGTLinkCommand::SetResponseText(const std::string text)
 {
   this->SetResponseTextInternal(text);
 
-  if (this->ResponseXML)
-    {
-    this->ResponseXML->Delete();
-    this->ResponseXML=NULL;
-    }
-
-  this->ResponseXML = vtkXMLUtilities::ReadElementFromString(text.c_str());
+  this->ResponseXML = vtkSmartPointer<vtkXMLDataElement>::Take(vtkXMLUtilities::ReadElementFromString(text.c_str()));
 }
 
 //----------------------------------------------------------------------------
