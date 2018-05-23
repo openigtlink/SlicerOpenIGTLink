@@ -70,7 +70,7 @@ public:
   static void onStopServerResponse(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
   static void onCommandReceived(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
   static void onServerInfoResponse(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
-  void onLogMessageCommand(vtkXMLDataElement* messageCommandElement);
+  void onLogMessageCommand(vtkSmartPointer<vtkXMLDataElement> messageCommandElement);
 
   virtual void getServerInfo();
   void connectToStartedServers(std::string filename);
@@ -230,10 +230,10 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::onStartServerResponse(vtkObject* call
 
   if (startServerCommand->IsSucceeded())
   {
-    vtkXMLDataElement* responseXML = startServerCommand->GetResponseXML();
+    vtkSmartPointer<vtkXMLDataElement> responseXML = startServerCommand->GetResponseXML();
     if (responseXML)
     {
-      vtkXMLDataElement* resultElement = responseXML->FindNestedElementWithName("Result");
+      vtkSmartPointer<vtkXMLDataElement> resultElement = responseXML->FindNestedElementWithName("Result");
       if (resultElement)
       {
         const char* servers = resultElement->GetAttribute("Servers");
@@ -298,7 +298,7 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::onCommandReceived(vtkObject* caller, 
   }
 
   std::string name = command->GetCommandName();
-  vtkSmartPointer<vtkXMLDataElement> rootElement = vtkXMLUtilities::ReadElementFromString(command->GetCommandText().c_str());
+  vtkSmartPointer<vtkXMLDataElement> rootElement = vtkSmartPointer<vtkXMLDataElement>::Take(vtkXMLUtilities::ReadElementFromString(command->GetCommandText().c_str()));
 
   if (name == "ServerStarted")
   {
@@ -319,7 +319,7 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::onCommandReceived(vtkObject* caller, 
   }
   else if (name == "ServerStopped")
   {
-    vtkXMLDataElement* serverStoppedElement = rootElement->FindNestedElementWithName("ServerStopped");
+    vtkSmartPointer<vtkXMLDataElement> serverStoppedElement = rootElement->FindNestedElementWithName("ServerStopped");
     if (serverStoppedElement)
     {
       if (serverStoppedElement->GetAttribute("ConfigFileName"))
@@ -391,7 +391,7 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::connectToStartedServers(std::string s
 }
 
 //-----------------------------------------------------------------------------
-void qMRMLPlusLauncherRemoteWidgetPrivate::onLogMessageCommand(vtkXMLDataElement* messageCommand)
+void qMRMLPlusLauncherRemoteWidgetPrivate::onLogMessageCommand(vtkSmartPointer<vtkXMLDataElement> messageCommand)
 {
   Q_Q(qMRMLPlusLauncherRemoteWidget);
 
@@ -402,7 +402,7 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::onLogMessageCommand(vtkXMLDataElement
 
   for (int i = 0; i < messageCommand->GetNumberOfNestedElements(); ++i)
   {
-    vtkXMLDataElement* nestedElement = messageCommand->GetNestedElement(i);
+    vtkSmartPointer<vtkXMLDataElement> nestedElement = messageCommand->GetNestedElement(i);
     if (strcmp(nestedElement->GetName(), "LogMessage") != 0)
     {
       continue;
@@ -496,10 +496,10 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::onServerInfoResponse(vtkObject* calle
 
   if (getServerInfoCommand->IsSucceeded())
   {
-    vtkXMLDataElement* getServerInfoElement = getServerInfoCommand->GetResponseXML();
+    vtkSmartPointer<vtkXMLDataElement> getServerInfoElement = getServerInfoCommand->GetResponseXML();
     for (int i = 0; i < getServerInfoElement->GetNumberOfNestedElements(); ++i)
     {
-      vtkXMLDataElement* nestedElement = getServerInfoElement->GetNestedElement(i);
+      vtkSmartPointer<vtkXMLDataElement> nestedElement = getServerInfoElement->GetNestedElement(i);
       if (strcmp(nestedElement->GetName(), "PlusOpenIGTLinkServer") == 0)
       {
         std::string id = nestedElement->GetAttribute("OutputChannelId");

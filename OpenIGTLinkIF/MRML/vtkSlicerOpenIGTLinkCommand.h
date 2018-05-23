@@ -25,12 +25,14 @@
 
 #include "vtkSlicerOpenIGTLinkIFModuleMRMLExport.h"
 
-#include "vtkCommand.h"
+// VTK includes
+#include <vtkCommand.h>
+#include <vtkSmartPointer.h>
+#include <vtkXMLDataElement.h>
 
-// IGTL includes
+// OpenIGTLink includes
 #include <igtlMessageBase.h>
 
-class vtkXMLDataElement;
 
 /// \ingroup Slicer_QtModules_ExtensionTemplate
 class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkSlicerOpenIGTLinkCommand :
@@ -144,7 +146,7 @@ public:
   virtual void SetResponseText(const std::string text);
 
   /// Get the response as an XML element. Returns NULL if the response text was not set or was invalid.
-  vtkGetMacro(ResponseXML, vtkXMLDataElement*);
+  vtkXMLDataElement* GetResponseXML() { return this->ResponseXML; };
 
   /// Returns true if command execution is in progress
   bool IsInProgress();
@@ -189,29 +191,29 @@ private:
   void operator=(const vtkSlicerOpenIGTLinkCommand&);               // Not implemented
 
   // Name of the Command to be sent
-  std::string                     CommandName;
+  std::string                         CommandName;
   // ID of the vtkSlicerOpenIGTLinkCommand object
-  std::string                     ID;
+  std::string                         ID;
   // ID of the device sending the command
-  std::string                     DeviceID;
+  std::string                         DeviceID;
   // ID of the Query contained in the command device
-  int                             QueryID;
+  int                                 QueryID;
 
-  int                             CommandVersion;
+  int                                 CommandVersion;
 
-  int                             Status;
-  double                          CommandTimeoutSec;
-  bool                            Blocking;
+  int                                 Status;
+  double                              CommandTimeoutSec;
+  bool                                Blocking;
 
-  vtkXMLDataElement*              CommandXML;
-  vtkXMLDataElement*              ResponseXML;
-  std::string                     ExportedCommandText;
-  std::string                     ResponseTextInternal;
+  vtkSmartPointer<vtkXMLDataElement>  CommandXML;
+  vtkSmartPointer<vtkXMLDataElement>  ResponseXML;
+  std::string                         ExportedCommandText;
+  std::string                         ResponseTextInternal;
 
-  int                             Direction;
+  int                                 Direction;
 
-  igtl::MessageBase::MetaDataMap  MetaData;
-  igtl::MessageBase::MetaDataMap  ResponseMetaData;
+  igtl::MessageBase::MetaDataMap      MetaData;
+  igtl::MessageBase::MetaDataMap      ResponseMetaData;
 };
 
 #endif
