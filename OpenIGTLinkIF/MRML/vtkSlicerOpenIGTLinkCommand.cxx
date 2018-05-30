@@ -118,45 +118,44 @@ int vtkSlicerOpenIGTLinkCommand::GetNumberOfResponses()
 }
 
 //----------------------------------------------------------------------------
-std::string vtkSlicerOpenIGTLinkCommand::GetResponseMessage(int responseID/*=0*/)
+std::string vtkSlicerOpenIGTLinkCommand::GetResponseMessage()
 {
-  if (this->ResponseXML == NULL)
+  if (!this->ResponseXML)
     {
     return "";
     }
 
-  if (responseID == 0)
+  // We might expect the response message to be stored in XML as:
+  // <Command Message="MESSAGE_TEXT"></Command>
+  std::string responseAttribute = this->GetResponseAttribute("Message");
+  if (!responseAttribute.empty())
     {
-    // We might expect the response message to be stored in XML as:
-    // <Command Message="MESSAGE_TEXT"></Command>
-    std::string responseAttribute = this->GetResponseAttribute("Message");
-    if (!responseAttribute.empty())
-      {
-      return responseAttribute;
-      }
+    return responseAttribute;
     }
 
-  // If responseID is > 0 or if above is not true, look instead for:
+  // Look instead for:
+  // <Command><Message>MESSAGE_TEXT</Message></Command>
+  // or
   // <Command><Response Success="true/false" Message="MESSAGE_TEXT"></Response></Command>
   int numberOfNestedElements = this->ResponseXML->GetNumberOfNestedElements();
-  if (responseID >= numberOfNestedElements)
+  for (int nestedIndex = 0; nestedIndex < numberOfNestedElements; ++nestedIndex)
     {
-    vtkErrorMacro("Could not find requested command response: responseID is out of range (Number of responses is " << numberOfNestedElements << ")");
-    return "";
-    }
+    vtkSmartPointer<vtkXMLDataElement> nestedElement = this->ResponseXML->GetNestedElement(nestedIndex);
+    if (!nestedElement)
+      {
+      continue;
+      }
 
-  vtkSmartPointer<vtkXMLDataElement> nestedElement = this->ResponseXML->GetNestedElement(responseID);
-  if (!nestedElement)
-    {
-    vtkErrorMacro("Could not find requested command response");
-    return "";
-    }
-
-  std::string message = nestedElement->GetAttribute("Message");
-  if (!message.empty())
-    {
-    return nestedElement->GetCharacterData();
-    }
+    if (strcmp(nestedElement->GetName(), "Message") == 0)
+      {
+      return nestedElement->GetCharacterData();
+      }
+    const char* message = nestedElement->GetAttribute("Message");
+    if (message)
+      {
+      return message;
+      }
+  }
 
   vtkErrorMacro("Could not find response message");
   return "";

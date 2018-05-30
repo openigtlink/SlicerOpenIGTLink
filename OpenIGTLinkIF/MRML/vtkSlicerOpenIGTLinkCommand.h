@@ -133,7 +133,7 @@ public:
   int GetNumberOfResponses();
 
   /// Get the message string from the response (stored in Message attribute)
-  std::string GetResponseMessage(int responseID = 0);
+  std::string GetResponseMessage();
 
   /// Get custom response attributes
   std::string GetResponseAttribute(const std::string attName);
