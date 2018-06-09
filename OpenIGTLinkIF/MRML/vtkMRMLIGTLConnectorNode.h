@@ -42,7 +42,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   //----------------------------------------------------------------
   // Standard methods for MRML nodes
   //----------------------------------------------------------------
-  
+
   enum
   {
     ConnectedEvent = 118944,
@@ -100,7 +100,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
 
   // method to propagate events generated in mrml
   virtual void ProcessMRMLEvents ( vtkObject *caller, unsigned long event, void *callData ) VTK_OVERRIDE;
-  
+
   int SetTypeServer(int port);
 
   int SetTypeClient(std::string hostname, int port);
@@ -124,13 +124,13 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   /// Call periodically to perform processing in the main thread.
   /// Suggested timeout 5ms.
   void PeriodicProcess();
-  
+
   void ConnectEvents();
   // Description:
   // Set and start observing MRML node for outgoing data.
   // If devType == NULL, a converter is chosen based only on MRML Tag.
   int RegisterOutgoingMRMLNode(vtkMRMLNode* node, const char* devType=NULL);
-  
+
   // Description:
   // Stop observing and remove MRML node for outgoing data.
   void UnregisterOutgoingMRMLNode(vtkMRMLNode* node);
@@ -139,7 +139,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   // Process IO connector incoming events
   // event ID is specified in OpenIGTLinkIO
   void ProcessIOConnectorEvents( vtkObject *caller, unsigned long event, void *callData );
-  
+
   // Description:
   // Add a new Device.
   // If a Device with an identical device_id already exist, the method will fail.
@@ -154,15 +154,15 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   // Register MRML node for incoming data.
   // Returns true on success.
   bool RegisterIncomingMRMLNode(vtkMRMLNode* node, IGTLDevicePointer device);
-  
+
   // Description:
   // Unregister MRML node for incoming data.
   void UnregisterIncomingMRMLNode(vtkMRMLNode* node);
-  
+
   // Description:
   // Get number of registered outgoing MRML nodes:
   unsigned int GetNumberOfOutgoingMRMLNodes();
-  
+
   // Description:
   // Get Nth outgoing MRML nodes:
   vtkMRMLNode* GetOutgoingMRMLNode(unsigned int i);
@@ -174,15 +174,15 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
 
   // Get device for outgoing MRML node. If a device has not been created then it is created.
   IGTLDevicePointer CreateDeviceForOutgoingMRMLNode(vtkMRMLNode* dnode);
-  
+
   // Description:
   // Get number of registered outgoing MRML nodes:
   unsigned int GetNumberOfIncomingMRMLNodes();
-  
+
   // Description:
   // Get Nth outgoing MRML nodes:
   vtkMRMLNode* GetIncomingMRMLNode(unsigned int i);
-  
+
   // Description:
   // Get the state of the connector:
   int GetState();
@@ -192,13 +192,18 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   bool GetPersistent();
   void SetPersistent(bool persistent);
 
+  // Controls if CRC checksum for received messages should be checked.
+  // If CRC check is enabled then messages with invalid CRC are ignored.
+  bool GetCheckCRC();
+  void SetCheckCRC(bool check);
+
   void SetRestrictDeviceName(int restrictDeviceName);
 
   // Description:
   // A function to explicitly push node to OpenIGTLink. The function is called either by
   // external nodes or MRML event hander in the connector node.
   int PushNode(vtkMRMLNode* node);
-  
+
   // Query queueing mechanism is needed to send all queries from the connector thread.
   // Queries can be pushed to the end of the QueryQueue by calling RequestInvoke from any thread,
   // and they will be Invoked in the main thread.
@@ -212,7 +217,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   // Description:
   // Push query into the query list.
   void PushQuery(vtkMRMLIGTLQueryNode* query);
-  
+
   // Description:
   // Removes query from the query list.
   void CancelQuery(vtkMRMLIGTLQueryNode* node);
@@ -250,36 +255,36 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   //----------------------------------------------------------------
   // For OpenIGTLink time stamp access
   //----------------------------------------------------------------
-  
+
   // Description:
   // Turn lock flag on to stop updating MRML node. Call this function before
   // reading the content of the MRML node and the corresponding time stamp.
   void LockIncomingMRMLNode(vtkMRMLNode* node);
-  
+
   // Description:
   // Turn lock flag off to start updating MRML node. Make sure to call this function
   // after reading the content / time stamp.
   void UnlockIncomingMRMLNode(vtkMRMLNode* node);
-  
+
   // Description:
   // Get OpenIGTLink's time stamp information. Returns 0, if it fails to obtain time stamp.
   int GetIGTLTimeStamp(vtkMRMLNode* node, int& second, int& nanosecond);
-  
-  
+
+
   std::vector<std::string> GetDeviceTypeFromMRMLNodeType(const char* NodeTag);
-  
+
   std::vector<std::string> GetNodeTagFromDeviceType(const char * deviceType);
-  
+
 #ifndef __VTK_WRAP__
   //BTX
   virtual void OnNodeReferenceAdded(vtkMRMLNodeReference *reference) VTK_OVERRIDE;
-  
+
   virtual void OnNodeReferenceRemoved(vtkMRMLNodeReference *reference) VTK_OVERRIDE;
-  
+
   virtual void OnNodeReferenceModified(vtkMRMLNodeReference *reference) VTK_OVERRIDE;
   //ETX
 #endif // __VTK_WRAP__
-  
+
  protected:
   //----------------------------------------------------------------
   // Constructor and destroctor
@@ -289,21 +294,21 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   ~vtkMRMLIGTLConnectorNode();
   vtkMRMLIGTLConnectorNode(const vtkMRMLIGTLConnectorNode&);
   void operator=(const vtkMRMLIGTLConnectorNode&);
-  
+
   //----------------------------------------------------------------
   // Reference role strings
   //----------------------------------------------------------------
   char* IncomingNodeReferenceRole;
   char* IncomingNodeReferenceMRMLAttributeName;
-  
+
   char* OutgoingNodeReferenceRole;
   char* OutgoingNodeReferenceMRMLAttributeName;
-  
+
   vtkSetStringMacro(IncomingNodeReferenceRole);
   vtkGetStringMacro(IncomingNodeReferenceRole);
   vtkSetStringMacro(IncomingNodeReferenceMRMLAttributeName);
   vtkGetStringMacro(IncomingNodeReferenceMRMLAttributeName);
-  
+
   vtkSetStringMacro(OutgoingNodeReferenceRole);
   vtkGetStringMacro(OutgoingNodeReferenceRole);
   vtkSetStringMacro(OutgoingNodeReferenceMRMLAttributeName);
@@ -311,7 +316,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
 
   private:
     class vtkInternal;
-    vtkInternal * Internal;  
+    vtkInternal * Internal;
     bool UseStreamingVolume;
 };
 
