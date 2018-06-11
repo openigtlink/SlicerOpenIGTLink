@@ -1067,6 +1067,7 @@ void vtkMRMLIGTLConnectorNode::WriteXML(ostream& of, int nIndent)
 
   of << " serverPort=\"" << this->Internal->IOConnector->GetServerPort() << "\" ";
   of << " persistent=\"" << this->Internal->IOConnector->GetPersistent() << "\" ";
+  of << " checkCRC=\"" << this->Internal->IOConnector->GetCheckCRC() << "\" ";
   of << " state=\"" << this->Internal->IOConnector->GetState() <<"\"";
   of << " restrictDeviceName=\"" << this->Internal->IOConnector->GetRestrictDeviceName() << "\" ";
 
@@ -1129,6 +1130,14 @@ void vtkMRMLIGTLConnectorNode::ReadXMLAttributes(const char** atts)
       std::stringstream ss;
       ss << attValue;
       ss >> persistent;
+      }
+    if (!strcmp(attName, "checkCRC"))
+      {
+      std::stringstream ss;
+      ss << attValue;
+      bool checkCRC = true;
+      ss >> checkCRC;
+      this->SetCheckCRC(checkCRC);
       }
     if (!strcmp(attName, "state"))
       {
@@ -1204,6 +1213,7 @@ void vtkMRMLIGTLConnectorNode::Copy(vtkMRMLNode *anode)
     }
   this->Internal->IOConnector->SetState(node->Internal->IOConnector->GetState());
   this->Internal->IOConnector->SetPersistent(node->Internal->IOConnector->GetPersistent());
+  this->SetCheckCRC(node->GetCheckCRC());
 }
 
 
@@ -1239,7 +1249,7 @@ void vtkMRMLIGTLConnectorNode::PrintSelf(ostream& os, vtkIndent indent)
   os << indent << "Persistent: " << this->Internal->IOConnector->GetPersistent() << "\n";
   os << indent << "Restrict Device Name: " << this->Internal->IOConnector->GetRestrictDeviceName() << "\n";
   os << indent << "Push Outgoing Message Flag: " << this->Internal->IOConnector->GetPushOutgoingMessageFlag() << "\n";
-  os << indent << "Check CRC: " << this->Internal->IOConnector->GetCheckCRC()<< "\n";
+  os << indent << "Check CRC: " << this->GetCheckCRC()<< "\n";
   os << indent << "Number of outgoing nodes: " << this->GetNumberOfOutgoingMRMLNodes() << "\n";
   os << indent << "Number of incoming nodes: " << this->GetNumberOfIncomingMRMLNodes() << "\n";
 }
@@ -2187,4 +2197,16 @@ void vtkMRMLIGTLConnectorNode::SetServerPort(int port)
 {
   this->Internal->IOConnector->SetServerPort(port);
   this->Modified();
+}
+
+//----------------------------------------------------------------------------
+void vtkMRMLIGTLConnectorNode::SetCheckCRC(bool check)
+{
+  this->Internal->IOConnector->SetCheckCRC(check ? 1 : 0);
+}
+
+//----------------------------------------------------------------------------
+bool vtkMRMLIGTLConnectorNode::GetCheckCRC()
+{
+  return (this->Internal->IOConnector->GetCheckCRC() != 0);
 }
