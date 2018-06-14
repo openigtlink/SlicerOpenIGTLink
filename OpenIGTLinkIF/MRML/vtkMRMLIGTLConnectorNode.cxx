@@ -651,6 +651,8 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetOrAddMRMLNodeforDevice(ig
     textNode->SetEncoding(modifiedDevice->GetContent().encoding);
     textNode->SetText(modifiedDevice->GetContent().string_msg.c_str());
     textNode->SetName(deviceName.c_str());
+    textNode->SetDescription("Received by OpenIGTLink");
+    this->External->GetScene()->AddNode(textNode);
     this->External->RegisterIncomingMRMLNode(textNode, device);
     return textNode;
   }
