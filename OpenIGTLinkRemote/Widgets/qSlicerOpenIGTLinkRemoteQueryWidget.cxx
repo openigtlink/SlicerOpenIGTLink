@@ -16,6 +16,7 @@
 ==============================================================================*/
 
 // Qt includes
+#include <QButtonGroup>
 #include <QDebug>
 #include <QList>
 #include <QModelIndexList>
