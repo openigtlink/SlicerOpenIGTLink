@@ -32,7 +32,6 @@
 
 class qMRMLPlusLauncherRemoteWidgetPrivate;
 class vtkMRMLIGTLConnectorNode;
-class vtkSlicerOpenIGTLinkCommand;
 class vtkMRMLPlusRemoteLauncherNode;
 class vtkMRMLNode;
 

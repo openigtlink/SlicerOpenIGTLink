@@ -24,8 +24,6 @@ if(OpenIGTLink_PROTOCOL_VERSION GREATER 1)
     vtkMRMLIGTLTrackingDataQueryNode.cxx
     vtkMRMLIGTLTrackingDataBundleNode.cxx
     vtkMRMLIGTLSensorNode.cxx
-    vtkSlicerOpenIGTLinkCommand.cxx
-    vtkSlicerOpenIGTLinkCommand.h
     )
 endif()
 

@@ -42,17 +42,15 @@
 // OpenIGTLinkIF includes
 #include <vtkMRMLTextNode.h>
 #include <vtkMRMLIGTLConnectorNode.h>
-#include <vtkSlicerOpenIGTLinkCommand.h>
 
 //-----------------------------------------------------------------------------
 const std::string CONFIG_FILE_NODE_ATTRIBUTE = "ConfigFile";
 const std::string CONFIG_FILE_NAME_ATTRIBUTE = "ConfigFilename";
+const std::string TEMP_CONFIG_FILE_NAME_ATTRIBUTE = "TempConfigFilename";
 
 const std::string COLOR_NORMAL = "#000000";
 const std::string COLOR_WARNING = "#FF8000";
 const std::string COLOR_ERROR = "#D70000";
-
-const std::string PLUS_SERVER_LAUNCHER_REMOTE_DEVICE_ID = "PSL_Remote";
 
 //-----------------------------------------------------------------------------
 class qMRMLPlusLauncherRemoteWidgetPrivate : public Ui_qMRMLPlusLauncherRemoteWidget
@@ -215,7 +213,7 @@ vtkSmartPointer<vtkMRMLIGTLConnectorNode> qMRMLPlusLauncherRemoteWidgetPrivate::
 //-----------------------------------------------------------------------------
 void qMRMLPlusLauncherRemoteWidgetPrivate::onStartServerResponse(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata)
 {
-  vtkSlicerOpenIGTLinkCommand* startServerCommand = vtkSlicerOpenIGTLinkCommand::SafeDownCast(caller);
+  igtlioCommand* startServerCommand = igtlioCommand::SafeDownCast(caller);
   if (!startServerCommand)
   {
     return;
@@ -228,9 +226,10 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::onStartServerResponse(vtkObject* call
   }
   startServerCommand->RemoveObserver(d->StartServerCallback);
 
-  if (startServerCommand->IsSucceeded())
+  if (startServerCommand->GetSuccessful())
   {
-    vtkSmartPointer<vtkXMLDataElement> responseXML = startServerCommand->GetResponseXML();
+    std::string responseContent = startServerCommand->GetResponseContent();
+    vtkSmartPointer<vtkXMLDataElement> responseXML = vtkXMLUtilities::ReadElementFromString(responseContent.c_str());
     if (responseXML)
     {
       vtkSmartPointer<vtkXMLDataElement> resultElement = responseXML->FindNestedElementWithName("Result");
@@ -258,7 +257,7 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::onStartServerResponse(vtkObject* call
 //-----------------------------------------------------------------------------
 void qMRMLPlusLauncherRemoteWidgetPrivate::onStopServerResponse(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata)
 {
-  vtkSlicerOpenIGTLinkCommand* stopServerCommand = vtkSlicerOpenIGTLinkCommand::SafeDownCast(caller);
+  igtlioCommand* stopServerCommand = igtlioCommand::SafeDownCast(caller);
   if (!stopServerCommand)
   {
     return;
@@ -271,7 +270,7 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::onStopServerResponse(vtkObject* calle
   }
   stopServerCommand->RemoveObserver(d->StopServerCallback);
 
-  if (stopServerCommand->IsSucceeded())
+  if (stopServerCommand->GetSuccessful())
   {
     d->ParameterSetNode->SetServerState(vtkMRMLPlusRemoteLauncherNode::ServerOff);
   }
@@ -291,14 +290,14 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::onCommandReceived(vtkObject* caller, 
     return;
   }
 
-  vtkSlicerOpenIGTLinkCommand* command = static_cast<vtkSlicerOpenIGTLinkCommand*>(calldata);
+  igtlioCommand* command = static_cast<igtlioCommand*>(calldata);
   if (!command)
   {
     return;
   }
 
-  std::string name = command->GetCommandName();
-  vtkSmartPointer<vtkXMLDataElement> rootElement = vtkSmartPointer<vtkXMLDataElement>::Take(vtkXMLUtilities::ReadElementFromString(command->GetCommandText().c_str()));
+  std::string name = command->GetName();
+  vtkSmartPointer<vtkXMLDataElement> rootElement = vtkXMLUtilities::ReadElementFromString(command->GetCommandContent().c_str());
 
   if (name == "ServerStarted")
   {
@@ -336,8 +335,7 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::onCommandReceived(vtkObject* caller, 
   {
     d->onLogMessageCommand(rootElement);
   }
-
-  if (command->GetCommandName() == "Echo")
+  else if (name == "Echo")
   {
     return;
   }
@@ -466,13 +464,12 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::getServerInfo()
   commandText << "  <PlusOpenIGTLinkServer/>" << std::endl;
   commandText << "</Command>" << std::endl;
 
-  vtkSmartPointer<vtkSlicerOpenIGTLinkCommand> getServerInfoCommand = vtkSmartPointer<vtkSlicerOpenIGTLinkCommand>::New();
+  igtlioCommandPointer getServerInfoCommand = igtlioCommandPointer::New();
   getServerInfoCommand->BlockingOff();
-  getServerInfoCommand->SetCommandName("GetServerInfo");
-  getServerInfoCommand->SetDeviceID(PLUS_SERVER_LAUNCHER_REMOTE_DEVICE_ID);
-  getServerInfoCommand->SetCommandText(commandText.str().c_str());
-  getServerInfoCommand->SetCommandTimeoutSec(1.0);
-  getServerInfoCommand->AddObserver(vtkSlicerOpenIGTLinkCommand::CommandCompletedEvent, this->ServerInfoReceivedCallback);
+  getServerInfoCommand->SetName("GetServerInfo");
+  getServerInfoCommand->SetCommandContent(commandText.str().c_str());
+  getServerInfoCommand->SetTimeoutSec(1.0);
+  getServerInfoCommand->AddObserver(igtlioCommand::CommandCompletedEvent, this->ServerInfoReceivedCallback);
   connectorNode->SendCommand(getServerInfoCommand);
 
 }
@@ -481,7 +478,7 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::getServerInfo()
 void qMRMLPlusLauncherRemoteWidgetPrivate::onServerInfoResponse(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata)
 {
 
-  vtkSlicerOpenIGTLinkCommand* getServerInfoCommand = vtkSlicerOpenIGTLinkCommand::SafeDownCast(caller);
+  igtlioCommand* getServerInfoCommand = igtlioCommand::SafeDownCast(caller);
   if (!getServerInfoCommand)
   {
     return;
@@ -494,9 +491,10 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::onServerInfoResponse(vtkObject* calle
   }
   getServerInfoCommand->RemoveObserver(d->StopServerCallback);
 
-  if (getServerInfoCommand->IsSucceeded())
+  if (getServerInfoCommand->GetSuccessful())
   {
-    vtkSmartPointer<vtkXMLDataElement> getServerInfoElement = getServerInfoCommand->GetResponseXML();
+    std::string responseContent = getServerInfoCommand->GetResponseContent();
+    vtkSmartPointer<vtkXMLDataElement> getServerInfoElement = vtkXMLUtilities::ReadElementFromString(responseContent.c_str());
     for (int i = 0; i < getServerInfoElement->GetNumberOfNestedElements(); ++i)
     {
       vtkSmartPointer<vtkXMLDataElement> nestedElement = getServerInfoElement->GetNestedElement(i);
@@ -605,7 +603,6 @@ void qMRMLPlusLauncherRemoteWidget::updateWidgetFromMRML()
     state = launcherConnectorNode->GetState();
   }
 
-  ///
   bool connectionEnabled = state != vtkMRMLIGTLConnectorNode::StateOff;
 
   bool checkBoxSignals = d->LauncherConnectCheckBox->blockSignals(true);
@@ -1116,20 +1113,24 @@ void qMRMLPlusLauncherRemoteWidget::launchServer()
   addConfigFileCommandText << "</Command>" << std::endl;
   std::string addConfigFileCommandString = addConfigFileCommandText.str();
 
-  vtkSmartPointer<vtkSlicerOpenIGTLinkCommand> addOrUpdateConfigFileCommand = vtkSmartPointer<vtkSlicerOpenIGTLinkCommand>::New();
+  vtkSmartPointer<igtlioCommand> addOrUpdateConfigFileCommand = vtkSmartPointer<igtlioCommand>::New();
   addOrUpdateConfigFileCommand->BlockingOn();
-  addOrUpdateConfigFileCommand->SetCommandName("AddConfigFile");
-  addOrUpdateConfigFileCommand->SetDeviceID(PLUS_SERVER_LAUNCHER_REMOTE_DEVICE_ID);
-  addOrUpdateConfigFileCommand->SetCommandText(addConfigFileCommandString.c_str());
-  addOrUpdateConfigFileCommand->SetCommandTimeoutSec(2.0);
-  addOrUpdateConfigFileCommand->SetMetaDataElement("ConfigFileName", fileName);
-  addOrUpdateConfigFileCommand->SetMetaDataElement("ConfigFileContent", configFile);
+  addOrUpdateConfigFileCommand->SetName("AddConfigFile");
+  addOrUpdateConfigFileCommand->SetCommandContent(addConfigFileCommandString);
+  addOrUpdateConfigFileCommand->SetTimeoutSec(2.0);
+  addOrUpdateConfigFileCommand->SetCommandMetaDataElement("ConfigFileName", fileName);
+  addOrUpdateConfigFileCommand->SetCommandMetaDataElement("ConfigFileContent", configFile);
   connectorNode->SendCommand(addOrUpdateConfigFileCommand);
 
-  if (!addOrUpdateConfigFileCommand->IsSucceeded())
+  if (!addOrUpdateConfigFileCommand->GetSuccessful())
   {
     return;
   }
+
+  
+  IANA_ENCODING_TYPE encodingType = IANA_TYPE_US_ASCII;
+  addOrUpdateConfigFileCommand->GetResponseMetaDataElement("ConfigFileName", fileName, encodingType);
+  configFileNode->SetAttribute(TEMP_CONFIG_FILE_NAME_ATTRIBUTE.c_str(), fileName.c_str());
 
   int logLevel = d->ParameterSetNode->GetLogLevel();
   std::stringstream startServerCommandText;
@@ -1142,15 +1143,14 @@ void qMRMLPlusLauncherRemoteWidget::launchServer()
   logLevelSS << d->ParameterSetNode->GetLogLevel();
   std::string logLevelString = logLevelSS.str();
 
-  vtkSmartPointer<vtkSlicerOpenIGTLinkCommand> startServerCommand = vtkSmartPointer<vtkSlicerOpenIGTLinkCommand>::New();
+  vtkSmartPointer<igtlioCommand> startServerCommand = vtkSmartPointer<igtlioCommand>::New();
   startServerCommand->BlockingOff();
-  startServerCommand->SetCommandName("StartServer");
-  startServerCommand->SetDeviceID(PLUS_SERVER_LAUNCHER_REMOTE_DEVICE_ID);
-  startServerCommand->SetCommandText(startServerCommandText.str().c_str());
-  startServerCommand->SetCommandTimeoutSec(2.0);
-  startServerCommand->SetMetaDataElement("LogLevel", logLevelString.c_str());
-  startServerCommand->SetMetaDataElement("ConfigFileName", fileName);
-  startServerCommand->AddObserver(vtkSlicerOpenIGTLinkCommand::CommandCompletedEvent, d->StartServerCallback);
+  startServerCommand->SetName("StartServer");
+  startServerCommand->SetCommandContent(startServerCommandText.str());
+  startServerCommand->SetTimeoutSec(2.0);
+  startServerCommand->SetCommandMetaDataElement("LogLevel", logLevelString);
+  startServerCommand->SetCommandMetaDataElement("ConfigFileName", fileName);
+  startServerCommand->AddObserver(igtlioCommand::CommandCompletedEvent, d->StartServerCallback);
   connectorNode->SendCommand(startServerCommand);
   d->ParameterSetNode->SetServerState(vtkMRMLPlusRemoteLauncherNode::ServerStarting);
 }
@@ -1171,18 +1171,16 @@ void qMRMLPlusLauncherRemoteWidget::stopServer()
     return;
   }
 
-  // TODO: Update with proper command syntax when finalized
-  std::stringstream commandText;
-  commandText << "<Command><StopServer/></Command>" << std::endl;
+  vtkMRMLTextNode* configFileNode = d->ParameterSetNode->GetCurrentConfigNode();
+  std::string fileName = configFileNode->GetAttribute(TEMP_CONFIG_FILE_NAME_ATTRIBUTE.c_str());
 
   //TODO: device name based on parameter node name?
-  vtkSmartPointer<vtkSlicerOpenIGTLinkCommand> stopServerCommand = vtkSmartPointer<vtkSlicerOpenIGTLinkCommand>::New();
+  vtkSmartPointer<igtlioCommand> stopServerCommand = vtkSmartPointer<igtlioCommand>::New();
   stopServerCommand->BlockingOff();
-  stopServerCommand->SetCommandName("StopServer");
-  stopServerCommand->SetDeviceID(PLUS_SERVER_LAUNCHER_REMOTE_DEVICE_ID);
-  stopServerCommand->SetCommandText(commandText.str().c_str());
-  stopServerCommand->SetCommandTimeoutSec(10.0);
-  stopServerCommand->AddObserver(vtkSlicerOpenIGTLinkCommand::CommandCompletedEvent, d->StopServerCallback);
+  stopServerCommand->SetName("StopServer");
+  stopServerCommand->SetTimeoutSec(10.0);
+  stopServerCommand->SetCommandMetaDataElement("ConfigFileName", fileName);
+  stopServerCommand->AddObserver(igtlioCommand::CommandCompletedEvent, d->StopServerCallback);
   connectorNode->SendCommand(stopServerCommand);
   d->ParameterSetNode->SetServerState(vtkMRMLPlusRemoteLauncherNode::ServerStopping);
 }
@@ -1202,11 +1200,10 @@ void qMRMLPlusLauncherRemoteWidget::subscribeToLogMessages()
   {
     return;
   }
-  vtkSmartPointer<vtkSlicerOpenIGTLinkCommand> subscribeLogCommand = vtkSmartPointer<vtkSlicerOpenIGTLinkCommand>::New();
+  vtkSmartPointer<igtlioCommand> subscribeLogCommand = vtkSmartPointer<igtlioCommand>::New();
   subscribeLogCommand->BlockingOff();
-  subscribeLogCommand->SetCommandName("LogSubscribe");
-  subscribeLogCommand->SetDeviceID(PLUS_SERVER_LAUNCHER_REMOTE_DEVICE_ID);
-  subscribeLogCommand->SetCommandTimeoutSec(0.1);
+  subscribeLogCommand->SetName("LogSubscribe");
+  subscribeLogCommand->SetTimeoutSec(0.1);
   connectorNode->SendCommand(subscribeLogCommand);
 }
 
