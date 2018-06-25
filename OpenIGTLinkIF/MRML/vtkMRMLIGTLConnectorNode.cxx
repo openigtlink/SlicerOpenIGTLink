@@ -84,9 +84,8 @@ public:
   void ProcessOutgoingDeviceModifiedEvent(vtkObject *caller, unsigned long event, igtlioDevice * modifiedDevice);
 
   /// Called when command responses are received.
-  /// Handles vtkSlicerOpenIGTLinkCommand related details on command response.
-  /// If there is a corresponding vtkSlicerOpenIGTLinkCommand, an event is invoked on it.
-  /// Returns vtkSlicerOpenIGTLinkCommand if found, otherwise, returns nullptr.
+  /// Handles igtlioCommandPointer related details on command response.
+  /// If there is a corresponding igtlioCommandPointer, an event is invoked on it.
   void ReceiveCommandResponse(igtlioCommandPointer commandDevice);
 
   vtkMRMLNode* GetOrAddMRMLNodeforDevice(igtlioDevice* device);
@@ -103,14 +102,6 @@ public:
   MessageDeviceMapType  IncomingMRMLIDToDeviceMap;
   DeviceTypeToNodeTagMapType DeviceTypeToNodeTagMap;
 
-  //----------------------------------------------------------------
-  // Command processing
-  //----------------------------------------------------------------
-
-  /// List of commands sent using SendCommand()
-  std::deque<vtkSmartPointer<vtkSlicerOpenIGTLinkCommand> > PendingCommands;
-  vtkMutexLock* PendingCommandMutex;
-
 };
 
 //----------------------------------------------------------------------------
@@ -121,9 +112,6 @@ vtkMRMLIGTLConnectorNode::vtkInternal::vtkInternal(vtkMRMLIGTLConnectorNode* ext
   : External(external)
 {
   this->IOConnector = igtlioConnector::New();
-
-  this->PendingCommands = std::deque<vtkSmartPointer<vtkSlicerOpenIGTLinkCommand> >();
-  this->PendingCommandMutex = vtkMutexLock::New();
 }
 
 
@@ -131,11 +119,6 @@ vtkMRMLIGTLConnectorNode::vtkInternal::vtkInternal(vtkMRMLIGTLConnectorNode* ext
 vtkMRMLIGTLConnectorNode::vtkInternal::~vtkInternal()
 {
   IOConnector->Delete();
-
-  if (this->PendingCommandMutex)
-  {
-    this->PendingCommandMutex->Delete();
-  }
 }
 
 //----------------------------------------------------------------------------
@@ -724,6 +707,7 @@ vtkMRMLIGTLConnectorNode::~vtkMRMLIGTLConnectorNode()
   this->Internal = NULL;
 }
 
+//----------------------------------------------------------------------------
 void vtkMRMLIGTLConnectorNode::ConnectEvents()
 {
   this->Internal->IOConnector->AddObserver(this->Internal->IOConnector->ConnectedEvent, this, &vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents);
@@ -732,6 +716,10 @@ void vtkMRMLIGTLConnectorNode::ConnectEvents()
   this->Internal->IOConnector->AddObserver(this->Internal->IOConnector->DeactivatedEvent,  this, &vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents);
   this->Internal->IOConnector->AddObserver(this->Internal->IOConnector->NewDeviceEvent, this,  &vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents);
   this->Internal->IOConnector->AddObserver(this->Internal->IOConnector->RemovedDeviceEvent,  this, &vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents);
+
+  this->Internal->IOConnector->AddObserver(igtlioCommand::CommandReceivedEvent, this, &vtkMRMLIGTLConnectorNode::ProcessIOConnectorCommandEvents);
+  this->Internal->IOConnector->AddObserver(igtlioCommand::CommandResponseEvent, this, &vtkMRMLIGTLConnectorNode::ProcessIOConnectorCommandEvents);
+  this->Internal->IOConnector->AddObserver(igtlioCommand::CommandCompletedEvent, this, &vtkMRMLIGTLConnectorNode::ProcessIOConnectorCommandEvents);
 }
 
 //----------------------------------------------------------------------------
@@ -807,7 +795,6 @@ void vtkMRMLIGTLConnectorNode::ProcessMRMLEvents( vtkObject *caller, unsigned lo
 void vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents(vtkObject *caller, unsigned long event, void *callData )
 {
   igtlioConnector* connector = reinterpret_cast<igtlioConnector*>(caller);
-  igtlioDevice* modifiedDevice = reinterpret_cast<igtlioDevice*>(callData);
   if (connector == NULL)
     {
     // we are only interested in proxy node modified events
@@ -824,11 +811,10 @@ void vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents(vtkObject *caller, unsig
     case igtlioConnector::NewDeviceEvent: mrmlEvent = NewDeviceEvent; break;
     case igtlioConnector::DeviceContentModifiedEvent: mrmlEvent = DeviceModifiedEvent; break;
     case igtlioConnector::RemovedDeviceEvent: mrmlEvent = DeviceModifiedEvent; break;
-    case igtlioCommand::CommandReceivedEvent: mrmlEvent = CommandReceivedEvent; break;  // COMMAND device got a query, COMMAND received
-    case igtlioCommand::CommandResponseEvent: mrmlEvent = CommandResponseReceivedEvent; break;  // COMMAND device got a response, RTS_COMMAND received
-    case igtlioCommand::CommandCompletedEvent: mrmlEvent = CommandCompletedEvent; break;  // COMMAND device did not receive a response before timeout
     }
-  if( modifiedDevice != NULL)
+
+  igtlioDevice* modifiedDevice = static_cast<igtlioDevice*>(callData);
+  if (modifiedDevice != NULL)
     {
     if(static_cast<int>(event)==this->Internal->IOConnector->NewDeviceEvent)
       {
@@ -842,8 +828,13 @@ void vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents(vtkObject *caller, unsig
         modifiedDevice->AddObserver(modifiedDevice->GetDeviceContentModifiedEvent(), this, &vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents);
         }
       }
-    if(event==modifiedDevice->GetDeviceContentModifiedEvent())
+
+    if (event == modifiedDevice->GetDeviceContentModifiedEvent())
       {
+      if (mrmlEvent == -1)
+        {
+        mrmlEvent = DeviceModifiedEvent;
+        }
       if (modifiedDevice->MessageDirectionIsIn())
         {
         this->Internal->ProcessIncomingDeviceModifiedEvent(caller, event, modifiedDevice);
@@ -853,19 +844,37 @@ void vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents(vtkObject *caller, unsig
         this->Internal->ProcessOutgoingDeviceModifiedEvent(caller, event, modifiedDevice);
         }
       }
+    this->InvokeEvent(mrmlEvent, modifiedDevice);
     }
-
-  if (event == igtlioCommand::CommandReceivedEvent ||
-      event == igtlioCommand::CommandResponseEvent ||
-      event == igtlioCommand::CommandCompletedEvent)
+  else
     {
-    igtlioCommand* command = reinterpret_cast<igtlioCommand*>(callData);
-    this->InvokeEvent(mrmlEvent, command);
+    this->InvokeEvent(mrmlEvent);
+    }
+}
+
+//----------------------------------------------------------------------------
+void vtkMRMLIGTLConnectorNode::ProcessIOConnectorCommandEvents(vtkObject *caller, unsigned long event, void *callData)
+{
+  igtlioConnector* connector = reinterpret_cast<igtlioConnector*>(caller);
+  if (connector == NULL)
+    {
+    // we are only interested in proxy node modified events
     return;
     }
 
-  // Propagate the event to the connector property and treeview widgets
-  this->InvokeEvent(mrmlEvent);
+  int mrmlEvent = -1;
+  switch (event)
+  {
+  case igtlioCommand::CommandReceivedEvent: mrmlEvent = CommandReceivedEvent; break;  // COMMAND received
+  case igtlioCommand::CommandResponseEvent: mrmlEvent = CommandResponseReceivedEvent; break;  // RTS_COMMAND received
+  case igtlioCommand::CommandCompletedEvent: mrmlEvent = CommandCompletedEvent; break;  // Sent COMMAND did not receive a response before timeout
+  }
+
+  igtlioCommand* command = static_cast<igtlioCommand*>(callData);
+  if (command)
+    {
+    this->InvokeEvent(mrmlEvent, command);
+    }
 }
 
 //----------------------------------------------------------------------------
@@ -1674,7 +1683,10 @@ igtlioCommandPointer vtkMRMLIGTLConnectorNode::SendCommand(std::string name, std
   command->SetClientId(clientId);
   command->SetName(name);
   command->SetCommandContent(content);
-  command->SetCommandMetaData(*metaData);
+  if (metaData)
+    {
+    command->SetCommandMetaData(*metaData);
+    }
   command->SetBlocking(blocking);
   command->SetTimeoutSec(timeout_s);
   return this->Internal->SendCommand(command);

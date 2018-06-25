@@ -110,8 +110,6 @@ int vtkMRMLConnectorCommandSendAndReceiveTest(int argc, char * argv [] )
       return EXIT_FAILURE;
       }
     }
-  
-  std::string device_name = "TestDevice";
 
   clientConnectorNode->SendCommand("Get", "<Command>\n <Parameter Name=\"Depth\" />\n </Command>", false);
   
