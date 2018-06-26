@@ -36,7 +36,6 @@
 
 class vtkMRMLIGTLQueryNode;
 class vtkMutexLock;
-class vtkSlicerOpenIGTLinkCommand;
 
 typedef void* IGTLDevicePointer;
 
@@ -141,9 +140,13 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   void UnregisterOutgoingMRMLNode(vtkMRMLNode* node);
 
 
-  // Process IO connector incoming events
+  // Process IO connector incoming device events
   // event ID is specified in OpenIGTLinkIO
   void ProcessIOConnectorEvents( vtkObject *caller, unsigned long event, void *callData );
+
+  // Process IO connector incoming command events
+  // event ID is specified in OpenIGTLinkIO
+  void ProcessIOConnectorCommandEvents(vtkObject *caller, unsigned long event, void *callData);
 
   // Description:
   // Add a new Device.
