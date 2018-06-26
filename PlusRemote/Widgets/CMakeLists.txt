@@ -6,25 +6,24 @@ set(${KIT}_EXPORT_DIRECTIVE "Q_SLICER_MODULE_${MODULE_NAME_UPPER}_WIDGETS_EXPORT
 
 set(${KIT}_INCLUDE_DIRECTORIES
   ${vtkSlicerOpenIGTLinkIFModuleMRML_INCLUDE_DIRS}
-  ${vtkSlicerOpenIGTLinkIFModuleCommand_INCLUDE_DIRS}
   ${vtkSlicer${MODULE_NAME}ModuleMRML_INCLUDE_DIRS}
   )
 
 set(${KIT}_SRCS
-  qMRMLPlusLauncherRemoteWidget.cxx
-  qMRMLPlusLauncherRemoteWidget.h
+  qMRMLPlusServerLauncherRemoteWidget.cxx
+  qMRMLPlusServerLauncherRemoteWidget.h
   )
 
 set(${KIT}_MOC_SRCS
-  qMRMLPlusLauncherRemoteWidget.h
+  qMRMLPlusServerLauncherRemoteWidget.h
   )
 
 set(${KIT}_UI_SRCS
-  Resources/UI/qMRMLPlusLauncherRemoteWidget.ui
+  Resources/UI/qMRMLPlusServerLauncherRemoteWidget.ui
   )
 
 set(${KIT}_RESOURCES
-  Resources/qMRMLPlusLauncherRemoteWidget.qrc
+  Resources/qMRMLPlusServerLauncherRemoteWidget.qrc
   )
 
 set(${KIT}_TARGET_LIBRARIES
@@ -46,4 +45,4 @@ SlicerMacroBuildModuleWidgets(
   )
 
 #-----------------------------------------------------------------------------
-#add_subdirectory(DesignerPlugins)
+add_subdirectory(DesignerPlugins)

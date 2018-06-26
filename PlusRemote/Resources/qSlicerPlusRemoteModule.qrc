@@ -1,0 +1,10 @@
+<RCC>
+  <qresource>
+    <file>Icons/icon_Stop.png</file>
+    <file>Icons/icon_Wait.png</file>
+    <file>Icons/icon_Record.png</file>
+    <file>Icons/VisibleOn.png</file>
+    <file>Icons/PlusRemote.png</file>
+    <file>Icons/VisibleOff.png</file>
+  </qresource>
+</RCC>

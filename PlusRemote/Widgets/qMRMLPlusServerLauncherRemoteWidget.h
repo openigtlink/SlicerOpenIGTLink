@@ -18,8 +18,8 @@
 
 ==============================================================================*/
 
-#ifndef __qMRMLPlusLauncherRemoteWidget_h
-#define __qMRMLPlusLauncherRemoteWidget_h
+#ifndef __qMRMLPlusServerLauncherRemoteWidget_h
+#define __qMRMLPlusServerLauncherRemoteWidget_h
 
 // PlusRemote includes
 #include "qSlicerPlusRemoteModuleWidgetsExport.h"
@@ -30,13 +30,13 @@
 // CTK includes
 #include <ctkVTKObject.h>
 
-class qMRMLPlusLauncherRemoteWidgetPrivate;
+class qMRMLPlusServerLauncherRemoteWidgetPrivate;
 class vtkMRMLIGTLConnectorNode;
-class vtkMRMLPlusRemoteLauncherNode;
+class vtkMRMLPlusServerLauncherRemoteNode;
 class vtkMRMLNode;
 
 /// \ingroup Slicer_QtModules_PlusRemote
-class Q_SLICER_MODULE_PLUSREMOTE_WIDGETS_EXPORT qMRMLPlusLauncherRemoteWidget : public qMRMLWidget
+class Q_SLICER_MODULE_PLUSREMOTE_WIDGETS_EXPORT qMRMLPlusServerLauncherRemoteWidget : public qMRMLWidget
 {
   Q_OBJECT
   QVTK_OBJECT
@@ -45,12 +45,12 @@ class Q_SLICER_MODULE_PLUSREMOTE_WIDGETS_EXPORT qMRMLPlusLauncherRemoteWidget : 
 public:
   typedef qMRMLWidget Superclass;
   /// Constructor
-  explicit qMRMLPlusLauncherRemoteWidget(QWidget* parent = 0);
+  explicit qMRMLPlusServerLauncherRemoteWidget(QWidget* parent = 0);
   /// Destructor
-  virtual ~qMRMLPlusLauncherRemoteWidget();
+  virtual ~qMRMLPlusServerLauncherRemoteWidget();
 
   /// Get the segment editor parameter set node
-  Q_INVOKABLE vtkMRMLPlusRemoteLauncherNode* plusRemoteLauncherNode()const;
+  Q_INVOKABLE vtkMRMLPlusServerLauncherRemoteNode* plusRemoteLauncherNode()const;
 
   /// Show/hide the log section
   bool logVisible() const;
@@ -83,14 +83,14 @@ public slots:
   virtual void subscribeToLogMessages();
  
   void setAndObserveLauncherConnectorNode(vtkMRMLIGTLConnectorNode*);
-  void setParameterSetNode(vtkMRMLPlusRemoteLauncherNode*);
+  void setParameterSetNode(vtkMRMLPlusServerLauncherRemoteNode*);
 
 protected:
-  QScopedPointer<qMRMLPlusLauncherRemoteWidgetPrivate> d_ptr;
+  QScopedPointer<qMRMLPlusServerLauncherRemoteWidgetPrivate> d_ptr;
 
 private:
-  Q_DECLARE_PRIVATE(qMRMLPlusLauncherRemoteWidget);
-  Q_DISABLE_COPY(qMRMLPlusLauncherRemoteWidget);
+  Q_DECLARE_PRIVATE(qMRMLPlusServerLauncherRemoteWidget);
+  Q_DISABLE_COPY(qMRMLPlusServerLauncherRemoteWidget);
 };
 
 #endif

@@ -21,7 +21,7 @@
 ==============================================================================*/
 
 // PlusRemote includes
-#include "vtkMRMLPlusRemoteLauncherNode.h"
+#include "vtkMRMLPlusServerLauncherRemoteNode.h"
 
 // MRML includes
 #include <vtkMRMLScene.h>
@@ -47,26 +47,26 @@ const int PORT_MIN = 0;
 const int PORT_MAX = 65535;
 
 //----------------------------------------------------------------------------
-vtkMRMLNodeNewMacro(vtkMRMLPlusRemoteLauncherNode);
+vtkMRMLNodeNewMacro(vtkMRMLPlusServerLauncherRemoteNode);
 
 //----------------------------------------------------------------------------
-vtkMRMLPlusRemoteLauncherNode::vtkMRMLPlusRemoteLauncherNode()
+vtkMRMLPlusServerLauncherRemoteNode::vtkMRMLPlusServerLauncherRemoteNode()
   : ServerLauncherHostname(NULL)
-  , ServerLauncherPort(vtkMRMLPlusRemoteLauncherNode::DefaultPort)
-  , ServerState(vtkMRMLPlusRemoteLauncherNode::ServerOff)
-  , LogLevel(vtkMRMLPlusRemoteLauncherNode::LogLevelInfo)
-  , CurrentErrorLevel(vtkMRMLPlusRemoteLauncherNode::LogLevelInfo)
+  , ServerLauncherPort(vtkMRMLPlusServerLauncherRemoteNode::DefaultPort)
+  , ServerState(vtkMRMLPlusServerLauncherRemoteNode::ServerOff)
+  , LogLevel(vtkMRMLPlusServerLauncherRemoteNode::LogLevelInfo)
+  , CurrentErrorLevel(vtkMRMLPlusServerLauncherRemoteNode::LogLevelInfo)
 {
   this->SetServerLauncherHostname("localhost");
 }
 
 //----------------------------------------------------------------------------
-vtkMRMLPlusRemoteLauncherNode::~vtkMRMLPlusRemoteLauncherNode()
+vtkMRMLPlusServerLauncherRemoteNode::~vtkMRMLPlusServerLauncherRemoteNode()
 {
 }
 
 //----------------------------------------------------------------------------
-void vtkMRMLPlusRemoteLauncherNode::WriteXML(ostream& of, int nIndent)
+void vtkMRMLPlusServerLauncherRemoteNode::WriteXML(ostream& of, int nIndent)
 {
   Superclass::WriteXML(of, nIndent);
 
@@ -78,7 +78,7 @@ void vtkMRMLPlusRemoteLauncherNode::WriteXML(ostream& of, int nIndent)
 }
 
 //----------------------------------------------------------------------------
-void vtkMRMLPlusRemoteLauncherNode::ReadXMLAttributes(const char** atts)
+void vtkMRMLPlusServerLauncherRemoteNode::ReadXMLAttributes(const char** atts)
 {
   int disabledModify = this->StartModify();
 
@@ -105,7 +105,7 @@ void vtkMRMLPlusRemoteLauncherNode::ReadXMLAttributes(const char** atts)
       int portValue = portVariant.ToInt(&valid);
       if (!valid)
         {
-        portValue = vtkMRMLPlusRemoteLauncherNode::DefaultPort;
+        portValue = vtkMRMLPlusServerLauncherRemoteNode::DefaultPort;
         }
       this->SetServerLauncherPort(portValue);
       }
@@ -117,7 +117,7 @@ void vtkMRMLPlusRemoteLauncherNode::ReadXMLAttributes(const char** atts)
       int stateValue = stateVariant.ToInt(&valid);
       if (!valid)
         {
-          stateValue = vtkMRMLPlusRemoteLauncherNode::ServerOff;
+          stateValue = vtkMRMLPlusServerLauncherRemoteNode::ServerOff;
         }
       this->SetServerState(stateValue);
       }
@@ -127,49 +127,49 @@ void vtkMRMLPlusRemoteLauncherNode::ReadXMLAttributes(const char** atts)
 }
 
 //----------------------------------------------------------------------------
-void vtkMRMLPlusRemoteLauncherNode::Copy(vtkMRMLNode *anode)
+void vtkMRMLPlusServerLauncherRemoteNode::Copy(vtkMRMLNode *anode)
 {
   Superclass::Copy(anode);
   this->DisableModifiedEventOn();
 
-  vtkMRMLPlusRemoteLauncherNode* otherNode = vtkMRMLPlusRemoteLauncherNode::SafeDownCast(anode);
+  vtkMRMLPlusServerLauncherRemoteNode* otherNode = vtkMRMLPlusServerLauncherRemoteNode::SafeDownCast(anode);
 
   this->DisableModifiedEventOff();
   this->InvokePendingModifiedEvent();
 }
 
 //----------------------------------------------------------------------------
-void vtkMRMLPlusRemoteLauncherNode::PrintSelf(ostream& os, vtkIndent indent)
+void vtkMRMLPlusServerLauncherRemoteNode::PrintSelf(ostream& os, vtkIndent indent)
 {
   Superclass::PrintSelf(os,indent);
 }
 
 //----------------------------------------------------------------------------
-vtkMRMLIGTLConnectorNode* vtkMRMLPlusRemoteLauncherNode::GetLauncherConnectorNode()
+vtkMRMLIGTLConnectorNode* vtkMRMLPlusServerLauncherRemoteNode::GetLauncherConnectorNode()
 {
   return vtkMRMLIGTLConnectorNode::SafeDownCast(this->GetNodeReference(LAUNCHER_CONNECTOR_REFERENCE_ROLE));
 }
 
 //----------------------------------------------------------------------------
-void vtkMRMLPlusRemoteLauncherNode::SetAndObserveLauncherConnectorNode(vtkMRMLIGTLConnectorNode* node)
+void vtkMRMLPlusServerLauncherRemoteNode::SetAndObserveLauncherConnectorNode(vtkMRMLIGTLConnectorNode* node)
 {
   this->SetNodeReferenceID(LAUNCHER_CONNECTOR_REFERENCE_ROLE, (node ? node->GetID() : NULL));
 }
 
 //----------------------------------------------------------------------------
-vtkMRMLTextNode* vtkMRMLPlusRemoteLauncherNode::GetCurrentConfigNode()
+vtkMRMLTextNode* vtkMRMLPlusServerLauncherRemoteNode::GetCurrentConfigNode()
 {
   return vtkMRMLTextNode::SafeDownCast(this->GetNodeReference(CURRENT_CONFIG_REFERENCE_ROLE));
 }
 
 //----------------------------------------------------------------------------
-void vtkMRMLPlusRemoteLauncherNode::SetAndObserveCurrentConfigNode(vtkMRMLTextNode* node)
+void vtkMRMLPlusServerLauncherRemoteNode::SetAndObserveCurrentConfigNode(vtkMRMLTextNode* node)
 {
   this->SetNodeReferenceID(CURRENT_CONFIG_REFERENCE_ROLE, (node ? node->GetID() : NULL));
 }
 
 //----------------------------------------------------------------------------
-void vtkMRMLPlusRemoteLauncherNode::SetServerLauncherPort(int port)
+void vtkMRMLPlusServerLauncherRemoteNode::SetServerLauncherPort(int port)
 {
   int clampedPort = std::max(PORT_MIN, std::min(PORT_MAX, port));
   this->ServerLauncherPort = clampedPort;

@@ -9,8 +9,10 @@ set(${KIT}_INCLUDE_DIRECTORIES
   )
 
 set(${KIT}_SRCS
-  vtkMRMLPlusRemoteLauncherNode.cxx
-  vtkMRMLPlusRemoteLauncherNode.h
+  vtkMRMLPlusServerLauncherRemoteNode.cxx
+  vtkMRMLPlusServerLauncherRemoteNode.h
+  vtkMRMLPlusRemoteNode.cxx
+  vtkMRMLPlusRemoteNode.h
   )
 
 set(${KIT}_TARGET_LIBRARIES
