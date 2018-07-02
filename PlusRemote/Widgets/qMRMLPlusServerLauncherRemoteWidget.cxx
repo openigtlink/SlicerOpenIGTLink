@@ -19,9 +19,9 @@
 ==============================================================================*/
 
 // PlusRemote includes
-#include "qMRMLPlusLauncherRemoteWidget.h"
-#include "ui_qMRMLPlusLauncherRemoteWidget.h"
-#include "vtkMRMLPlusRemoteLauncherNode.h"
+#include "qMRMLPlusServerLauncherRemoteWidget.h"
+#include "ui_qMRMLPlusServerLauncherRemoteWidget.h"
+#include "vtkMRMLPlusServerLauncherRemoteNode.h"
 
 // QT includes
 #include <QtGui>
@@ -53,15 +53,15 @@ const std::string COLOR_WARNING = "#FF8000";
 const std::string COLOR_ERROR = "#D70000";
 
 //-----------------------------------------------------------------------------
-class qMRMLPlusLauncherRemoteWidgetPrivate : public Ui_qMRMLPlusLauncherRemoteWidget
+class qMRMLPlusServerLauncherRemoteWidgetPrivate : public Ui_qMRMLPlusServerLauncherRemoteWidget
 {
-  Q_DECLARE_PUBLIC(qMRMLPlusLauncherRemoteWidget);
+  Q_DECLARE_PUBLIC(qMRMLPlusServerLauncherRemoteWidget);
 
 protected:
-  qMRMLPlusLauncherRemoteWidget* const q_ptr;
+  qMRMLPlusServerLauncherRemoteWidget* const q_ptr;
 public:
-  qMRMLPlusLauncherRemoteWidgetPrivate(qMRMLPlusLauncherRemoteWidget& object);
-  ~qMRMLPlusLauncherRemoteWidgetPrivate();
+  qMRMLPlusServerLauncherRemoteWidgetPrivate(qMRMLPlusServerLauncherRemoteWidget& object);
+  ~qMRMLPlusServerLauncherRemoteWidgetPrivate();
   void init();
 
   static void onStartServerResponse(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
@@ -82,7 +82,7 @@ public:
   vtkSmartPointer<vtkCallbackCommand> CommandReceivedCallback;
   vtkSmartPointer<vtkCallbackCommand> ServerInfoReceivedCallback;
 
-  vtkWeakPointer<vtkMRMLPlusRemoteLauncherNode> ParameterSetNode;
+  vtkWeakPointer<vtkMRMLPlusServerLauncherRemoteNode> ParameterSetNode;
   vtkWeakPointer<vtkMRMLIGTLConnectorNode> LauncherConnectorNode;
 
   vtkSmartPointer<vtkMRMLTextNode> LogTextNode;
@@ -103,7 +103,7 @@ public:
 };
 
 //-----------------------------------------------------------------------------
-qMRMLPlusLauncherRemoteWidgetPrivate::qMRMLPlusLauncherRemoteWidgetPrivate(qMRMLPlusLauncherRemoteWidget& object)
+qMRMLPlusServerLauncherRemoteWidgetPrivate::qMRMLPlusServerLauncherRemoteWidgetPrivate(qMRMLPlusServerLauncherRemoteWidget& object)
   : q_ptr(&object)
   , LauncherConnectorNode(NULL)
   , IconDisconnected(QPixmap(":/Icons/PlusLauncherRemoteDisconnected.png"))
@@ -122,39 +122,39 @@ qMRMLPlusLauncherRemoteWidgetPrivate::qMRMLPlusLauncherRemoteWidgetPrivate(qMRML
 }
 
 //-----------------------------------------------------------------------------
-qMRMLPlusLauncherRemoteWidgetPrivate::~qMRMLPlusLauncherRemoteWidgetPrivate()
+qMRMLPlusServerLauncherRemoteWidgetPrivate::~qMRMLPlusServerLauncherRemoteWidgetPrivate()
 {
-  Q_Q(qMRMLPlusLauncherRemoteWidget);
+  Q_Q(qMRMLPlusServerLauncherRemoteWidget);
 }
 
-void qMRMLPlusLauncherRemoteWidgetPrivate::init()
+void qMRMLPlusServerLauncherRemoteWidgetPrivate::init()
 {
-  Q_Q(qMRMLPlusLauncherRemoteWidget);
+  Q_Q(qMRMLPlusServerLauncherRemoteWidget);
   this->setupUi(q);
 
   this->ConfigFileSelectorComboBox->addAttribute("vtkMRMLTextNode", CONFIG_FILE_NODE_ATTRIBUTE.c_str());
 
   this->StartServerCallback = vtkSmartPointer<vtkCallbackCommand>::New();
-  this->StartServerCallback->SetCallback(qMRMLPlusLauncherRemoteWidgetPrivate::onStartServerResponse);
+  this->StartServerCallback->SetCallback(qMRMLPlusServerLauncherRemoteWidgetPrivate::onStartServerResponse);
   this->StartServerCallback->SetClientData(this);
 
   this->StopServerCallback = vtkSmartPointer<vtkCallbackCommand>::New();
-  this->StopServerCallback->SetCallback(qMRMLPlusLauncherRemoteWidgetPrivate::onStopServerResponse);
+  this->StopServerCallback->SetCallback(qMRMLPlusServerLauncherRemoteWidgetPrivate::onStopServerResponse);
   this->StopServerCallback->SetClientData(this);
 
   this->CommandReceivedCallback = vtkSmartPointer<vtkCallbackCommand>::New();
-  this->CommandReceivedCallback->SetCallback(qMRMLPlusLauncherRemoteWidgetPrivate::onCommandReceived);
+  this->CommandReceivedCallback->SetCallback(qMRMLPlusServerLauncherRemoteWidgetPrivate::onCommandReceived);
   this->CommandReceivedCallback->SetClientData(this);
 
   this->ServerInfoReceivedCallback = vtkSmartPointer<vtkCallbackCommand>::New();
-  this->ServerInfoReceivedCallback->SetCallback(qMRMLPlusLauncherRemoteWidgetPrivate::onServerInfoResponse);
+  this->ServerInfoReceivedCallback->SetCallback(qMRMLPlusServerLauncherRemoteWidgetPrivate::onServerInfoResponse);
   this->ServerInfoReceivedCallback->SetClientData(this);
 
-  this->LogLevelComboBox->addItem("Error", vtkMRMLPlusRemoteLauncherNode::LogLevelError);
-  this->LogLevelComboBox->addItem("Warning", vtkMRMLPlusRemoteLauncherNode::LogLevelWarning);
-  this->LogLevelComboBox->addItem("Info", vtkMRMLPlusRemoteLauncherNode::LogLevelInfo);
-  this->LogLevelComboBox->addItem("Debug", vtkMRMLPlusRemoteLauncherNode::LogLevelDebug);
-  //this->LogLevelComboBox->addItem("Trace", vtkMRMLPlusRemoteLauncherNode::LogLevelTrace); // Callback in vtkPlusLogger does not trigger on trace
+  this->LogLevelComboBox->addItem("Error", vtkMRMLPlusServerLauncherRemoteNode::LogLevelError);
+  this->LogLevelComboBox->addItem("Warning", vtkMRMLPlusServerLauncherRemoteNode::LogLevelWarning);
+  this->LogLevelComboBox->addItem("Info", vtkMRMLPlusServerLauncherRemoteNode::LogLevelInfo);
+  this->LogLevelComboBox->addItem("Debug", vtkMRMLPlusServerLauncherRemoteNode::LogLevelDebug);
+  //this->LogLevelComboBox->addItem("Trace", vtkMRMLPlusServerLauncherRemoteNode::LogLevelTrace); // Callback in vtkPlusLogger does not trigger on trace
 
   QObject::connect(this->LauncherConnectCheckBox, SIGNAL(toggled(bool)), q, SLOT(onConnectCheckBoxChanged(bool)));
   QObject::connect(this->LoadConfigFileButton, SIGNAL(clicked()), q, SLOT(onLoadConfigFile()));
@@ -166,9 +166,9 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::init()
 }
 
 //-----------------------------------------------------------------------------
-vtkSmartPointer<vtkMRMLIGTLConnectorNode> qMRMLPlusLauncherRemoteWidgetPrivate::createConnectorNode(std::string name, std::string hostname, int port)
+vtkSmartPointer<vtkMRMLIGTLConnectorNode> qMRMLPlusServerLauncherRemoteWidgetPrivate::createConnectorNode(std::string name, std::string hostname, int port)
 {
-  Q_Q(qMRMLPlusLauncherRemoteWidget);
+  Q_Q(qMRMLPlusServerLauncherRemoteWidget);
 
   vtkMRMLIGTLConnectorNode* launcherConnectorNode = NULL;
 
@@ -211,7 +211,7 @@ vtkSmartPointer<vtkMRMLIGTLConnectorNode> qMRMLPlusLauncherRemoteWidgetPrivate::
 }
 
 //-----------------------------------------------------------------------------
-void qMRMLPlusLauncherRemoteWidgetPrivate::onStartServerResponse(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata)
+void qMRMLPlusServerLauncherRemoteWidgetPrivate::onStartServerResponse(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata)
 {
   igtlioCommand* startServerCommand = igtlioCommand::SafeDownCast(caller);
   if (!startServerCommand)
@@ -219,7 +219,7 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::onStartServerResponse(vtkObject* call
     return;
   }
 
-  qMRMLPlusLauncherRemoteWidgetPrivate* d = static_cast<qMRMLPlusLauncherRemoteWidgetPrivate*>(clientdata);
+  qMRMLPlusServerLauncherRemoteWidgetPrivate* d = static_cast<qMRMLPlusServerLauncherRemoteWidgetPrivate*>(clientdata);
   if (!d)
   {
     return;
@@ -243,19 +243,19 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::onStartServerResponse(vtkObject* call
         }
       }
     }
-    d->ParameterSetNode->SetServerState(vtkMRMLPlusRemoteLauncherNode::ServerRunning);
+    d->ParameterSetNode->SetServerState(vtkMRMLPlusServerLauncherRemoteNode::ServerRunning);
     // TODO: check for success
   }
   else
   {
     // Expired or returned with failure.
-    d->ParameterSetNode->SetServerState(vtkMRMLPlusRemoteLauncherNode::ServerOff);
+    d->ParameterSetNode->SetServerState(vtkMRMLPlusServerLauncherRemoteNode::ServerOff);
   }
 
 }
 
 //-----------------------------------------------------------------------------
-void qMRMLPlusLauncherRemoteWidgetPrivate::onStopServerResponse(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata)
+void qMRMLPlusServerLauncherRemoteWidgetPrivate::onStopServerResponse(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata)
 {
   igtlioCommand* stopServerCommand = igtlioCommand::SafeDownCast(caller);
   if (!stopServerCommand)
@@ -263,7 +263,7 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::onStopServerResponse(vtkObject* calle
     return;
   }
 
-  qMRMLPlusLauncherRemoteWidgetPrivate* d = static_cast<qMRMLPlusLauncherRemoteWidgetPrivate*>(clientdata);
+  qMRMLPlusServerLauncherRemoteWidgetPrivate* d = static_cast<qMRMLPlusServerLauncherRemoteWidgetPrivate*>(clientdata);
   if (!d)
   {
     return;
@@ -272,19 +272,19 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::onStopServerResponse(vtkObject* calle
 
   if (stopServerCommand->GetSuccessful())
   {
-    d->ParameterSetNode->SetServerState(vtkMRMLPlusRemoteLauncherNode::ServerOff);
+    d->ParameterSetNode->SetServerState(vtkMRMLPlusServerLauncherRemoteNode::ServerOff);
   }
   else
   {
     // Expired or returned with failure
-    d->ParameterSetNode->SetServerState(vtkMRMLPlusRemoteLauncherNode::ServerRunning);
+    d->ParameterSetNode->SetServerState(vtkMRMLPlusServerLauncherRemoteNode::ServerRunning);
   }
 }
 
 //-----------------------------------------------------------------------------
-void qMRMLPlusLauncherRemoteWidgetPrivate::onCommandReceived(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata)
+void qMRMLPlusServerLauncherRemoteWidgetPrivate::onCommandReceived(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata)
 {
-  qMRMLPlusLauncherRemoteWidgetPrivate* d = static_cast<qMRMLPlusLauncherRemoteWidgetPrivate*>(clientdata);
+  qMRMLPlusServerLauncherRemoteWidgetPrivate* d = static_cast<qMRMLPlusServerLauncherRemoteWidgetPrivate*>(clientdata);
   if (!d)
   {
     return;
@@ -304,8 +304,8 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::onCommandReceived(vtkObject* caller, 
     // FOR NOW, ONLY CONTROL ONE SERVER THAT IS MANAGED BY THIS PARAMETER NODE
     // IN THE FUTURE, MAY WANT TO SEE LIST OF CURRENTLY RUNNING SERVERS AND PROVIDE OPTION TO MANAGE ALL OF THEM
 
-    //d->CurrentErrorLevel = vtkMRMLPlusRemoteLauncherNode::LogLevelInfo;
-    //d->ParameterSetNode->SetServerState(vtkMRMLPlusRemoteLauncherNode::ServerRunning);
+    //d->CurrentErrorLevel = vtkMRMLPlusServerLauncherRemoteNode::LogLevelInfo;
+    //d->ParameterSetNode->SetServerState(vtkMRMLPlusServerLauncherRemoteNode::ServerRunning);
     //vtkSmartPointer<vtkXMLDataElement> plusConfigurationResponseElement = rootElement->FindNestedElementWithName("ServerStarted");
     //if (plusConfigurationResponseElement)
     //{
@@ -326,7 +326,7 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::onCommandReceived(vtkObject* caller, 
         std::string configFileName = serverStoppedElement->GetAttribute("ConfigFileName");
         if (!configFileName.empty() && strcmp(configFileName.c_str(), d->ParameterSetNode->GetCurrentConfigNode()->GetAttribute(CONFIG_FILE_NAME_ATTRIBUTE.c_str())) == 0)
         {
-          d->ParameterSetNode->SetServerState(vtkMRMLPlusRemoteLauncherNode::ServerOff);
+          d->ParameterSetNode->SetServerState(vtkMRMLPlusServerLauncherRemoteNode::ServerOff);
         }
       }
     }
@@ -349,7 +349,7 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::onCommandReceived(vtkObject* caller, 
 }
 
 //-----------------------------------------------------------------------------
-void qMRMLPlusLauncherRemoteWidgetPrivate::connectToStartedServers(std::string serverString)
+void qMRMLPlusServerLauncherRemoteWidgetPrivate::connectToStartedServers(std::string serverString)
 {
   /* String is in format:
     OutputChannelId:ListeningPort;OutputChannelId:ListeningPort;OutputChannelId:ListeningPort;
@@ -389,9 +389,9 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::connectToStartedServers(std::string s
 }
 
 //-----------------------------------------------------------------------------
-void qMRMLPlusLauncherRemoteWidgetPrivate::onLogMessageCommand(vtkSmartPointer<vtkXMLDataElement> messageCommand)
+void qMRMLPlusServerLauncherRemoteWidgetPrivate::onLogMessageCommand(vtkSmartPointer<vtkXMLDataElement> messageCommand)
 {
-  Q_Q(qMRMLPlusLauncherRemoteWidget);
+  Q_Q(qMRMLPlusServerLauncherRemoteWidget);
 
   if (!this->ParameterSetNode)
   {
@@ -415,15 +415,15 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::onLogMessageCommand(vtkSmartPointer<v
     int logLevel = 0;
     if (!nestedElement->GetScalarAttribute("LogLevel", logLevel))
     {
-      logLevel = vtkMRMLPlusRemoteLauncherNode::LogLevelInfo;
+      logLevel = vtkMRMLPlusServerLauncherRemoteNode::LogLevelInfo;
     }
 
     std::stringstream message;
-    if (logLevel == vtkMRMLPlusRemoteLauncherNode::LogLevelError)
+    if (logLevel == vtkMRMLPlusServerLauncherRemoteNode::LogLevelError)
     {
       message << "<font color = \"" << COLOR_ERROR << "\">";
     }
-    else if (logLevel == vtkMRMLPlusRemoteLauncherNode::LogLevelWarning)
+    else if (logLevel == vtkMRMLPlusServerLauncherRemoteNode::LogLevelWarning)
     {
       message << "<font color = \"" << COLOR_WARNING << "\">";
     }
@@ -450,7 +450,7 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::onLogMessageCommand(vtkSmartPointer<v
 }
 
 //-----------------------------------------------------------------------------
-void qMRMLPlusLauncherRemoteWidgetPrivate::getServerInfo()
+void qMRMLPlusServerLauncherRemoteWidgetPrivate::getServerInfo()
 {
   vtkMRMLIGTLConnectorNode* connectorNode = this->ParameterSetNode->GetLauncherConnectorNode();
   if (!connectorNode)
@@ -475,7 +475,7 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::getServerInfo()
 }
 
 //-----------------------------------------------------------------------------
-void qMRMLPlusLauncherRemoteWidgetPrivate::onServerInfoResponse(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata)
+void qMRMLPlusServerLauncherRemoteWidgetPrivate::onServerInfoResponse(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata)
 {
 
   igtlioCommand* getServerInfoCommand = igtlioCommand::SafeDownCast(caller);
@@ -484,7 +484,7 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::onServerInfoResponse(vtkObject* calle
     return;
   }
 
-  qMRMLPlusLauncherRemoteWidgetPrivate* d = static_cast<qMRMLPlusLauncherRemoteWidgetPrivate*>(clientdata);
+  qMRMLPlusServerLauncherRemoteWidgetPrivate* d = static_cast<qMRMLPlusServerLauncherRemoteWidgetPrivate*>(clientdata);
   if (!d)
   {
     return;
@@ -515,27 +515,27 @@ void qMRMLPlusLauncherRemoteWidgetPrivate::onServerInfoResponse(vtkObject* calle
 }
 
 //-----------------------------------------------------------------------------
-// qMRMLPlusLauncherRemoteWidget methods
+// qMRMLPlusServerLauncherRemoteWidget methods
 
 //-----------------------------------------------------------------------------
-qMRMLPlusLauncherRemoteWidget::qMRMLPlusLauncherRemoteWidget(QWidget* _parent)
+qMRMLPlusServerLauncherRemoteWidget::qMRMLPlusServerLauncherRemoteWidget(QWidget* _parent)
   : qMRMLWidget(_parent)
-  , d_ptr(new qMRMLPlusLauncherRemoteWidgetPrivate(*this))
+  , d_ptr(new qMRMLPlusServerLauncherRemoteWidgetPrivate(*this))
 {
-  Q_D(qMRMLPlusLauncherRemoteWidget);
+  Q_D(qMRMLPlusServerLauncherRemoteWidget);
   d->init();
   this->updateWidgetFromMRML();
 }
 
 //-----------------------------------------------------------------------------
-qMRMLPlusLauncherRemoteWidget::~qMRMLPlusLauncherRemoteWidget()
+qMRMLPlusServerLauncherRemoteWidget::~qMRMLPlusServerLauncherRemoteWidget()
 {
 }
 
 //-----------------------------------------------------------------------------
-void qMRMLPlusLauncherRemoteWidget::setMRMLScene(vtkMRMLScene* newScene)
+void qMRMLPlusServerLauncherRemoteWidget::setMRMLScene(vtkMRMLScene* newScene)
 {
-  Q_D(qMRMLPlusLauncherRemoteWidget);
+  Q_D(qMRMLPlusServerLauncherRemoteWidget);
   if (newScene == this->mrmlScene())
   {
     return;
@@ -556,9 +556,9 @@ void qMRMLPlusLauncherRemoteWidget::setMRMLScene(vtkMRMLScene* newScene)
 }
 
 ////------------------------------------------------------------------------------
-//void qMRMLPlusLauncherRemoteWidget::initializeParameterSetNode()
+//void qMRMLPlusServerLauncherRemoteWidget::initializeParameterSetNode()
 //{
-//  Q_D(qMRMLPlusLauncherRemoteWidget);
+//  Q_D(qMRMLPlusServerLauncherRemoteWidget);
 //  if (!d->ParameterSetNode)
 //  {
 //    return;
@@ -566,9 +566,9 @@ void qMRMLPlusLauncherRemoteWidget::setMRMLScene(vtkMRMLScene* newScene)
 //}
 
 //-----------------------------------------------------------------------------
-void qMRMLPlusLauncherRemoteWidget::onMRMLSceneEndCloseEvent()
+void qMRMLPlusServerLauncherRemoteWidget::onMRMLSceneEndCloseEvent()
 {
-  Q_D(qMRMLPlusLauncherRemoteWidget);
+  Q_D(qMRMLPlusServerLauncherRemoteWidget);
 
   this->setParameterSetNode(NULL);
   //this->initializeParameterSetNode();
@@ -576,9 +576,9 @@ void qMRMLPlusLauncherRemoteWidget::onMRMLSceneEndCloseEvent()
 }
 
 //-----------------------------------------------------------------------------
-void qMRMLPlusLauncherRemoteWidget::updateWidgetFromMRML()
+void qMRMLPlusServerLauncherRemoteWidget::updateWidgetFromMRML()
 {
-  Q_D(qMRMLPlusLauncherRemoteWidget);
+  Q_D(qMRMLPlusServerLauncherRemoteWidget);
 
   std::string tooltipSuffix = "\nClick to view log";
   if (!this->mrmlScene() || this->mrmlScene()->IsClosing() || !d->ParameterSetNode)
@@ -648,7 +648,7 @@ void qMRMLPlusLauncherRemoteWidget::updateWidgetFromMRML()
   }
   else
   {
-    serverState = vtkMRMLPlusRemoteLauncherNode::ServerOff;
+    serverState = vtkMRMLPlusServerLauncherRemoteNode::ServerOff;
     d->ParameterSetNode->SetServerState(serverState);
     d->WasPreviouslyConnected = false;
   }
@@ -656,28 +656,28 @@ void qMRMLPlusLauncherRemoteWidget::updateWidgetFromMRML()
   // Adjust buttons based on server state, and construct log button message
   switch (serverState)
   {
-  case vtkMRMLPlusRemoteLauncherNode::ServerRunning:
+  case vtkMRMLPlusServerLauncherRemoteNode::ServerRunning:
     d->StartStopServerButton->setEnabled(true);
     d->StartStopServerButton->setText("Stop server");
     d->ConfigFileSelectorComboBox->setDisabled(true);
     d->LogLevelComboBox->setDisabled(true);
     logIconMessage = "Server running.";
     break;
-  case vtkMRMLPlusRemoteLauncherNode::ServerStarting:
+  case vtkMRMLPlusServerLauncherRemoteNode::ServerStarting:
     d->StartStopServerButton->setDisabled(true);
     d->StartStopServerButton->setText("Launching...");
     d->ConfigFileSelectorComboBox->setDisabled(true);
     d->LogLevelComboBox->setDisabled(true);
     logIconMessage = "Server starting.";
     break;
-  case vtkMRMLPlusRemoteLauncherNode::ServerStopping:
+  case vtkMRMLPlusServerLauncherRemoteNode::ServerStopping:
     d->StartStopServerButton->setDisabled(true);
     d->StartStopServerButton->setText("Stopping...");
     d->ConfigFileSelectorComboBox->setDisabled(true);
     d->LogLevelComboBox->setDisabled(true);
     logIconMessage = "Server stopping.";
     break;
-  case vtkMRMLPlusRemoteLauncherNode::ServerOff:
+  case vtkMRMLPlusServerLauncherRemoteNode::ServerOff:
   default:
     d->StartStopServerButton->setEnabled(connected && configFileSelected);
     d->StartStopServerButton->setText("Launch server");
@@ -702,10 +702,10 @@ void qMRMLPlusLauncherRemoteWidget::updateWidgetFromMRML()
   int errorLevel = d->ParameterSetNode->GetCurrentErrorLevel();
   switch (errorLevel)
   {
-    case vtkMRMLPlusRemoteLauncherNode::LogLevelError:
+    case vtkMRMLPlusServerLauncherRemoteNode::LogLevelError:
       logIconMessage += " Error detected.";
       break;
-    case vtkMRMLPlusRemoteLauncherNode::LogLevelWarning:
+    case vtkMRMLPlusServerLauncherRemoteNode::LogLevelWarning:
       logIconMessage += " Warning detected.";
       break;
     default:
@@ -724,13 +724,13 @@ void qMRMLPlusLauncherRemoteWidget::updateWidgetFromMRML()
 }
 
 //-----------------------------------------------------------------------------
-void qMRMLPlusLauncherRemoteWidget::updateStatusIcon()
+void qMRMLPlusServerLauncherRemoteWidget::updateStatusIcon()
 {
-  Q_D(qMRMLPlusLauncherRemoteWidget);
+  Q_D(qMRMLPlusServerLauncherRemoteWidget);
 
   int connectionEnabled = vtkMRMLIGTLConnectorNode::StateOff;
-  int serverState = vtkMRMLPlusRemoteLauncherNode::ServerOff;
-  int errorLevel = vtkMRMLPlusRemoteLauncherNode::LogLevelInfo;
+  int serverState = vtkMRMLPlusServerLauncherRemoteNode::ServerOff;
+  int errorLevel = vtkMRMLPlusServerLauncherRemoteNode::LogLevelInfo;
 
   int state = vtkMRMLIGTLConnectorNode::StateOff;
   if (d->ParameterSetNode)
@@ -752,54 +752,54 @@ void qMRMLPlusLauncherRemoteWidget::updateStatusIcon()
   {
     d->LauncherStatusButton->setIcon(d->IconNotConnected);
   }
-  else if (errorLevel >= vtkMRMLPlusRemoteLauncherNode::LogLevelInfo)
+  else if (errorLevel >= vtkMRMLPlusServerLauncherRemoteNode::LogLevelInfo)
   {
     switch (serverState)
     {
-      case vtkMRMLPlusRemoteLauncherNode::ServerOff:
+      case vtkMRMLPlusServerLauncherRemoteNode::ServerOff:
         d->LauncherStatusButton->setIcon(d->IconConnected);
         break;
-      case vtkMRMLPlusRemoteLauncherNode::ServerRunning:
+      case vtkMRMLPlusServerLauncherRemoteNode::ServerRunning:
         d->LauncherStatusButton->setIcon(d->IconRunning);
         break;
-      case vtkMRMLPlusRemoteLauncherNode::ServerStarting:
-      case vtkMRMLPlusRemoteLauncherNode::ServerStopping:
+      case vtkMRMLPlusServerLauncherRemoteNode::ServerStarting:
+      case vtkMRMLPlusServerLauncherRemoteNode::ServerStopping:
         d->LauncherStatusButton->setIcon(d->IconWaiting);
         break;
       default:
         break;
     }
   }
-  else if (errorLevel == vtkMRMLPlusRemoteLauncherNode::LogLevelWarning)
+  else if (errorLevel == vtkMRMLPlusServerLauncherRemoteNode::LogLevelWarning)
   {
     switch (serverState)
     {
-    case vtkMRMLPlusRemoteLauncherNode::ServerOff:
+    case vtkMRMLPlusServerLauncherRemoteNode::ServerOff:
       d->LauncherStatusButton->setIcon(d->IconConnectedWarning);
       break;
-    case vtkMRMLPlusRemoteLauncherNode::ServerRunning:
+    case vtkMRMLPlusServerLauncherRemoteNode::ServerRunning:
       d->LauncherStatusButton->setIcon(d->IconRunningWarning);
       break;
-    case vtkMRMLPlusRemoteLauncherNode::ServerStarting:
-    case vtkMRMLPlusRemoteLauncherNode::ServerStopping:
+    case vtkMRMLPlusServerLauncherRemoteNode::ServerStarting:
+    case vtkMRMLPlusServerLauncherRemoteNode::ServerStopping:
       d->LauncherStatusButton->setIcon(d->IconWaitingWarning);
       break;
     default:
       break;
     }
   }
-  else if (errorLevel == vtkMRMLPlusRemoteLauncherNode::LogLevelError)
+  else if (errorLevel == vtkMRMLPlusServerLauncherRemoteNode::LogLevelError)
   {
     switch (serverState)
     {
-    case vtkMRMLPlusRemoteLauncherNode::ServerOff:
+    case vtkMRMLPlusServerLauncherRemoteNode::ServerOff:
       d->LauncherStatusButton->setIcon(d->IconConnectedError);
       break;
-    case vtkMRMLPlusRemoteLauncherNode::ServerRunning:
+    case vtkMRMLPlusServerLauncherRemoteNode::ServerRunning:
       d->LauncherStatusButton->setIcon(d->IconRunningError);
       break;
-    case vtkMRMLPlusRemoteLauncherNode::ServerStarting:
-    case vtkMRMLPlusRemoteLauncherNode::ServerStopping:
+    case vtkMRMLPlusServerLauncherRemoteNode::ServerStarting:
+    case vtkMRMLPlusServerLauncherRemoteNode::ServerStopping:
       d->LauncherStatusButton->setIcon(d->IconWaitingError);
       break;
     default:
@@ -810,9 +810,9 @@ void qMRMLPlusLauncherRemoteWidget::updateStatusIcon()
 }
 
 //-----------------------------------------------------------------------------
-void qMRMLPlusLauncherRemoteWidget::onConnectCheckBoxChanged(bool connect)
+void qMRMLPlusServerLauncherRemoteWidget::onConnectCheckBoxChanged(bool connect)
 {
-  Q_D(qMRMLPlusLauncherRemoteWidget);
+  Q_D(qMRMLPlusServerLauncherRemoteWidget);
 
   std::string hostname = d->ParameterSetNode->GetServerLauncherHostname();
   int port = d->ParameterSetNode->GetServerLauncherPort();
@@ -882,9 +882,9 @@ void qMRMLPlusLauncherRemoteWidget::onConnectCheckBoxChanged(bool connect)
 }
 
 //-----------------------------------------------------------------------------
-void qMRMLPlusLauncherRemoteWidget::setAndObserveLauncherConnectorNode(vtkMRMLIGTLConnectorNode* connectorNode)
+void qMRMLPlusServerLauncherRemoteWidget::setAndObserveLauncherConnectorNode(vtkMRMLIGTLConnectorNode* connectorNode)
 {
-  Q_D(qMRMLPlusLauncherRemoteWidget);
+  Q_D(qMRMLPlusServerLauncherRemoteWidget);
 
   d->ParameterSetNode->SetAndObserveLauncherConnectorNode(connectorNode);
 
@@ -920,7 +920,7 @@ void qMRMLPlusLauncherRemoteWidget::setAndObserveLauncherConnectorNode(vtkMRMLIG
 }
 
 //------------------------------------------------------------------------------
-void qMRMLPlusLauncherRemoteWidget::onLoadConfigFile()
+void qMRMLPlusServerLauncherRemoteWidget::onLoadConfigFile()
 {
   QString filename = QFileDialog::getOpenFileName(NULL, "Select config file", "", "Config Files (*.xml);;AllFiles (*)");
   QFile file(filename);
@@ -976,9 +976,9 @@ void qMRMLPlusLauncherRemoteWidget::onLoadConfigFile()
 }
 
 //-----------------------------------------------------------------------------
-void qMRMLPlusLauncherRemoteWidget::onConfigFileChanged(vtkMRMLNode* currentNode)
+void qMRMLPlusServerLauncherRemoteWidget::onConfigFileChanged(vtkMRMLNode* currentNode)
 {
-  Q_D(qMRMLPlusLauncherRemoteWidget);
+  Q_D(qMRMLPlusServerLauncherRemoteWidget);
 
   if (!d->ParameterSetNode)
   {
@@ -990,9 +990,9 @@ void qMRMLPlusLauncherRemoteWidget::onConfigFileChanged(vtkMRMLNode* currentNode
 }
 
 //-----------------------------------------------------------------------------
-void qMRMLPlusLauncherRemoteWidget::onLogLevelChanged(int index)
+void qMRMLPlusServerLauncherRemoteWidget::onLogLevelChanged(int index)
 {
-  Q_D(qMRMLPlusLauncherRemoteWidget);
+  Q_D(qMRMLPlusServerLauncherRemoteWidget);
 
   if (!d->ParameterSetNode)
   {
@@ -1007,9 +1007,9 @@ void qMRMLPlusLauncherRemoteWidget::onLogLevelChanged(int index)
 }
 
 //-----------------------------------------------------------------------------
-void qMRMLPlusLauncherRemoteWidget::onHostChanged(const QString &text)
+void qMRMLPlusServerLauncherRemoteWidget::onHostChanged(const QString &text)
 {
-  Q_D(qMRMLPlusLauncherRemoteWidget);
+  Q_D(qMRMLPlusServerLauncherRemoteWidget);
 
   std::string hostnameAndPort = text.toStdString();
   std::vector<std::string> tokens = std::vector<std::string>();
@@ -1054,36 +1054,36 @@ void qMRMLPlusLauncherRemoteWidget::onHostChanged(const QString &text)
 }
 
 //-----------------------------------------------------------------------------
-void qMRMLPlusLauncherRemoteWidget::onStartStopButton()
+void qMRMLPlusServerLauncherRemoteWidget::onStartStopButton()
 {
-  Q_D(qMRMLPlusLauncherRemoteWidget);
+  Q_D(qMRMLPlusServerLauncherRemoteWidget);
 
-  if (d->ParameterSetNode->GetServerState() == vtkMRMLPlusRemoteLauncherNode::ServerOff)
+  if (d->ParameterSetNode->GetServerState() == vtkMRMLPlusServerLauncherRemoteNode::ServerOff)
   {
     this->launchServer();
   }
-  else if (d->ParameterSetNode->GetServerState() == vtkMRMLPlusRemoteLauncherNode::ServerRunning)
+  else if (d->ParameterSetNode->GetServerState() == vtkMRMLPlusServerLauncherRemoteNode::ServerRunning)
   {
     this->stopServer();
   }
 }
 
 //-----------------------------------------------------------------------------
-void qMRMLPlusLauncherRemoteWidget::onClearLogButton()
+void qMRMLPlusServerLauncherRemoteWidget::onClearLogButton()
 {
-  Q_D(qMRMLPlusLauncherRemoteWidget);
+  Q_D(qMRMLPlusServerLauncherRemoteWidget);
   d->ServerLogTextEdit->setPlainText("");
   if (d->ParameterSetNode)
   {
-    d->ParameterSetNode->SetCurrentErrorLevel(vtkMRMLPlusRemoteLauncherNode::LogLevelInfo);
+    d->ParameterSetNode->SetCurrentErrorLevel(vtkMRMLPlusServerLauncherRemoteNode::LogLevelInfo);
   }
   this->updateWidgetFromMRML();
 }
 
 //-----------------------------------------------------------------------------
-void qMRMLPlusLauncherRemoteWidget::launchServer()
+void qMRMLPlusServerLauncherRemoteWidget::launchServer()
 {
-  Q_D(qMRMLPlusLauncherRemoteWidget);
+  Q_D(qMRMLPlusServerLauncherRemoteWidget);
 
   if (!d->ParameterSetNode)
   {
@@ -1152,13 +1152,13 @@ void qMRMLPlusLauncherRemoteWidget::launchServer()
   startServerCommand->SetCommandMetaDataElement("ConfigFileName", fileName);
   startServerCommand->AddObserver(igtlioCommand::CommandCompletedEvent, d->StartServerCallback);
   connectorNode->SendCommand(startServerCommand);
-  d->ParameterSetNode->SetServerState(vtkMRMLPlusRemoteLauncherNode::ServerStarting);
+  d->ParameterSetNode->SetServerState(vtkMRMLPlusServerLauncherRemoteNode::ServerStarting);
 }
 
 //-----------------------------------------------------------------------------
-void qMRMLPlusLauncherRemoteWidget::stopServer()
+void qMRMLPlusServerLauncherRemoteWidget::stopServer()
 {
-  Q_D(qMRMLPlusLauncherRemoteWidget);
+  Q_D(qMRMLPlusServerLauncherRemoteWidget);
 
   if (!d->ParameterSetNode)
   {
@@ -1182,13 +1182,13 @@ void qMRMLPlusLauncherRemoteWidget::stopServer()
   stopServerCommand->SetCommandMetaDataElement("ConfigFileName", fileName);
   stopServerCommand->AddObserver(igtlioCommand::CommandCompletedEvent, d->StopServerCallback);
   connectorNode->SendCommand(stopServerCommand);
-  d->ParameterSetNode->SetServerState(vtkMRMLPlusRemoteLauncherNode::ServerStopping);
+  d->ParameterSetNode->SetServerState(vtkMRMLPlusServerLauncherRemoteNode::ServerStopping);
 }
 
 //-----------------------------------------------------------------------------
-void qMRMLPlusLauncherRemoteWidget::subscribeToLogMessages()
+void qMRMLPlusServerLauncherRemoteWidget::subscribeToLogMessages()
 {
-  Q_D(qMRMLPlusLauncherRemoteWidget);
+  Q_D(qMRMLPlusServerLauncherRemoteWidget);
 
   if (!d->ParameterSetNode)
   {
@@ -1208,31 +1208,31 @@ void qMRMLPlusLauncherRemoteWidget::subscribeToLogMessages()
 }
 
 //-----------------------------------------------------------------------------
-bool qMRMLPlusLauncherRemoteWidget::logVisible() const
+bool qMRMLPlusServerLauncherRemoteWidget::logVisible() const
 {
-  Q_D(const qMRMLPlusLauncherRemoteWidget);
+  Q_D(const qMRMLPlusServerLauncherRemoteWidget);
   return d->LogGroupBox->isVisible();
 }
 
 //-----------------------------------------------------------------------------
-void qMRMLPlusLauncherRemoteWidget::setLogVisible(bool visible)
+void qMRMLPlusServerLauncherRemoteWidget::setLogVisible(bool visible)
 {
-  Q_D(qMRMLPlusLauncherRemoteWidget);
+  Q_D(qMRMLPlusServerLauncherRemoteWidget);
   d->LogGroupBox->setVisible(visible);
 }
 
 //------------------------------------------------------------------------------
-vtkMRMLPlusRemoteLauncherNode* qMRMLPlusLauncherRemoteWidget::plusRemoteLauncherNode()const
+vtkMRMLPlusServerLauncherRemoteNode* qMRMLPlusServerLauncherRemoteWidget::plusRemoteLauncherNode()const
 {
-  Q_D(const qMRMLPlusLauncherRemoteWidget);
+  Q_D(const qMRMLPlusServerLauncherRemoteWidget);
   return d->ParameterSetNode;
 }
 
 
 //------------------------------------------------------------------------------
-void qMRMLPlusLauncherRemoteWidget::setParameterSetNode(vtkMRMLPlusRemoteLauncherNode* parameterNode)
+void qMRMLPlusServerLauncherRemoteWidget::setParameterSetNode(vtkMRMLPlusServerLauncherRemoteNode* parameterNode)
 {
-  Q_D(qMRMLPlusLauncherRemoteWidget);
+  Q_D(qMRMLPlusServerLauncherRemoteWidget);
   if (d->ParameterSetNode == parameterNode)
   {
     return;

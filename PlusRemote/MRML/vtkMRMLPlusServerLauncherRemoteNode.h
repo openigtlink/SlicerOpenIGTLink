@@ -20,8 +20,8 @@
 
 ==============================================================================*/
 
-#ifndef __vtkMRMLPlusRemoteLauncherNode_h
-#define __vtkMRMLPlusRemoteLauncherNode_h
+#ifndef __vtkMRMLPlusServerLauncherRemoteNode_h
+#define __vtkMRMLPlusServerLauncherRemoteNode_h
 
 // MRML includes
 #include <vtkMRMLNode.h>
@@ -36,7 +36,7 @@ class vtkMRMLTextNode;
 /// \ingroup Segmentations
 /// \brief Parameter set node for the plus remote launcher widget
 ///
-class VTK_SLICER_PLUSREMOTE_MODULE_MRML_EXPORT vtkMRMLPlusRemoteLauncherNode : public vtkMRMLNode
+class VTK_SLICER_PLUSREMOTE_MODULE_MRML_EXPORT vtkMRMLPlusServerLauncherRemoteNode : public vtkMRMLNode
 {
 
 public:
@@ -49,8 +49,8 @@ public:
     ServerStopping,
   };
 
-  static vtkMRMLPlusRemoteLauncherNode *New();
-  vtkTypeMacro(vtkMRMLPlusRemoteLauncherNode, vtkMRMLNode);
+  static vtkMRMLPlusServerLauncherRemoteNode *New();
+  vtkTypeMacro(vtkMRMLPlusServerLauncherRemoteNode, vtkMRMLNode);
   void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
 
   // Standard MRML node methods
@@ -61,10 +61,10 @@ public:
   virtual const char* GetNodeTagName() VTK_OVERRIDE { return "PlusRemoteLauncher"; }
 
 protected:
-  vtkMRMLPlusRemoteLauncherNode();
-  virtual ~vtkMRMLPlusRemoteLauncherNode();
-  vtkMRMLPlusRemoteLauncherNode(const vtkMRMLPlusRemoteLauncherNode&);
-  void operator=(const vtkMRMLPlusRemoteLauncherNode&);
+  vtkMRMLPlusServerLauncherRemoteNode();
+  virtual ~vtkMRMLPlusServerLauncherRemoteNode();
+  vtkMRMLPlusServerLauncherRemoteNode(const vtkMRMLPlusServerLauncherRemoteNode&);
+  void operator=(const vtkMRMLPlusServerLauncherRemoteNode&);
 
 public:
 
@@ -113,4 +113,4 @@ private:
   static const int DefaultPort = 18904;
 };
 
-#endif // __vtkMRMLPlusRemoteLauncherNode_h
+#endif // __vtkMRMLPlusServerLauncherRemoteNode_h

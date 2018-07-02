@@ -1,19 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>qMRMLPlusLauncherRemoteWidget</class>
- <widget class="qMRMLWidget" name="qMRMLPlusLauncherRemoteWidget">
+ <class>qMRMLPlusServerLauncherRemoteWidget</class>
+ <widget class="qMRMLWidget" name="qMRMLPlusServerLauncherRemoteWidget">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>345</width>
-    <height>286</height>
+    <height>198</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
+   <property name="sizeConstraint">
+    <enum>QLayout::SetMinimumSize</enum>
+   </property>
    <item>
     <widget class="ctkCollapsibleGroupBox" name="LauncherConnectionGroupBox">
      <property name="title">
@@ -47,7 +50,7 @@
          <string>...</string>
         </property>
         <property name="icon">
-         <iconset resource="../qMRMLPlusLauncherRemoteWidget.qrc">
+         <iconset resource="../qMRMLPlusServerLauncherRemoteWidget.qrc">
           <normaloff>:/Icons/PlusLauncherRemoteDisconnected.png</normaloff>:/Icons/PlusLauncherRemoteDisconnected.png</iconset>
         </property>
         <property name="iconSize">
@@ -86,19 +89,19 @@
       </widget>
      </item>
      <item>
-      <widget class="qMRMLNodeComboBox" name="ConfigFileSelectorComboBox" native="true">
+      <widget class="qMRMLNodeComboBox" name="ConfigFileSelectorComboBox">
        <property name="enabled">
         <bool>false</bool>
        </property>
        <property name="focusPolicy">
         <enum>Qt::WheelFocus</enum>
        </property>
-       <property name="nodeTypes" stdset="0">
+       <property name="nodeTypes">
         <stringlist>
          <string>vtkMRMLTextNode</string>
         </stringlist>
        </property>
-       <property name="addEnabled" stdset="0">
+       <property name="addEnabled">
         <bool>false</bool>
        </property>
       </widget>
@@ -190,7 +193,7 @@
      <property name="title">
       <string>Config File</string>
      </property>
-     <property name="collapsed" stdset="0">
+     <property name="collapsed">
       <bool>true</bool>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_5">
@@ -228,6 +231,7 @@
    <class>qMRMLNodeComboBox</class>
    <extends>QWidget</extends>
    <header>qMRMLNodeComboBox.h</header>
+   <container>1</container>
   </customwidget>
   <customwidget>
    <class>qMRMLWidget</class>
@@ -243,7 +247,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../qMRMLPlusLauncherRemoteWidget.qrc"/>
+  <include location="../qMRMLPlusServerLauncherRemoteWidget.qrc"/>
  </resources>
  <connections>
   <connection>
