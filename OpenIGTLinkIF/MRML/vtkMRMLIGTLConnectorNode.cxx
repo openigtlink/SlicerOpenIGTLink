@@ -362,6 +362,20 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetOrAddMRMLNodeforDevice(ig
     }
   }
 
+  // Device name is empty, we will not be able to find a node in the scene
+  if (device->GetDeviceName().empty())
+  {
+    std::string deviceType = device->GetDeviceType();
+
+    // Status messages with no device name are ignored
+    // For other message types, a warning is logged
+    if (deviceType != igtlioStatusConverter::GetIGTLTypeName())
+    {
+      vtkWarningWithObjectMacro(this->External, "Incoming " << deviceType << " device has no device name!");
+    }
+    return NULL;
+  }
+
   // Node not found and add the node
   if (strcmp(device->GetDeviceType().c_str(), "IMAGE") == 0)
   {
