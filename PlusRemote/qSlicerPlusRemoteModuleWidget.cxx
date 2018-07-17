@@ -775,8 +775,8 @@ void qSlicerPlusRemoteModuleWidget::onConnectorNodeConnected()
     return;
   }
 
-  d->logic()->GetCaptureDeviceIDs(d->ParameterNode);
-  d->logic()->GetVolumeReconstructorDeviceIDs(d->ParameterNode);
+  d->logic()->RequestCaptureDeviceIDs(d->ParameterNode);
+  d->logic()->RequestVolumeReconstructorDeviceIDs(d->ParameterNode);
 }
 
 //-----------------------------------------------------------------------------

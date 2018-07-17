@@ -76,9 +76,11 @@ public:
   void CreateDefaultParameterSet();
 
   /// Send a command to get the list of capture devices from the Plus
-  void GetCaptureDeviceIDs(vtkMRMLPlusRemoteNode*);
+  void RequestCaptureDeviceIDs(vtkMRMLPlusRemoteNode*);
   /// Send a command to get the list of volume reconstructor devices from the Plus
-  void GetVolumeReconstructorDeviceIDs(vtkMRMLPlusRemoteNode*);
+  void RequestVolumeReconstructorDeviceIDs(vtkMRMLPlusRemoteNode*);
+  /// Send a command to get a list of device ids from Plus
+  void RequestDeviceIDs(vtkMRMLPlusRemoteNode*);
 
   /// Sends a command to Plus to start recording with the specified parameters
   void StartRecording(vtkMRMLPlusRemoteNode*);
@@ -132,8 +134,9 @@ protected:
 
   ///////////////////////
   // Callback functions for when commands are received
-  static void onGetCaptureDeviceCommandResponseReceived(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
-  static void onGetVolumeReconstructorDeviceCommandResponseReceived(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
+  static void onRequestCaptureDeviceIDsCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
+  static void onRequestVolumeReconstructorDeviceIDsCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
+  static void onRequestDeviceIDsCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
 
   static void onRecordingStarted(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
   static void onRecordingCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);

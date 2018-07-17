@@ -5,7 +5,6 @@ set(${KIT}_EXPORT "Q_SLICER_MODULE_${MODULE_NAME_UPPER}_WIDGETS_PLUGINS_EXPORT")
 set(${KIT}_SRCS
   qSlicerPlusRemoteModuleWidgetsAbstractPlugin.cxx
   qSlicerPlusRemoteModuleWidgetsAbstractPlugin.h
-  qSlicerPlusRemoteModuleWidgetsAbstractPlugin.cxx
   qSlicerPlusRemoteModuleWidgetsPlugin.cxx
   qSlicerPlusRemoteModuleWidgetsPlugin.h
   qMRMLPlusServerLauncherRemoteWidgetPlugin.cxx

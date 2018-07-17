@@ -83,17 +83,18 @@ public:
 
   enum
   {
-    CaptureIdsReceivedEvent                       = vtkCommand::UserEvent + 300,
-    VolumeReconstructorIdsReceivedEvent           = vtkCommand::UserEvent + 301,
-    RecordingStartedEvent                         = vtkCommand::UserEvent + 302,
-    RecordingCompletedEvent                       = vtkCommand::UserEvent + 303,
-    OfflineReconstructionStartedEvent             = vtkCommand::UserEvent + 304,
-    OfflineReconstructionCompletedEvent           = vtkCommand::UserEvent + 305,
-    ScoutScanStartedEvent                         = vtkCommand::UserEvent + 306,
-    ScoutScanCompletedEvent                       = vtkCommand::UserEvent + 307,
-    LiveVolumeReconstructionStartedEvent          = vtkCommand::UserEvent + 308,
-    LiveVolumeReconstructionSnapshotReceivedEvent = vtkCommand::UserEvent + 309,
-    LiveVolumeReconstructionCompletedEvent        = vtkCommand::UserEvent + 310,
+    CaptureIdsReceivedEvent = vtkCommand::UserEvent + 300,
+    VolumeReconstructorIdsReceivedEvent,
+    DeviceIdsReceivedEvent,
+    RecordingStartedEvent,
+    RecordingCompletedEvent,
+    OfflineReconstructionStartedEvent,
+    OfflineReconstructionCompletedEvent,
+    ScoutScanStartedEvent,
+    ScoutScanCompletedEvent,
+    LiveVolumeReconstructionStartedEvent,
+    LiveVolumeReconstructionSnapshotReceivedEvent,
+    LiveVolumeReconstructionCompletedEvent,
   };
 
 protected:
@@ -107,6 +108,10 @@ protected:
   std::string                 CurrentCaptureID;
   std::vector<std::string>    VolumeReconstructorIDs;
   std::string                 CurrentVolumeReconstructorID;
+
+  std::string                 CurrentDeviceID;
+  std::string                 DeviceIDType;
+  std::vector<std::string>    DeviceIDs;
 
   // Recording parameters
   int                         RecordingStatus;
@@ -168,6 +173,14 @@ public:
   vtkGetStdVectorMacro(VolumeReconstructorIDs, std::vector<std::string>);
   vtkSetMacro(CurrentVolumeReconstructorID, std::string);
   vtkGetMacro(CurrentVolumeReconstructorID, std::string);
+
+  vtkSetStdVectorMacro(DeviceIDs, std::vector<std::string>);
+  vtkGetStdVectorMacro(DeviceIDs, std::vector<std::string>);
+  vtkSetMacro(CurrentDeviceID, std::string);
+  vtkGetMacro(CurrentDeviceID, std::string);
+  vtkSetMacro(DeviceIDType, std::string);
+  vtkGetMacro(DeviceIDType, std::string);
+  void GetDeviceIDs(vtkStringArray* stringArray);
 
   //////////////////////////
   // Recording parameter setters/getters
