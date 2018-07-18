@@ -152,7 +152,7 @@ protected:
   static void onLiveVolumeSnapshotAquired(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
   static void onLiveVolumeReconstructionCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
 
-  //static void onPrintCommandResponseRequested(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
+  static void onPrintCommandResponseRequested(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
 
   ///////////////////////
   // Delayed callbacks called when the required volumes in the scene are updated, invoked when the corresponding devices are modified

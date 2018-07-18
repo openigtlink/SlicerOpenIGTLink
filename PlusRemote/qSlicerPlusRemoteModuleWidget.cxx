@@ -151,9 +151,11 @@ void qSlicerPlusRemoteModuleWidget::setup()
   d->ScoutScanSettingsButton->setChecked(false);
   d->LiveReconstructionSettingsButton->setChecked(false);
 
+  connect(d->ParameterNodeSelector, SIGNAL(nodeActivated(vtkMRMLNode*)), this, SLOT(onParameterSetSelected(vtkMRMLNode*)));
   connect(d->ParameterNodeSelector, SIGNAL(currentNodeChanged(vtkMRMLNode*)), this, SLOT(onParameterSetSelected(vtkMRMLNode*)));
-  connect(d->OpenIGTLinkConnectorNodeSelector, SIGNAL(nodeActivated(vtkMRMLNode*)), this, SLOT(onConnectorNodeSelected(vtkMRMLNode*)));
-  connect(d->OpenIGTLinkConnectorNodeSelector, SIGNAL(currentNodeChanged(vtkMRMLNode*)), this, SLOT(onConnectorNodeSelected()));
+
+  connect(d->OpenIGTLinkConnectorNodeSelector, SIGNAL(nodeActivated(vtkMRMLNode*)), this, SLOT(updateParameterNodeFromGui(vtkMRMLNode*)));
+  connect(d->OpenIGTLinkConnectorNodeSelector, SIGNAL(currentNodeChanged(vtkMRMLNode*)), this, SLOT(updateParameterNodeFromGui()));
 
   connect(d->CaptureIDSelector, SIGNAL(currentTextChanged(QString)), this, SLOT(updateParameterNodeFromGui()));
   connect(d->VolumeReconstructorIDSelector, SIGNAL(currentTextChanged(QString)), this, SLOT(updateParameterNodeFromGui()));
@@ -192,7 +194,6 @@ void qSlicerPlusRemoteModuleWidget::setup()
 
   connect(d->ConfigFilenameLineEdit, SIGNAL(textEdited(QString)), this, SLOT(updateParameterNodeFromGui()));
 
-  this->onConnectorNodeSelected(NULL);
   d->logic()->CreateDefaultParameterSet();
 }
 
@@ -214,29 +215,6 @@ void qSlicerPlusRemoteModuleWidget::setMRMLScene(vtkMRMLScene* scene)
 {
   Q_D(qSlicerPlusRemoteModuleWidget);
   this->Superclass::setMRMLScene(scene);
-
-  if (!scene)
-  {
-    d->PlusServerLauncherRemoteWidget->setParameterSetNode(NULL);
-    return;
-  }
-
-  vtkSmartPointer<vtkCollection> collection =
-    vtkSmartPointer<vtkCollection>::Take(this->mrmlScene()->GetNodesByClassByName("vtkMRMLPlusServerLauncherRemoteNode", "PlusRemote"));
-
-  vtkMRMLPlusServerLauncherRemoteNode* plusServerLauncherRemoteNode = NULL;
-  if (collection->GetNumberOfItems() > 0)
-  {
-    plusServerLauncherRemoteNode = vtkMRMLPlusServerLauncherRemoteNode::SafeDownCast(collection->GetItemAsObject(0));
-  }
-
-  if (!plusServerLauncherRemoteNode)
-  {
-    plusServerLauncherRemoteNode = vtkMRMLPlusServerLauncherRemoteNode::SafeDownCast(
-      this->mrmlScene()->AddNewNodeByClass("vtkMRMLPlusServerLauncherRemoteNode"));
-  }
-
-  d->PlusServerLauncherRemoteWidget->setParameterSetNode(plusServerLauncherRemoteNode);
 }
 
 //-----------------------------------------------------------------------------
@@ -252,6 +230,10 @@ void qSlicerPlusRemoteModuleWidget::setParameterNode(vtkMRMLNode *node)
   Q_D(qSlicerPlusRemoteModuleWidget);
 
   vtkMRMLPlusRemoteNode* selectedParameterNode = vtkMRMLPlusRemoteNode::SafeDownCast(node);
+  if (selectedParameterNode == d->ParameterNode)
+  {
+    return;
+  }
 
   // Make sure the parameter set node is selected (in case the function was not called by the selector combobox signal)
   d->ParameterNodeSelector->setCurrentNode(selectedParameterNode);
@@ -675,9 +657,7 @@ void qSlicerPlusRemoteModuleWidget::updateParameterNodeFromGui()
   {
     // Block events so that onParameterSetSelected is not called,
     // becuase it would update the GUI from the node.
-    bool wasBlocked = d->ParameterNodeSelector->blockSignals(true);
     d->ParameterNodeSelector->addNode();
-    d->ParameterNodeSelector->blockSignals(wasBlocked);
     d->ParameterNode = vtkMRMLPlusRemoteNode::SafeDownCast(d->ParameterNodeSelector->currentNode());
     if (!d->ParameterNode)
     {
@@ -688,6 +668,23 @@ void qSlicerPlusRemoteModuleWidget::updateParameterNodeFromGui()
   }
 
   int previousModify = d->ParameterNode->StartModify();
+
+  vtkSmartPointer<vtkMRMLIGTLConnectorNode> oldConnectorNode = d->ParameterNode->GetOpenIGTLinkConnectorNode();
+  vtkSmartPointer<vtkMRMLIGTLConnectorNode> newConnectorNode = vtkMRMLIGTLConnectorNode::SafeDownCast(d->OpenIGTLinkConnectorNodeSelector->currentNode());
+  if (oldConnectorNode != newConnectorNode)
+  {
+    qvtkReconnect(oldConnectorNode, newConnectorNode, vtkMRMLIGTLConnectorNode::ConnectedEvent, this, SLOT(onConnectorNodeConnected()));
+    qvtkReconnect(oldConnectorNode, newConnectorNode, vtkMRMLIGTLConnectorNode::DisconnectedEvent, this, SLOT(onConnectorNodeDisconnected()));
+    d->ParameterNode->SetAndObserveOpenIGTLinkConnectorNode(newConnectorNode);
+    if (newConnectorNode->GetState() == vtkMRMLIGTLConnectorNode::StateConnected)
+    {
+      this->onConnectorNodeConnected();
+    }
+    else
+    {
+      this->onConnectorNodeDisconnected();
+    }
+  }
 
   d->ParameterNode->SetAndObserveOpenIGTLinkConnectorNode(vtkMRMLIGTLConnectorNode::SafeDownCast(d->OpenIGTLinkConnectorNodeSelector->currentNode()));
   d->ParameterNode->SetCurrentCaptureID(d->CaptureIDSelector->currentText().toStdString());
@@ -739,30 +736,6 @@ void qSlicerPlusRemoteModuleWidget::onParameterSetSelected(vtkMRMLNode* node)
   vtkSmartPointer<vtkMRMLPlusRemoteNode> newNode = vtkMRMLPlusRemoteNode::SafeDownCast(node);
   this->setParameterNode(node);
   this->updateWidgetFromMRML();
-}
-
-//-----------------------------------------------------------------------------
-void qSlicerPlusRemoteModuleWidget::onConnectorNodeSelected(vtkMRMLNode* node)
-{
-  Q_D(qSlicerPlusRemoteModuleWidget);
-
-  vtkSmartPointer<vtkMRMLIGTLConnectorNode> connectorNode = vtkMRMLIGTLConnectorNode::SafeDownCast(node);
-  if (connectorNode)
-  {
-    qvtkReconnect(d->ParameterNode->GetOpenIGTLinkConnectorNode(), connectorNode, vtkMRMLIGTLConnectorNode::ConnectedEvent, this, SLOT(onConnectorNodeConnected()));
-    qvtkReconnect(d->ParameterNode->GetOpenIGTLinkConnectorNode(), connectorNode, vtkMRMLIGTLConnectorNode::DisconnectedEvent, this, SLOT(onConnectorNodeDisconnected()));
-    d->ParameterNode->SetAndObserveOpenIGTLinkConnectorNode(connectorNode);
-
-    if (connectorNode->GetState() == vtkMRMLIGTLConnectorNode::StateConnected)
-    {
-      this->onConnectorNodeConnected();
-    }
-    else
-    {
-      this->onConnectorNodeDisconnected();
-    }
-  }
-
 }
 
 //-----------------------------------------------------------------------------
@@ -888,6 +861,12 @@ void qSlicerPlusRemoteModuleWidget::onLiveReconstructionShowHideROIButtonClicked
 void qSlicerPlusRemoteModuleWidget::onUpdateTransformButtonClicked()
 {
   Q_D(qSlicerPlusRemoteModuleWidget);
+  vtkSmartPointer<vtkMRMLLinearTransformNode> updatedTransformNode = vtkMRMLLinearTransformNode::SafeDownCast(d->ConfigUpdateTransformSelector->currentNode());
+  if (!updatedTransformNode)
+  {
+    return;
+  }
+  d->ParameterNode->SetAndObserveUpdatedTransformNode(updatedTransformNode);
   d->logic()->UpdateTransform(d->ParameterNode);
 }
 

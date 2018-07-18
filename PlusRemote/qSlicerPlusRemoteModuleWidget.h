@@ -70,7 +70,6 @@ protected slots:
   virtual void updateParameterNodeFromGui();
 
   virtual void onParameterSetSelected(vtkMRMLNode* node);
-  virtual void onConnectorNodeSelected(vtkMRMLNode* node);
 
   virtual void onConnectorNodeConnected();
   virtual void onConnectorNodeDisconnected();

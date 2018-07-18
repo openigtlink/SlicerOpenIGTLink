@@ -24,6 +24,9 @@
 // OpenIGTLinkIF includes
 #include "vtkMRMLIGTLConnectorNode.h"
 
+// Slicer includes
+#include <vtkMRMLLinearTransformNode.h>
+
 // std includes
 #include <sstream>
 
@@ -36,6 +39,7 @@
 //------------------------------------------------------------------------------
 const char* vtkMRMLPlusRemoteNode::CONNECTOR_REFERENCE_ROLE = "OpenIGTLinkConnectorNode";
 const char* vtkMRMLPlusRemoteNode::ROI_REFERENCE_ROLE = "LiveReconstructionROINode";
+const char* vtkMRMLPlusRemoteNode::UPDATE_TRANSFORM_REFERENCE_ROLE = "UpdateTransformNode";
 
 //------------------------------------------------------------------------------
 vtkMRMLNodeNewMacro(vtkMRMLPlusRemoteNode);
@@ -130,16 +134,30 @@ void vtkMRMLPlusRemoteNode::SetAndObserveOpenIGTLinkConnectorNode(vtkMRMLIGTLCon
     vtkErrorMacro("Cannot set reference: the referenced and referencing node are not in the same scene");
     return;
   }
-
-  vtkMRMLIGTLConnectorNode* oldNode = this->GetOpenIGTLinkConnectorNode();
   this->SetNodeReferenceID(CONNECTOR_REFERENCE_ROLE, (node ? node->GetID() : NULL));
-
 }
 
 //----------------------------------------------------------------------------
 vtkMRMLIGTLConnectorNode* vtkMRMLPlusRemoteNode::GetOpenIGTLinkConnectorNode()
 {
   return vtkMRMLIGTLConnectorNode::SafeDownCast(this->GetNodeReference(CONNECTOR_REFERENCE_ROLE));
+}
+
+//----------------------------------------------------------------------------
+void vtkMRMLPlusRemoteNode::SetAndObserveUpdatedTransformNode(vtkMRMLLinearTransformNode* node)
+{
+  if (node && this->Scene != node->GetScene())
+  {
+    vtkErrorMacro("Cannot set reference: the referenced and referencing node are not in the same scene");
+    return;
+  }
+  this->SetNodeReferenceID(UPDATE_TRANSFORM_REFERENCE_ROLE, (node ? node->GetID() : NULL));
+}
+
+//----------------------------------------------------------------------------
+vtkMRMLLinearTransformNode* vtkMRMLPlusRemoteNode::GetUpdatedTransformNode()
+{
+  return vtkMRMLLinearTransformNode::SafeDownCast(this->GetNodeReference(UPDATE_TRANSFORM_REFERENCE_ROLE));
 }
 
 //----------------------------------------------------------------------------
