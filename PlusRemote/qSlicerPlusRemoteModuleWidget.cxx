@@ -214,29 +214,6 @@ void qSlicerPlusRemoteModuleWidget::setMRMLScene(vtkMRMLScene* scene)
 {
   Q_D(qSlicerPlusRemoteModuleWidget);
   this->Superclass::setMRMLScene(scene);
-
-  if (!scene)
-  {
-    d->PlusServerLauncherRemoteWidget->setParameterSetNode(NULL);
-    return;
-  }
-
-  vtkSmartPointer<vtkCollection> collection =
-    vtkSmartPointer<vtkCollection>::Take(this->mrmlScene()->GetNodesByClassByName("vtkMRMLPlusServerLauncherRemoteNode", "PlusRemote"));
-
-  vtkMRMLPlusServerLauncherRemoteNode* plusServerLauncherRemoteNode = NULL;
-  if (collection->GetNumberOfItems() > 0)
-  {
-    plusServerLauncherRemoteNode = vtkMRMLPlusServerLauncherRemoteNode::SafeDownCast(collection->GetItemAsObject(0));
-  }
-
-  if (!plusServerLauncherRemoteNode)
-  {
-    plusServerLauncherRemoteNode = vtkMRMLPlusServerLauncherRemoteNode::SafeDownCast(
-      this->mrmlScene()->AddNewNodeByClass("vtkMRMLPlusServerLauncherRemoteNode"));
-  }
-
-  d->PlusServerLauncherRemoteWidget->setParameterSetNode(plusServerLauncherRemoteNode);
 }
 
 //-----------------------------------------------------------------------------
@@ -745,6 +722,11 @@ void qSlicerPlusRemoteModuleWidget::onParameterSetSelected(vtkMRMLNode* node)
 void qSlicerPlusRemoteModuleWidget::onConnectorNodeSelected(vtkMRMLNode* node)
 {
   Q_D(qSlicerPlusRemoteModuleWidget);
+
+  if (!d->ParameterNode)
+  {
+    return;
+  }
 
   vtkSmartPointer<vtkMRMLIGTLConnectorNode> connectorNode = vtkMRMLIGTLConnectorNode::SafeDownCast(node);
   if (connectorNode)

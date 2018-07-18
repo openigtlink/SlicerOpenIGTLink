@@ -545,25 +545,37 @@ void qMRMLPlusServerLauncherRemoteWidget::setMRMLScene(vtkMRMLScene* newScene)
 
   d->ConfigFileSelectorComboBox->setMRMLScene(this->mrmlScene());
 
-  // Make connections that depend on the Slicer application
-  //QObject::connect(qSlicerApplication::application()->layoutManager(), SIGNAL(layoutChanged(int)), this, SLOT(onLayoutChanged(int)));
+  this->initializeParameterSetNode();
 
   // Update UI
   this->updateWidgetFromMRML();
 
-  // observe close event so can re-add a parameters node if necessary
+  // observe close event so we can re-add a parameters node if necessary
   this->qvtkConnect(this->mrmlScene(), vtkMRMLScene::EndCloseEvent, this, SLOT(onMRMLSceneEndCloseEvent()));
 }
 
-////------------------------------------------------------------------------------
-//void qMRMLPlusServerLauncherRemoteWidget::initializeParameterSetNode()
-//{
-//  Q_D(qMRMLPlusServerLauncherRemoteWidget);
-//  if (!d->ParameterSetNode)
-//  {
-//    return;
-//  }
-//}
+//------------------------------------------------------------------------------
+void qMRMLPlusServerLauncherRemoteWidget::initializeParameterSetNode()
+{
+  Q_D(qMRMLPlusServerLauncherRemoteWidget);
+
+  vtkSmartPointer<vtkCollection> collection =
+    vtkSmartPointer<vtkCollection>::Take(this->mrmlScene()->GetNodesByClassByName("vtkMRMLPlusServerLauncherRemoteNode", "PlusRemote"));
+
+  vtkMRMLPlusServerLauncherRemoteNode* plusServerLauncherRemoteNode = NULL;
+  if (collection->GetNumberOfItems() > 0)
+  {
+    plusServerLauncherRemoteNode = vtkMRMLPlusServerLauncherRemoteNode::SafeDownCast(collection->GetItemAsObject(0));
+  }
+
+  if (!plusServerLauncherRemoteNode)
+  {
+    plusServerLauncherRemoteNode = vtkMRMLPlusServerLauncherRemoteNode::SafeDownCast(
+      this->mrmlScene()->AddNewNodeByClass("vtkMRMLPlusServerLauncherRemoteNode"));
+  }
+
+  this->setParameterSetNode(plusServerLauncherRemoteNode);
+}
 
 //-----------------------------------------------------------------------------
 void qMRMLPlusServerLauncherRemoteWidget::onMRMLSceneEndCloseEvent()
@@ -571,7 +583,7 @@ void qMRMLPlusServerLauncherRemoteWidget::onMRMLSceneEndCloseEvent()
   Q_D(qMRMLPlusServerLauncherRemoteWidget);
 
   this->setParameterSetNode(NULL);
-  //this->initializeParameterSetNode();
+  this->initializeParameterSetNode();
   this->updateWidgetFromMRML();
 }
 
