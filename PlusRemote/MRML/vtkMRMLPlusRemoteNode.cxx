@@ -28,6 +28,9 @@
 #include <sstream>
 
 // VTK include
+#include <vtkStringArray.h>
+
+// vtksys includes
 #include <vtksys/SystemTools.hxx>
 
 //------------------------------------------------------------------------------
@@ -39,13 +42,7 @@ vtkMRMLNodeNewMacro(vtkMRMLPlusRemoteNode);
 
 //----------------------------------------------------------------------------
 vtkMRMLPlusRemoteNode::vtkMRMLPlusRemoteNode()
-  : CaptureIDs()
-  , CurrentCaptureID("")
-
-  , VolumeReconstructorIDs()
-  , CurrentVolumeReconstructorID("")
-
-  , RecordingStatus(PLUS_REMOTE_IDLE)
+  : RecordingStatus(PLUS_REMOTE_IDLE)
   , RecordingFilename("Recording.mha")
   , RecordingFilenameCompletion(false)
   , RecordingEnableCompression(false)
@@ -53,7 +50,6 @@ vtkMRMLPlusRemoteNode::vtkMRMLPlusRemoteNode()
   , OfflineReconstructionStatus(PLUS_REMOTE_IDLE)
   , OfflineReconstructionSpacing(3.0)
   , OfflineReconstructionDevice("RecVol_Reference")
-  , OfflineReconstructionInputFilename("")
   , OfflineReconstructionOutputFilename("RecVol_Reference.mha")
   , OfflineReconstructionShowResultOnCompletion(true)
 
@@ -144,6 +140,20 @@ void vtkMRMLPlusRemoteNode::SetAndObserveOpenIGTLinkConnectorNode(vtkMRMLIGTLCon
 vtkMRMLIGTLConnectorNode* vtkMRMLPlusRemoteNode::GetOpenIGTLinkConnectorNode()
 {
   return vtkMRMLIGTLConnectorNode::SafeDownCast(this->GetNodeReference(CONNECTOR_REFERENCE_ROLE));
+}
+
+//----------------------------------------------------------------------------
+void vtkMRMLPlusRemoteNode::GetDeviceIDs(vtkStringArray* stringArray)
+{
+  if (!stringArray)
+  {
+    return;
+  }
+
+  for (std::vector<std::string>::iterator deviceIDIt = this->DeviceIDs.begin(); deviceIDIt != this->DeviceIDs.end(); ++deviceIDIt)
+  {
+    stringArray->InsertNextValue((*deviceIDIt).c_str());
+  }
 }
 
 //----------------------------------------------------------------------------
@@ -330,6 +340,10 @@ void vtkMRMLPlusRemoteNode::WriteXML(ostream& of, int nIndent)
   vtkMRMLWriteXMLStdStringVectorMacro(volumeReconstructorIDs, VolumeReconstructorIDs, std::vector);
   vtkMRMLWriteXMLStdStringMacro(currentVolumeReconstructorID, CurrentVolumeReconstructorID);
 
+  vtkMRMLWriteXMLStdStringVectorMacro(deviceIDs, DeviceIDs, std::vector);
+  vtkMRMLWriteXMLStdStringMacro(currentDeviceID, CurrentDeviceID);
+  vtkMRMLWriteXMLStdStringMacro(deviceIDType, DeviceIDType);
+
   vtkMRMLWriteXMLEnumMacro(recordingStatus, RecordingStatus);
   vtkMRMLWriteXMLStdStringMacro(recordingMessage, RecordingMessage);
   vtkMRMLWriteXMLStdStringMacro(recordingFilename, RecordingFilename);
@@ -380,8 +394,13 @@ void vtkMRMLPlusRemoteNode::ReadXMLAttributes(const char** atts)
 
   vtkMRMLReadXMLStdStringVectorMacro(captureIDs, CaptureIDs, std::vector);
   vtkMRMLReadXMLStdStringMacro(currentCaptureID, CurrentCaptureID);
+
   vtkMRMLReadXMLStdStringVectorMacro(volumeReconstructorIDs, VolumeReconstructorIDs, std::vector);
   vtkMRMLReadXMLStdStringMacro(currentVolumeReconstructorID, CurrentVolumeReconstructorID);
+
+  vtkMRMLReadXMLStdStringVectorMacro(deviceIDs, DeviceIDs, std::vector);
+  vtkMRMLReadXMLStdStringMacro(currentDeviceID, CurrentDeviceID);
+  vtkMRMLReadXMLStdStringMacro(deviceIDType, DeviceIDType);
 
   vtkMRMLReadXMLEnumMacro(recordingStatus, RecordingStatus);
   vtkMRMLReadXMLStdStringMacro(recordingMessage, RecordingMessage);
@@ -437,6 +456,10 @@ void vtkMRMLPlusRemoteNode::Copy(vtkMRMLNode *anode)
   vtkMRMLCopyStdStringMacro(CurrentVolumeReconstructorID);
   vtkMRMLCopyStdStringVectorMacroMacro(VolumeReconstructorIDs);
 
+  vtkMRMLCopyStdStringVectorMacroMacro(DeviceIDs);
+  vtkMRMLCopyStdStringMacro(CurrentDeviceID);
+  vtkMRMLCopyStdStringMacro(DeviceIDType);
+
   vtkMRMLCopyEnumMacro(RecordingStatus);
   vtkMRMLCopyStdStringMacro(RecordingMessage);
   vtkMRMLCopyStdStringMacro(RecordingFilename);
@@ -491,6 +514,10 @@ void vtkMRMLPlusRemoteNode::PrintSelf(ostream& os, vtkIndent indent)
 
   vtkMRMLPrintStdStringMacro(CurrentVolumeReconstructorID);
   vtkMRMLPrintStdStringVectorMacro(VolumeReconstructorIDs, std::vector);
+
+  vtkMRMLPrintStdStringVectorMacro(DeviceIDs, std::vector);
+  vtkMRMLPrintStdStringMacro(CurrentDeviceID);
+  vtkMRMLPrintStdStringMacro(DeviceIDType);
 
   vtkMRMLPrintEnumMacro(RecordingStatus);
   vtkMRMLPrintStdStringMacro(RecordingMessage);

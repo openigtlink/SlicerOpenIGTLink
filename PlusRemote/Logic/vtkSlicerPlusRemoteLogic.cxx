@@ -91,6 +91,7 @@ struct ParameterNodeCommands
   bool CommandBlocking;
   ParameterNodeCommand CmdGetCaptureDeviceIDs;
   ParameterNodeCommand CmdGetReconstructorDeviceIDs;
+  ParameterNodeCommand CmdGetDeviceIDs;
   ParameterNodeCommand CmdStartVolumeReconstruction;
   ParameterNodeCommand CmdStopVolumeReconstruction;
   ParameterNodeCommand CmdReconstructRecorded;
@@ -108,6 +109,7 @@ struct ParameterNodeCommands
     , CommandBlocking(false)
     , CmdGetCaptureDeviceIDs(ParameterNodeCommand())
     , CmdGetReconstructorDeviceIDs(ParameterNodeCommand())
+    , CmdGetDeviceIDs(ParameterNodeCommand())
     , CmdStartVolumeReconstruction(ParameterNodeCommand())
     , CmdStopVolumeReconstruction(ParameterNodeCommand())
     , CmdReconstructRecorded(ParameterNodeCommand())
@@ -128,6 +130,10 @@ struct ParameterNodeCommands
     this->CmdGetReconstructorDeviceIDs.Command->SetTimeoutSec(this->CommandTimeoutSec);
     this->CmdGetReconstructorDeviceIDs.Command->SetName("RequestDeviceIds");
     this->CmdGetReconstructorDeviceIDs.Command->SetBlocking(this->CommandBlocking);
+
+    this->CmdGetDeviceIDs.Command->SetTimeoutSec(this->CommandTimeoutSec);
+    this->CmdGetDeviceIDs.Command->SetName("RequestDeviceIds");
+    this->CmdGetDeviceIDs.Command->SetBlocking(this->CommandBlocking);
 
     this->CmdStartVolumeReconstruction.Command->SetTimeoutSec(this->CommandTimeoutSec);
     this->CmdStartVolumeReconstruction.Command->SetName("StartVolumeReconstruction");
@@ -235,7 +241,7 @@ void vtkSlicerPlusRemoteLogic::CreateDefaultParameterSet()
 }
 
 //---------------------------------------------------------------------------
-void vtkSlicerPlusRemoteLogic::GetCaptureDeviceIDs(vtkMRMLPlusRemoteNode* parameterNode)
+void vtkSlicerPlusRemoteLogic::RequestCaptureDeviceIDs(vtkMRMLPlusRemoteNode* parameterNode)
 {
   if (!parameterNode)
   {
@@ -260,12 +266,12 @@ void vtkSlicerPlusRemoteLogic::GetCaptureDeviceIDs(vtkMRMLPlusRemoteNode* parame
   commands->CmdGetCaptureDeviceIDs.Command->SetCommandContent(ss.str());
   commands->CmdGetCaptureDeviceIDs.Callback->Logic = this;
   commands->CmdGetCaptureDeviceIDs.Callback->ParameterNode = parameterNode;
-  commands->CmdGetCaptureDeviceIDs.Callback->SetCallback(vtkSlicerPlusRemoteLogic::onGetCaptureDeviceCommandResponseReceived);
+  commands->CmdGetCaptureDeviceIDs.Callback->SetCallback(vtkSlicerPlusRemoteLogic::onRequestCaptureDeviceIDsCompleted);
   connectorNode->SendCommand(commands->CmdGetCaptureDeviceIDs.Command);
 }
 
 //---------------------------------------------------------------------------
-void vtkSlicerPlusRemoteLogic::GetVolumeReconstructorDeviceIDs(vtkMRMLPlusRemoteNode* parameterNode)
+void vtkSlicerPlusRemoteLogic::RequestVolumeReconstructorDeviceIDs(vtkMRMLPlusRemoteNode* parameterNode)
 {
   if (!parameterNode)
   {
@@ -290,8 +296,41 @@ void vtkSlicerPlusRemoteLogic::GetVolumeReconstructorDeviceIDs(vtkMRMLPlusRemote
   commands->CmdGetReconstructorDeviceIDs.Command->SetCommandContent(ss.str());
   commands->CmdGetReconstructorDeviceIDs.Callback->Logic = this;
   commands->CmdGetReconstructorDeviceIDs.Callback->ParameterNode = parameterNode;
-  commands->CmdGetReconstructorDeviceIDs.Callback->SetCallback(vtkSlicerPlusRemoteLogic::onGetVolumeReconstructorDeviceCommandResponseReceived);
+  commands->CmdGetReconstructorDeviceIDs.Callback->SetCallback(vtkSlicerPlusRemoteLogic::onRequestVolumeReconstructorDeviceIDsCompleted);
   connectorNode->SendCommand(commands->CmdGetReconstructorDeviceIDs.Command);
+}
+
+//---------------------------------------------------------------------------
+void vtkSlicerPlusRemoteLogic::RequestDeviceIDs(vtkMRMLPlusRemoteNode* parameterNode)
+{
+  if (!parameterNode)
+  {
+    return;
+  }
+
+  vtkMRMLIGTLConnectorNode* connectorNode = parameterNode->GetOpenIGTLinkConnectorNode();
+  if (!connectorNode)
+  {
+    return;
+  }
+
+  ParameterNodeCommands* commands = &this->NodeCommandMap[parameterNode];
+
+  vtkNew<vtkXMLDataElement> commandElement;
+  commandElement->SetName("Command");
+  commandElement->SetAttribute("Name", commands->CmdGetReconstructorDeviceIDs.Command->GetName().c_str());
+  if (parameterNode->GetDeviceIDType() != "")
+  {
+    commandElement->SetAttribute("DeviceType", parameterNode->GetDeviceIDType().c_str());
+  }
+  std::stringstream ss;
+  vtkXMLUtilities::FlattenElement(commandElement, ss);
+
+  commands->CmdGetDeviceIDs.Command->SetCommandContent(ss.str());
+  commands->CmdGetDeviceIDs.Callback->Logic = this;
+  commands->CmdGetDeviceIDs.Callback->ParameterNode = parameterNode;
+  commands->CmdGetDeviceIDs.Callback->SetCallback(vtkSlicerPlusRemoteLogic::onRequestDeviceIDsCompleted);
+  connectorNode->SendCommand(commands->CmdGetDeviceIDs.Command);
 }
 
 //---------------------------------------------------------------------------
@@ -557,7 +596,7 @@ void vtkSlicerPlusRemoteLogic::GetLiveVolumeReconstructionSnapshot(vtkMRMLPlusRe
   {
     return;
   }
-  
+
   // Update command attributes
   ParameterNodeCommands* commands = &this->NodeCommandMap[parameterNode];
 
@@ -891,7 +930,7 @@ void vtkSlicerPlusRemoteLogic::InitializeROIFromVolume(vtkMRMLAnnotationROINode*
 }
 
 //---------------------------------------------------------------------------
-void vtkSlicerPlusRemoteLogic::onGetCaptureDeviceCommandResponseReceived(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void *vtkNotUsed(calldata))
+void vtkSlicerPlusRemoteLogic::onRequestCaptureDeviceIDsCompleted(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void *vtkNotUsed(calldata))
 {
   igtlioCommandPointer command = igtlioCommand::SafeDownCast(caller);
   if (!command)
@@ -910,7 +949,7 @@ void vtkSlicerPlusRemoteLogic::onGetCaptureDeviceCommandResponseReceived(vtkObje
   {
     return;
   }
-  
+
   vtkSmartPointer<vtkXMLDataElement> responseXML = vtkXMLUtilities::ReadElementFromString(responseContent.c_str());
   if (!responseXML)
   {
@@ -919,7 +958,8 @@ void vtkSlicerPlusRemoteLogic::onGetCaptureDeviceCommandResponseReceived(vtkObje
   std::string captureDeviceIDsListString = responseXML->GetAttribute("Message") ? responseXML->GetAttribute("Message") : "";
 
   std::vector<std::string> captureDevicesIDs;
-  if (!captureDeviceIDsListString.empty())
+  // If the command was not successful, then there are no matching device ids and captureDevicesIDs should remain empty
+  if (!captureDeviceIDsListString.empty() && command->GetSuccessful())
   {
     std::istringstream ss(captureDeviceIDsListString);
     std::string captureDeviceID;
@@ -934,7 +974,7 @@ void vtkSlicerPlusRemoteLogic::onGetCaptureDeviceCommandResponseReceived(vtkObje
 }
 
 //---------------------------------------------------------------------------
-void vtkSlicerPlusRemoteLogic::onGetVolumeReconstructorDeviceCommandResponseReceived(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void *vtkNotUsed(calldata))
+void vtkSlicerPlusRemoteLogic::onRequestVolumeReconstructorDeviceIDsCompleted(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void *vtkNotUsed(calldata))
 {
   igtlioCommandPointer command = igtlioCommand::SafeDownCast(caller);
   if (!command)
@@ -962,7 +1002,8 @@ void vtkSlicerPlusRemoteLogic::onGetVolumeReconstructorDeviceCommandResponseRece
   }
 
   std::vector<std::string> volumeReconstructorDeviceIDs;
-  if (!volumeReconstructorDeviceIDsListString.empty())
+  // If the command was not successful, then there are no matching device ids and volumeReconstructorDeviceIDs should remain empty
+  if (!volumeReconstructorDeviceIDsListString.empty() && command->GetSuccessful())
   {
     std::istringstream ss(volumeReconstructorDeviceIDsListString);
     std::string volumeReconstructorDeviceID;
@@ -975,6 +1016,51 @@ void vtkSlicerPlusRemoteLogic::onGetVolumeReconstructorDeviceCommandResponseRece
   parameterNode->SetVolumeReconstructorIDs(volumeReconstructorDeviceIDs);
   parameterNode->InvokeEvent(vtkMRMLPlusRemoteNode::VolumeReconstructorIdsReceivedEvent);
 }
+
+//---------------------------------------------------------------------------
+void vtkSlicerPlusRemoteLogic::onRequestDeviceIDsCompleted(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void *vtkNotUsed(calldata))
+{
+  igtlioCommandPointer command = igtlioCommand::SafeDownCast(caller);
+  if (!command || !command->GetSuccessful())
+  {
+    return;
+  }
+
+  vtkPlusRemoteLogicCallbackCommand* callback = static_cast<vtkPlusRemoteLogicCallbackCommand*>(clientdata);
+  vtkSlicerPlusRemoteLogic* self = callback->Logic;
+  vtkMRMLPlusRemoteNode* parameterNode = callback->ParameterNode;
+
+  std::string responseContent = command->GetResponseContent();
+  parameterNode->SetResponseText(responseContent);
+
+  if (command->GetStatus() != igtlioCommandStatus::CommandResponseReceived)
+  {
+    return;
+  }
+
+  std::string deviceIDsListString = "";
+  vtkSmartPointer<vtkXMLDataElement> responseXML = vtkXMLUtilities::ReadElementFromString(responseContent.c_str());
+  if (responseXML)
+  {
+    deviceIDsListString = responseXML->GetAttribute("Message") ? responseXML->GetAttribute("Message") : "";
+  }
+
+  std::vector<std::string> deviceIDs;
+  // If the command was not successful, then there are no matching device ids and deviceIDs should remain empty
+  if (!deviceIDsListString.empty() && command->GetSuccessful())
+  {
+    std::istringstream ss(deviceIDsListString);
+    std::string deviceID;
+    while (std::getline(ss, deviceID, ','))
+    {
+      deviceIDs.push_back(deviceID);
+    }
+  }
+
+  parameterNode->SetDeviceIDs(deviceIDs);
+  parameterNode->InvokeEvent(vtkMRMLPlusRemoteNode::DeviceIdsReceivedEvent);
+}
+
 
 //---------------------------------------------------------------------------
 void vtkSlicerPlusRemoteLogic::onRecordingStarted(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void *vtkNotUsed(calldata))
@@ -990,7 +1076,7 @@ void vtkSlicerPlusRemoteLogic::onRecordingStarted(vtkObject* caller, unsigned lo
   vtkMRMLPlusRemoteNode* parameterNode = callback->ParameterNode;
 
   std::string responseContent = command->GetResponseContent();
-  parameterNode->SetResponseText(responseContent);  
+  parameterNode->SetResponseText(responseContent);
   parameterNode->SetRecordingStatus(vtkMRMLPlusRemoteNode::PLUS_REMOTE_RECORDING);
   parameterNode->SetRecordingMessage("Recording in progress");
   parameterNode->InvokeEvent(vtkMRMLPlusRemoteNode::RecordingStartedEvent);
@@ -1039,26 +1125,6 @@ void vtkSlicerPlusRemoteLogic::onRecordingCompleted(vtkObject* caller, unsigned 
   }
   parameterNode->InvokeEvent(vtkMRMLPlusRemoteNode::RecordingCompletedEvent);
 }
-
-////---------------------------------------------------------------------------
-//void vtkSlicerPlusRemoteLogic::onOfflineVolumeReconstructionStarted(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void *vtkNotUsed(calldata))
-//{
-//  igtlioCommandPointer command = igtlioCommand::SafeDownCast(caller);
-//  if (!command)
-//  {
-//    return;
-//  }
-//
-//  parameterNode->SetRecordingStatus(vtkMRMLPlusRemoteNode::PLUS_REMOTE_RECORDING);
-//  parameterNode->SetRecordingMessage("Recording in progress");
-//
-//  vtkPlusRemoteLogicCallbackCommand* callback = static_cast<vtkPlusRemoteLogicCallbackCommand*>(clientdata);
-//  vtkSlicerPlusRemoteLogic* self = callback->Logic;
-//  vtkMRMLPlusRemoteNode* parameterNode = callback->ParameterNode;
-//
-//  std::string responseContent = command->GetResponseContent();
-//  parameterNode->SetResponseText(responseContent);
-//}
 
 //---------------------------------------------------------------------------
 void vtkSlicerPlusRemoteLogic::onOfflineVolumeReconstructionCompleted(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void *vtkNotUsed(calldata))
@@ -1424,7 +1490,7 @@ void vtkSlicerPlusRemoteLogic::onSnapshotAquiredFinalize(vtkObject* caller, unsi
     self->ShowVolumeInSliceViewers(snapshotVolumeNode, sliceViews);
     self->ShowVolumeRendering(snapshotVolumeNode);
   }
-    
+
   parameterNode->InvokeEvent(vtkMRMLPlusRemoteNode::LiveVolumeReconstructionSnapshotReceivedEvent);
 }
 
