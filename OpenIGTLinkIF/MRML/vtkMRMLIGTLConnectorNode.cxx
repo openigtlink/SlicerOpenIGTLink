@@ -261,6 +261,7 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
       if (strcmp(modifiedNode->GetName(), deviceName.c_str()) == 0)
       {
         vtkMRMLBitStreamNode* bitStreamNode = vtkMRMLBitStreamNode::SafeDownCast(modifiedNode);
+        bitStreamNode->SetIJKToRASMatrix(videoDevice->GetContent().transform);
         bitStreamNode->SetAndObserveImageData(videoDevice->GetContent().image);
       }
       // The BitstreamNode has its own handling of the device modified event
