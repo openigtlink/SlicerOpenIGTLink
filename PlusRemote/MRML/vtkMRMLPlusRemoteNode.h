@@ -42,6 +42,7 @@
 #include "vtkSlicerPlusRemoteModuleMRMLExport.h"
 
 class vtkMRMLIGTLConnectorNode;
+class vtkMRMLLinearTransformNode;
 
 class VTK_SLICER_PLUSREMOTE_MODULE_MRML_EXPORT vtkMRMLPlusRemoteNode : public vtkMRMLNode
 {
@@ -67,6 +68,7 @@ public:
 
   static const char* CONNECTOR_REFERENCE_ROLE;
   static const char* ROI_REFERENCE_ROLE;
+  static const char* UPDATE_TRANSFORM_REFERENCE_ROLE;
 
   enum PlusRemoteStatus
   {
@@ -321,7 +323,11 @@ public:
   void SetAndObserveOpenIGTLinkConnectorNode(vtkMRMLIGTLConnectorNode* connectorNode);
   vtkMRMLIGTLConnectorNode* GetOpenIGTLinkConnectorNode();
 
-  void SetAndObserveLiveReconstructionROINode(vtkMRMLAnnotationROINode* connectorNode);
+  void SetAndObserveUpdatedTransformNode(vtkMRMLLinearTransformNode* transformNode);
+  vtkMRMLLinearTransformNode* GetUpdatedTransformNode();
+  
+
+  void SetAndObserveLiveReconstructionROINode(vtkMRMLAnnotationROINode* annotationNode);
   vtkMRMLAnnotationROINode* GetLiveReconstructionROINode();
 
   vtkSetMacro(ResponseText, std::string);

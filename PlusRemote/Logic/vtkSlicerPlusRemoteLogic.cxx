@@ -679,6 +679,7 @@ void vtkSlicerPlusRemoteLogic::SaveConfigFile(vtkMRMLPlusRemoteNode* parameterNo
   commands->CmdSaveConfig.Command->SetCommandContent(ss.str());
   commands->CmdSaveConfig.Callback->Logic = this;
   commands->CmdSaveConfig.Callback->ParameterNode = parameterNode;
+  commands->CmdSaveConfig.Callback->SetCallback(vtkSlicerPlusRemoteLogic::onPrintCommandResponseRequested);
   connectorNode->SendCommand(commands->CmdSaveConfig.Command);
 
 }
@@ -692,7 +693,7 @@ void vtkSlicerPlusRemoteLogic::UpdateTransform(vtkMRMLPlusRemoteNode* parameterN
   }
 
   vtkMRMLIGTLConnectorNode* connectorNode = parameterNode->GetOpenIGTLinkConnectorNode();
-  vtkMRMLLinearTransformNode* transformNode = NULL; //TODO
+  vtkMRMLLinearTransformNode* transformNode = parameterNode->GetUpdatedTransformNode();
   if (!connectorNode || !transformNode)
   {
     return;
@@ -733,7 +734,7 @@ void vtkSlicerPlusRemoteLogic::UpdateTransform(vtkMRMLPlusRemoteNode* parameterN
   commands->CmdUpdateTransform.Command->SetCommandContent(ss.str());
   commands->CmdUpdateTransform.Callback->Logic = this;
   commands->CmdUpdateTransform.Callback->ParameterNode = parameterNode;
-  //commands.CmdUpdateTransform.Callback->SetCallback();
+  commands->CmdUpdateTransform.Callback->SetCallback(vtkSlicerPlusRemoteLogic::onPrintCommandResponseRequested);
 
   // Send command
   connectorNode->SendCommand(commands->CmdUpdateTransform.Command);
@@ -1581,6 +1582,23 @@ void vtkSlicerPlusRemoteLogic::onLiveVolumeReconstructedFinalized(vtkObject* cal
   }
 
   parameterNode->InvokeEvent(vtkMRMLPlusRemoteNode::LiveVolumeReconstructionCompletedEvent);
+}
+
+//---------------------------------------------------------------------------
+void vtkSlicerPlusRemoteLogic::onPrintCommandResponseRequested(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void *calldata)
+{
+  igtlioCommandPointer command = igtlioCommand::SafeDownCast(caller);
+  if (!command)
+  {
+    return;
+  }
+
+  vtkPlusRemoteLogicCallbackCommand* callback = static_cast<vtkPlusRemoteLogicCallbackCommand*>(clientdata);
+  vtkSlicerPlusRemoteLogic* self = callback->Logic;
+  vtkMRMLPlusRemoteNode* parameterNode = callback->ParameterNode;
+
+  std::string responseContent = command->GetResponseContent();
+  parameterNode->SetResponseText(responseContent);
 }
 
 //---------------------------------------------------------------------------

@@ -60,7 +60,8 @@ public slots:
   /// Set the MRML scene associated with the widget
   virtual void setMRMLScene(vtkMRMLScene* newScene);
 
-  //virtual void initializeParameterSetNode();
+  /// Create a parameter node if one doesn't exist
+  virtual void initializeParameterSetNode();
 
   ///
   virtual void onMRMLSceneEndCloseEvent();
