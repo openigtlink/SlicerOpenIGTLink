@@ -55,10 +55,15 @@ public:
   vtkSlicerPlusRemoteLogic* logic() const;
 
 private:
-  QMessageBox*            RecordingStatus;
-  QMessageBox*            OfflineReconstructionStatus;
-  QMessageBox*            ScoutScanStatus;
-  QMessageBox*            LiveReconstructionStatus;
+  QLabel*                 RecordingStatus;
+  QLabel*                 OfflineReconstructionStatus;
+  QLabel*                 ScoutScanStatus;
+  QLabel*                 LiveReconstructionStatus;
+
+  QSize                   StatusPixmapSize = QSize(60, 60);
+  QPixmap                 InformationPixmap;
+  QPixmap                 WarningPixmap;
+  QPixmap                 CriticalPixmap;
 
   QIcon                   IconRecord;
   QIcon                   IconStop;
@@ -78,6 +83,10 @@ qSlicerPlusRemoteModuleWidgetPrivate::qSlicerPlusRemoteModuleWidgetPrivate(qSlic
   , OfflineReconstructionStatus(NULL)
   , ScoutScanStatus(NULL)
   , LiveReconstructionStatus(NULL)
+
+  , InformationPixmap(object.style()->standardIcon(QStyle::SP_MessageBoxInformation).pixmap(this->StatusPixmapSize))
+  , WarningPixmap(object.style()->standardIcon(QStyle::SP_MessageBoxWarning).pixmap(this->StatusPixmapSize))
+  , CriticalPixmap(object.style()->standardIcon(QStyle::SP_MessageBoxCritical).pixmap(this->StatusPixmapSize))
 
   , IconRecord(QIcon(":/Icons/icon_Record.png"))
   , IconStop(QIcon(":/Icons/icon_Stop.png"))
@@ -118,31 +127,27 @@ void qSlicerPlusRemoteModuleWidget::setup()
   this->Superclass::setup();
 
   // Add message boxes
-  d->RecordingStatus = new QMessageBox(this);
+  d->RecordingStatus = new QLabel(this);
   d->RecordingStatus->setToolTip("Recording status");
-  d->RecordingStatus->setIcon(QMessageBox::Information);
-  d->RecordingStatus->setStandardButtons(QMessageBox::NoButton);
+  d->RecordingStatus->setPixmap(d->InformationPixmap);
   d->RecordingStatus->setEnabled(false);
   d->RecordingLayout->addWidget(d->RecordingStatus);
 
-  d->OfflineReconstructionStatus = new QMessageBox(this);
+  d->OfflineReconstructionStatus = new QLabel(this);
   d->OfflineReconstructionStatus->setToolTip("Offline reconstruction status");
-  d->OfflineReconstructionStatus->setIcon(QMessageBox::Information);
-  d->OfflineReconstructionStatus->setStandardButtons(QMessageBox::NoButton);
+  d->OfflineReconstructionStatus->setPixmap(d->InformationPixmap);
   d->OfflineReconstructionStatus->setEnabled(false);
   d->OfflineReconstructionLayout->addWidget(d->OfflineReconstructionStatus);
 
-  d->ScoutScanStatus = new QMessageBox(this);
-  d->ScoutScanStatus->setIcon(QMessageBox::Information);
+  d->ScoutScanStatus = new QLabel(this);
   d->ScoutScanStatus->setToolTip("Scout scan status");
-  d->ScoutScanStatus->setStandardButtons(QMessageBox::NoButton);
+  d->ScoutScanStatus->setPixmap(d->InformationPixmap);
   d->ScoutScanStatus->setEnabled(false);
   d->ScoutScanLayout->addWidget(d->ScoutScanStatus);
 
-  d->LiveReconstructionStatus = new QMessageBox(this);
-  d->LiveReconstructionStatus->setIcon(QMessageBox::Information);
+  d->LiveReconstructionStatus = new QLabel(this);
   d->LiveReconstructionStatus->setToolTip("Live reconstruction status");
-  d->LiveReconstructionStatus->setStandardButtons(QMessageBox::NoButton);
+  d->LiveReconstructionStatus->setPixmap(d->InformationPixmap);
   d->LiveReconstructionStatus->setEnabled(false);
   d->LiveReconstructionLayout->addWidget(d->LiveReconstructionStatus);
 
@@ -532,7 +537,7 @@ void qSlicerPlusRemoteModuleWidget::updateButtonsFromStatus()
     d->RecordingStartStopButton->setToolTip("If clicked, stop recording");
     d->RecordingStartStopButton->setEnabled(true);
     d->RecordingStartStopButton->setChecked(true);
-    d->RecordingStatus->setIcon(QMessageBox::Information);
+    d->RecordingStatus->setPixmap(d->InformationPixmap);
     break;
   case vtkMRMLPlusRemoteNode::PLUS_REMOTE_FAILED:
     d->RecordingStartStopButton->setIcon(d->IconRecord);
@@ -540,7 +545,7 @@ void qSlicerPlusRemoteModuleWidget::updateButtonsFromStatus()
     d->RecordingStartStopButton->setToolTip("If clicked, start recording");
     d->RecordingStartStopButton->setEnabled(true);
     d->RecordingStartStopButton->setChecked(false);
-    d->RecordingStatus->setIcon(QMessageBox::Critical);
+    d->RecordingStatus->setPixmap(d->CriticalPixmap);
     break;
   default:
     d->RecordingStartStopButton->setIcon(d->IconRecord);
@@ -548,7 +553,7 @@ void qSlicerPlusRemoteModuleWidget::updateButtonsFromStatus()
     d->RecordingStartStopButton->setToolTip("If clicked, start recording");
     d->RecordingStartStopButton->setEnabled(true);
     d->RecordingStartStopButton->setChecked(false);
-    d->RecordingStatus->setIcon(QMessageBox::Information);
+    d->RecordingStatus->setPixmap(d->InformationPixmap);
     break;
   }
 
@@ -562,21 +567,21 @@ void qSlicerPlusRemoteModuleWidget::updateButtonsFromStatus()
     d->OfflineReconstructionStartButton->setToolTip("If clicked, stop recording");
     d->OfflineReconstructionStartButton->setEnabled(false);
     d->OfflineReconstructionStartButton->setChecked(true);
-    d->OfflineReconstructionStatus->setIcon(QMessageBox::Information);
+    d->OfflineReconstructionStatus->setPixmap(d->InformationPixmap);
     break;
   case vtkMRMLPlusRemoteNode::PLUS_REMOTE_FAILED:
     d->OfflineReconstructionStartButton->setIcon(d->IconRecord);
     d->OfflineReconstructionStartButton->setText("  Offline reconstruction");
     d->OfflineReconstructionStartButton->setEnabled(true);
     d->OfflineReconstructionStartButton->setChecked(false);
-    d->OfflineReconstructionStatus->setIcon(QMessageBox::Critical);
+    d->OfflineReconstructionStatus->setPixmap(d->CriticalPixmap);
     break;
   default:
     d->OfflineReconstructionStartButton->setIcon(d->IconRecord);
     d->OfflineReconstructionStartButton->setText("  Offline reconstruction");
     d->OfflineReconstructionStartButton->setEnabled(true);
     d->OfflineReconstructionStartButton->setChecked(false);
-    d->OfflineReconstructionStatus->setIcon(QMessageBox::Information);
+    d->OfflineReconstructionStatus->setPixmap(d->InformationPixmap);
     break;
   }
 
@@ -590,14 +595,14 @@ void qSlicerPlusRemoteModuleWidget::updateButtonsFromStatus()
     d->ScoutScanStartStopButton->setToolTip("If clicked, stop recording and reconstruct recorded volume");
     d->ScoutScanStartStopButton->setEnabled(true);
     d->ScoutScanStartStopButton->setChecked(true);
-    d->ScoutScanStatus->setIcon(QMessageBox::Information);
+    d->ScoutScanStatus->setPixmap(d->InformationPixmap);
     break;
   case  vtkMRMLPlusRemoteNode::PLUS_REMOTE_RECONSTRUCTING:
     d->ScoutScanStartStopButton->setIcon(QIcon(":/Icons/icon_Wait.png"));
     d->ScoutScanStartStopButton->setText("  Scout scan reconstruction in progress...");
     d->ScoutScanStartStopButton->setEnabled(false);
     d->ScoutScanStartStopButton->setChecked(true);
-    d->ScoutScanStatus->setIcon(QMessageBox::Information);
+    d->ScoutScanStatus->setPixmap(d->InformationPixmap);
     break;
   case vtkMRMLPlusRemoteNode::PLUS_REMOTE_FAILED:
     d->ScoutScanStartStopButton->setText("  Start scout scan");
@@ -605,7 +610,7 @@ void qSlicerPlusRemoteModuleWidget::updateButtonsFromStatus()
     d->ScoutScanStartStopButton->setToolTip("If clicked, start recording");
     d->ScoutScanStartStopButton->setEnabled(true);
     d->ScoutScanStartStopButton->setChecked(false);
-    d->ScoutScanStatus->setIcon(QMessageBox::Critical);
+    d->ScoutScanStatus->setPixmap(d->CriticalPixmap);
     break;
   default:
     d->ScoutScanStartStopButton->setText("  Start scout scan");
@@ -613,7 +618,7 @@ void qSlicerPlusRemoteModuleWidget::updateButtonsFromStatus()
     d->ScoutScanStartStopButton->setToolTip("If clicked, start recording");
     d->ScoutScanStartStopButton->setEnabled(true);
     d->ScoutScanStartStopButton->setChecked(false);
-    d->ScoutScanStatus->setIcon(QMessageBox::Information);
+    d->ScoutScanStatus->setPixmap(d->InformationPixmap);
     break;
   }
 
@@ -627,7 +632,7 @@ void qSlicerPlusRemoteModuleWidget::updateButtonsFromStatus()
     d->LiveReconstructionStartStopButton->setToolTip("If clicked, stop live reconstruction");
     d->LiveReconstructionStartStopButton->setEnabled(true);
     d->LiveReconstructionStartStopButton->setChecked(true);
-    d->LiveReconstructionStatus->setIcon(QMessageBox::Information);
+    d->LiveReconstructionStatus->setPixmap(d->InformationPixmap);
     break;
   case vtkMRMLPlusRemoteNode::PLUS_REMOTE_FAILED:
     d->LiveReconstructionStartStopButton->setText("  Start live reconstruction");
@@ -635,7 +640,7 @@ void qSlicerPlusRemoteModuleWidget::updateButtonsFromStatus()
     d->LiveReconstructionStartStopButton->setToolTip("If clicked, start live reconstruction");
     d->LiveReconstructionStartStopButton->setEnabled(true);
     d->LiveReconstructionStartStopButton->setChecked(false);
-    d->LiveReconstructionStatus->setIcon(QMessageBox::Critical);
+    d->LiveReconstructionStatus->setPixmap(d->CriticalPixmap);
     break;
   default:
     d->LiveReconstructionStartStopButton->setText("  Start live reconstruction");
@@ -643,7 +648,7 @@ void qSlicerPlusRemoteModuleWidget::updateButtonsFromStatus()
     d->LiveReconstructionStartStopButton->setToolTip("If clicked, start live reconstruction");
     d->LiveReconstructionStartStopButton->setEnabled(true);
     d->LiveReconstructionStartStopButton->setChecked(false);
-    d->LiveReconstructionStatus->setIcon(QMessageBox::Information);
+    d->LiveReconstructionStatus->setPixmap(d->InformationPixmap);
     break;
   }
 
@@ -772,7 +777,7 @@ void qSlicerPlusRemoteModuleWidget::onRecordingStartStopButtonClicked()
   {
     return;
   }
-  d->RecordingStatus->setIcon(QMessageBox::Information);
+  d->RecordingStatus->setPixmap(d->InformationPixmap);
   if (d->RecordingStartStopButton->isChecked())
   {
     d->logic()->StartRecording(d->ParameterNode);
@@ -826,7 +831,7 @@ void qSlicerPlusRemoteModuleWidget::onLiveReconstructionStartStopButtonClicked()
     vtkMRMLAnnotationROINode* roiNode = d->ParameterNode->GetLiveReconstructionROINode();
     if (roiNode)
     {
-      d->LiveReconstructionStatus->setIcon(QMessageBox::Information);
+      d->LiveReconstructionStatus->setPixmap(d->InformationPixmap);
       d->LiveReconstructionStatus->setToolTip("Live reconstruction in progress");
 
       d->logic()->StartLiveVolumeReconstruction(d->ParameterNode);
@@ -841,7 +846,7 @@ void qSlicerPlusRemoteModuleWidget::onLiveReconstructionStartStopButtonClicked()
   }
   else
   {
-    d->LiveReconstructionStatus->setIcon(QMessageBox::Information);
+    d->LiveReconstructionStatus->setPixmap(d->InformationPixmap);
     d->LiveReconstructionStatus->setToolTip("Live reconstruction is being stopped");
     d->logic()->StopLiveVolumeReconstruction(d->ParameterNode);
     d->LiveReconstructionStartStopButton->setEnabled(false);
