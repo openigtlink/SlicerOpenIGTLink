@@ -828,6 +828,15 @@ void vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents(vtkObject *caller, unsig
     case igtlioConnector::RemovedDeviceEvent: mrmlEvent = DeviceModifiedEvent; break;
     }
 
+  if (mrmlEvent == ConnectedEvent)
+  {
+    vtkInfoMacro("Connected: " << connector->GetServerHostname() << ":" << connector->GetServerPort());
+  }
+  else if (mrmlEvent == DisconnectedEvent)
+  {
+    vtkInfoMacro("Disconnected: " << connector->GetServerHostname() << ":" << connector->GetServerPort());
+  }
+
   igtlioDevice* modifiedDevice = static_cast<igtlioDevice*>(callData);
   if (modifiedDevice != NULL)
     {
@@ -993,13 +1002,6 @@ void vtkMRMLIGTLConnectorNode::ReadXMLAttributes(const char** atts)
       ss << attValue;
       ss >> state;
       }
-    /*if (!strcmp(attName, "logErrorIfServerConnectionFailed"))
-      {
-      std::stringstream ss;
-      ss << attValue;
-      ss >> LogErrorIfServerConnectionFailed;
-      }
-    }*/
 
   switch(type)
     {
