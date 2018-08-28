@@ -43,8 +43,6 @@ void qSlicerIGTLConnectorPropertyWidgetPrivate::init()
                    q, SLOT(startCurrentIGTLConnector(bool)));
   QObject::connect(this->PersistentStateCheckBox, SIGNAL(toggled(bool)),
                    q, SLOT(updateIGTLConnectorNode()));
-  QObject::connect(this->LogConnectionErrorCheckBox, SIGNAL(toggled(bool)),
-                   q, SLOT(updateIGTLConnectorNode()));
   QObject::connect(this->ConnectorHostNameEdit, SIGNAL(editingFinished()),
                    q, SLOT(updateIGTLConnectorNode()));
   QObject::connect(this->ConnectorPortEdit, SIGNAL(editingFinished()),
@@ -180,7 +178,6 @@ void qSlicerIGTLConnectorPropertyWidget::onMRMLNodeModified()
     }
   d->ConnectorStateCheckBox->setChecked(!deactivated);
   d->PersistentStateCheckBox->setChecked(d->IGTLConnectorNode->GetPersistent());
-  //d->LogConnectionErrorCheckBox->setChecked(d->IGTLConnectorNode->IOConnector->GetLogErrorIfServerConnectionFailed());
 }
 
 //------------------------------------------------------------------------------
@@ -210,7 +207,6 @@ void qSlicerIGTLConnectorPropertyWidget::updateIGTLConnectorNode()
   d->IGTLConnectorNode->SetServerHostname(d->ConnectorHostNameEdit->text().toStdString());
   d->IGTLConnectorNode->SetServerPort(d->ConnectorPortEdit->text().toInt());
   d->IGTLConnectorNode->SetPersistent(d->PersistentStateCheckBox->isChecked());
-  //d->IGTLConnectorNode->SetLogErrorIfServerConnectionFailed(d->LogConnectionErrorCheckBox->isChecked());
   d->IGTLConnectorNode->SetUseStreamingVolume(d->UseStreamingVolumeCheckBox->isChecked());
   d->IGTLConnectorNode->DisableModifiedEventOff();
   d->IGTLConnectorNode->InvokePendingModifiedEvent();

@@ -91,36 +91,26 @@
           </property>
          </widget>
         </item>
+       </layout>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="MRMLNodeAlgorithm">
+        <property name="text">
+         <string>MRMLNodeAlgorithm:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
         <item>
-         <widget class="QCheckBox" name="LogConnectionErrorCheckBox">
+         <widget class="QCheckBox" name="UseStreamingVolumeCheckBox">
           <property name="text">
-           <string>Log Connection Errors</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
+           <string>UseStreamingVolume</string>
           </property>
          </widget>
         </item>
        </layout>
       </item>
-      <item row="3" column="0">
-         <widget class="QLabel" name="MRMLNodeAlgorithm">
-           <property name="text">
-             <string>MRMLNodeAlgorithm:</string>
-           </property>
-         </widget>
-      </item>
-      <item row="3" column="1">
-         <layout class="QHBoxLayout" name="horizontalLayout_3">
-           <item>
-             <widget class="QCheckBox" name="UseStreamingVolumeCheckBox">
-               <property name="text">
-                 <string>UseStreamingVolume</string>
-               </property>
-             </widget>
-           </item>
-         </layout>
-      </item>  
       <item row="4" column="0">
        <widget class="QLabel" name="ConnectorHostnameLabel">
         <property name="text">
