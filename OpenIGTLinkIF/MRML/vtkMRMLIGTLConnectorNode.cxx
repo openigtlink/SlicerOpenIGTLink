@@ -97,6 +97,16 @@ public:
   typedef std::map<std::string, vtkSmartPointer <igtlioDevice> > MessageDeviceMapType;
   typedef std::map<std::string, std::vector<std::string> > DeviceTypeToNodeTagMapType;
 
+  // Calling StartModify() on incoming nodes when messages are received, and EndModify() once all incoming messages have been parsed is a neccesary step.
+  // If a Modified() event is triggered on an incoming node while incoming messages are still being processed, it can trigger an early Render.
+  // To prevent this, StartModify is called on all incoming nodes in: ProcessIncomingDeviceModifiedEvent() and EndModify() is called on modified nodes in PeriodicProcess().
+  struct NodeModification
+  {
+    int Modifying;
+    vtkSmartPointer<vtkMRMLNode> Node;
+  };
+  std::deque<NodeModification> PendingNodeModifications;
+
   NodeInfoMapType IncomingMRMLNodeInfoMap;
   MessageDeviceMapType  OutgoingMRMLIDToDeviceMap;
   MessageDeviceMapType  IncomingMRMLIDToDeviceMap;
@@ -218,6 +228,11 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
     // Could not find or add node.
     return;
   }
+
+  vtkInternal::NodeModification modifying;
+  modifying.Node = modifiedNode;
+  modifying.Modifying = modifiedNode->StartModify();
+  this->PendingNodeModifications.push_back(modifying);
 
   const std::string deviceType = modifiedDevice->GetDeviceType();
   const std::string deviceName = modifiedDevice->GetDeviceName();
@@ -1747,6 +1762,13 @@ int vtkMRMLIGTLConnectorNode::Stop()
 void vtkMRMLIGTLConnectorNode::PeriodicProcess()
 {
   this->Internal->IOConnector->PeriodicProcess();
+
+  while (!this->Internal->PendingNodeModifications.empty())
+    {
+    vtkInternal::NodeModification wasModifying = this->Internal->PendingNodeModifications.back();
+    wasModifying.Node->EndModify(wasModifying.Modifying);
+    this->Internal->PendingNodeModifications.pop_back();
+    }
 }
 
 //---------------------------------------------------------------------------
