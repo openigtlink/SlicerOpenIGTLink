@@ -324,7 +324,8 @@ void qMRMLPlusServerLauncherRemoteWidgetPrivate::onCommandReceived(vtkObject* ca
       if (serverStoppedElement->GetAttribute("ConfigFileName"))
       {
         std::string configFileName = serverStoppedElement->GetAttribute("ConfigFileName");
-        if (!configFileName.empty() && strcmp(configFileName.c_str(), d->ParameterSetNode->GetCurrentConfigNode()->GetAttribute(CONFIG_FILE_NAME_ATTRIBUTE.c_str())) == 0)
+        vtkMRMLTextNode* configNode = d->ParameterSetNode->GetCurrentConfigNode();
+        if (!configFileName.empty() && configNode && strcmp(configFileName.c_str(), configNode->GetAttribute(CONFIG_FILE_NAME_ATTRIBUTE.c_str())) == 0)
         {
           d->ParameterSetNode->SetServerState(vtkMRMLPlusServerLauncherRemoteNode::ServerOff);
         }
