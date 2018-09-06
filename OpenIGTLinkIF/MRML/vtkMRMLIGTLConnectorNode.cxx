@@ -26,19 +26,22 @@ Version:   $Revision: 1.2 $
   #include "igtlioVideoDevice.h"
   #include <vtkMRMLBitStreamNode.h>
 #endif
+
 // OpenIGTLinkIF MRML includes
 #include "vtkMRMLIGTLConnectorNode.h"
-#include "vtkMRMLVolumeNode.h"
-#include <vtkMRMLScalarVolumeNode.h>
-#include <vtkMRMLScalarVolumeDisplayNode.h>
-#include <vtkMRMLVectorVolumeNode.h>
-#include <vtkMRMLVectorVolumeDisplayNode.h>
-#include <vtkMRMLModelNode.h>
-#include <vtkMRMLTextNode.h>
-#include <vtkMRMLIGTLStatusNode.h>
-#include <vtkMRMLLinearTransformNode.h>
+#include "vtkMRMLIGTLStatusNode.h"
+#include "vtkMRMLTextNode.h"
+
+// MRML includes
 #include <vtkMRMLColorLogic.h>
 #include <vtkMRMLColorTableNode.h>
+#include <vtkMRMLLinearTransformNode.h>
+#include <vtkMRMLModelNode.h>
+#include <vtkMRMLScalarVolumeDisplayNode.h>
+#include <vtkMRMLScalarVolumeNode.h>
+#include <vtkMRMLVectorVolumeDisplayNode.h>
+#include <vtkMRMLVectorVolumeNode.h>
+#include "vtkMRMLVolumeNode.h"
 
 // VTK includes
 #include <vtkCollection.h>
@@ -48,8 +51,12 @@ Version:   $Revision: 1.2 $
 #include <vtkMatrix4x4.h>
 #include <vtkPolyData.h>
 
-// VTK include
+// vtksys includes
 #include <vtksys/SystemTools.hxx>
+
+// SlicerQt includes
+#include <qSlicerApplication.h>
+#include <qSlicerLayoutManager.h>
 
 #define MEMLNodeNameKey "MEMLNodeName"
 
@@ -1800,6 +1807,9 @@ int vtkMRMLIGTLConnectorNode::Stop()
 //---------------------------------------------------------------------------
 void vtkMRMLIGTLConnectorNode::PeriodicProcess()
 {
+  qSlicerApplication* application = qSlicerApplication::application();
+  application->pauseRender();
+
   this->Internal->IOConnector->PeriodicProcess();
 
   while (!this->Internal->PendingNodeModifications.empty())
@@ -1808,6 +1818,7 @@ void vtkMRMLIGTLConnectorNode::PeriodicProcess()
     wasModifying.Node->EndModify(wasModifying.Modifying);
     this->Internal->PendingNodeModifications.pop_back();
     }
+  application->resumeRender();
 }
 
 //---------------------------------------------------------------------------

@@ -42,6 +42,7 @@ set(${KIT}_TARGET_LIBRARIES
   SlicerBaseLogic
   vtkSlicerAnnotationsModuleMRML
   vtkSlicerMarkupsModuleMRML
+  qSlicerBaseQTGUI
   )
 
 #-----------------------------------------------------------------------------
