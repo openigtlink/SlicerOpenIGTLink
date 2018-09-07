@@ -53,7 +53,6 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
     DisconnectedEvent = 118945,
     ActivatedEvent = 118946,
     DeactivatedEvent = 118947,
-    ReceiveEvent = 118948, // deprecated. it was for query response, OpenIGTLinkIO doesn't support query event. it is replaced with command message
     NewDeviceEvent = 118949,
     DeviceModifiedEvent = 118950,
     RemovedDeviceEvent= 118951,
@@ -139,14 +138,17 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   // Stop observing and remove MRML node for outgoing data.
   void UnregisterOutgoingMRMLNode(vtkMRMLNode* node);
 
-
-  // Process IO connector incoming device events
+  // Process IO connector incoming events
   // event ID is specified in OpenIGTLinkIO
   void ProcessIOConnectorEvents( vtkObject *caller, unsigned long event, void *callData );
 
+  // Process IO incoming device events
+  // event ID is specified in OpenIGTLinkIO
+  void ProcessIODeviceEvents(vtkObject *caller, unsigned long event, void *callData);
+
   // Process IO connector incoming command events
   // event ID is specified in OpenIGTLinkIO
-  void ProcessIOConnectorCommandEvents(vtkObject *caller, unsigned long event, void *callData);
+  void ProcessIOCommandEvents(vtkObject *caller, unsigned long event, void *callData);
 
   // Description:
   // Add a new Device.
