@@ -543,6 +543,11 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
   {
     igtlioVideoDevice* videoDevice = reinterpret_cast<igtlioVideoDevice*>(device);
     igtlioVideoConverter::ContentData content = videoDevice->GetContent();
+    if (!content.image)
+    {
+      // Image data has not been set yet
+      return NULL;
+    }
     int numberOfComponents = content.image->GetNumberOfScalarComponents(); //to improve the io module to be able to cope with video data
     vtkSmartPointer<vtkImageData> image = content.image;
     std::string deviceName = videoDevice->GetDeviceName().c_str();
