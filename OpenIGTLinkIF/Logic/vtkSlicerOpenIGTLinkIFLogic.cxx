@@ -28,10 +28,6 @@
 #include "vtkMRMLIGTLStatusNode.h"
 #include "vtkMRMLIGTLSensorNode.h"
 
-#if defined(OpenIGTLink_ENABLE_VIDEOSTREAMING)
-  #include "vtkMRMLBitStreamNode.h"
-#endif
-
 // OpenIGTLinkIO Device includes
 #include "igtlioDevice.h"
 #include "igtlioConnector.h"
@@ -49,6 +45,12 @@
 #include <vtkCallbackCommand.h>
 #include <vtkImageData.h>
 #include <vtkTransform.h>
+
+#include <vtkStreamingVolumeCodecFactory.h>
+
+#if defined(OpenIGTLink_USE_VP9)
+#include <vtkIGTLVP9VolumeCodec.h>
+#endif
 
 //---------------------------------------------------------------------------
 vtkStandardNewMacro(vtkSlicerOpenIGTLinkIFLogic);
@@ -155,8 +157,10 @@ void vtkSlicerOpenIGTLinkIFLogic::RegisterNodes()
   scene->RegisterNodeClass(vtkNew<vtkMRMLIGTLTrackingDataBundleNode>().GetPointer());
   scene->RegisterNodeClass(vtkNew<vtkMRMLIGTLStatusNode>().GetPointer());
   scene->RegisterNodeClass(vtkNew<vtkMRMLIGTLSensorNode>().GetPointer());
-#if defined(OpenIGTLink_ENABLE_VIDEOSTREAMING)
-  scene->RegisterNodeClass(vtkNew<vtkMRMLBitStreamNode>().GetPointer());
+
+  vtkStreamingVolumeCodecFactory* codecFactory = vtkStreamingVolumeCodecFactory::GetInstance();
+#if defined(OpenIGTLink_USE_VP9)
+  codecFactory->RegisterStreamingCodec(vtkSmartPointer<vtkIGTLVP9VolumeCodec>::New());
 #endif
 }
 

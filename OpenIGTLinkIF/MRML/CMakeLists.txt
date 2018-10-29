@@ -31,7 +31,8 @@ endif()
 
 if(SlicerOpenIGTLink_USE_VP9)
   list(APPEND ${KIT}_SRCS
-    vtkMRMLBitStreamNode.cxx
+    vtkIGTLVP9VolumeCodec.cxx
+    vtkIGTLVP9VolumeCodec.h
   )
 endif()
 

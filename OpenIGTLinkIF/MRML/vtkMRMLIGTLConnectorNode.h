@@ -6,7 +6,7 @@
   or http://www.slicer.org/copyright/copyright.txt for details.
 
   Program:   3D Slicer
-  Module:    $RCSfile: vtkMRMLCurveAnalysisNode.h,v $
+  Module:    $RCSfile: vtkMRMLConnectorNode.h,v $
   Date:      $Date: 2006/03/19 17:12:29 $
   Version:   $Revision: 1.3 $
 

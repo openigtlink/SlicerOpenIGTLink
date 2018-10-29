@@ -6,7 +6,7 @@ See Doc/copyright/copyright.txt
 or http://www.slicer.org/copyright/copyright.txt for details.
 
 Program:   3D Slicer
-Module:    $RCSfile: vtkMRMLGradientAnisotropicDiffusionFilterNode.cxx,v $
+Module:    $RCSfile: vtkMRMLConnectorNode.cxx,v $
 Date:      $Date: 2006/03/17 15:10:10 $
 Version:   $Revision: 1.2 $
 
@@ -24,7 +24,6 @@ Version:   $Revision: 1.2 $
 
 #if defined(OpenIGTLink_ENABLE_VIDEOSTREAMING)
   #include "igtlioVideoDevice.h"
-  #include <vtkMRMLBitStreamNode.h>
 #endif
 
 // OpenIGTLinkIF MRML includes
@@ -39,6 +38,7 @@ Version:   $Revision: 1.2 $
 #include <vtkMRMLModelNode.h>
 #include <vtkMRMLScalarVolumeDisplayNode.h>
 #include <vtkMRMLScalarVolumeNode.h>
+#include <vtkMRMLStreamingVolumeNode.h>
 #include <vtkMRMLVectorVolumeDisplayNode.h>
 #include <vtkMRMLVectorVolumeNode.h>
 #include "vtkMRMLVolumeNode.h"
@@ -105,6 +105,7 @@ public:
   typedef std::map<std::string, igtlioConnector::NodeInfoType>   NodeInfoMapType;
   typedef std::map<std::string, vtkSmartPointer <igtlioDevice> > MessageDeviceMapType;
   typedef std::map<std::string, std::vector<std::string> > DeviceTypeToNodeTagMapType;
+  typedef std::map<std::string, vtkSmartPointer<vtkStreamingVolumeFrame> > FrameMapType;
 
   // Calling StartModify() on incoming nodes when messages are received, and EndModify() once all incoming messages have been parsed is a neccesary step.
   // If a Modified() event is triggered on an incoming node while incoming messages are still being processed, it can trigger an early Render.
@@ -120,7 +121,7 @@ public:
   MessageDeviceMapType  OutgoingMRMLIDToDeviceMap;
   MessageDeviceMapType  IncomingMRMLIDToDeviceMap;
   DeviceTypeToNodeTagMapType DeviceTypeToNodeTagMap;
-
+  FrameMapType          PreviousIncomingFramesMap;
 };
 
 //----------------------------------------------------------------------------
@@ -199,16 +200,16 @@ unsigned int vtkMRMLIGTLConnectorNode::vtkInternal::AssignOutGoingNodeToDevice(v
   else if (device->GetDeviceType().compare("VIDEO") == 0)
   {
     igtlioVideoDevice* videoDevice = static_cast<igtlioVideoDevice*>(device.GetPointer());
-    vtkMRMLBitStreamNode* bitStreamNode = vtkMRMLBitStreamNode::SafeDownCast(node);
+    vtkMRMLStreamingVolumeNode* streamingVolumeNode = vtkMRMLStreamingVolumeNode::SafeDownCast(node);
     igtlioVideoConverter::ContentData content;
-    content.image = bitStreamNode->GetImageData();
+    content.image = streamingVolumeNode->GetImageData();
     content.frameType = FrameTypeUnKnown;
     strncpy(content.codecName, videoDevice->GetCurrentCodecType().c_str(), IGTL_VIDEO_CODEC_NAME_SIZE);
     content.keyFrameMessage = NULL;
     content.keyFrameUpdated = false;
     content.videoMessage = NULL;
     videoDevice->SetContent(content);
-    modifiedEvent = vtkMRMLBitStreamNode::ImageDataModifiedEvent;
+    modifiedEvent = vtkCommand::ModifiedEvent;
   }
 #endif
   return modifiedEvent;
@@ -247,30 +248,13 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
       igtlioImageDevice* imageDevice = reinterpret_cast<igtlioImageDevice*>(modifiedDevice);
       if (strcmp(modifiedNode->GetName(), deviceName.c_str()) == 0)
       {
-        if (strcmp(modifiedNode->GetNodeTagName(), "Volume") == 0 ||
-            strcmp(modifiedNode->GetNodeTagName(), "VectorVolume") == 0
-            )
+        vtkMRMLVolumeNode* volumeNode = vtkMRMLVolumeNode::SafeDownCast(modifiedNode);
+        if (volumeNode)
         {
-          vtkMRMLVolumeNode* volumeNode = vtkMRMLVolumeNode::SafeDownCast(modifiedNode);
           volumeNode->SetIJKToRASMatrix(imageDevice->GetContent().transform);
           volumeNode->SetAndObserveImageData(imageDevice->GetContent().image);
           volumeNode->Modified();
         }
-#if defined(OpenIGTLink_ENABLE_VIDEOSTREAMING)
-        else if (strcmp(modifiedNode->GetNodeTagName(), "BitStream") == 0)
-        {
-          vtkMRMLBitStreamNode* bitStreamNode = vtkMRMLBitStreamNode::SafeDownCast(modifiedNode);
-          bitStreamNode->SetAndObserveImageData(imageDevice->GetContent().image);
-          bitStreamNode->SetIJKToRASMatrix(imageDevice->GetContent().transform);
-          bitStreamNode->Modified();
-          igtlioVideoDevice* device = static_cast<igtlioVideoDevice*>(bitStreamNode->GetVideoMessageDevice());
-          igtlioVideoConverter::ContentData content;
-          content.image = imageDevice->GetContent().image;
-          device->SetContent(content);
-          //memcpy(device->GetContent().image->GetScalarPointer(), imageDevice->GetContent().image->GetScalarPointer(), dataSize);
-          device->GetIGTLMessage();
-        }
-#endif
       }
     }
 #if defined(OpenIGTLink_ENABLE_VIDEOSTREAMING)
@@ -279,11 +263,28 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
       igtlioVideoDevice* videoDevice = reinterpret_cast<igtlioVideoDevice*>(modifiedDevice);
       if (strcmp(modifiedNode->GetName(), deviceName.c_str()) == 0)
       {
-        vtkMRMLBitStreamNode* bitStreamNode = vtkMRMLBitStreamNode::SafeDownCast(modifiedNode);
-        bitStreamNode->SetIJKToRASMatrix(videoDevice->GetContent().transform);
-        bitStreamNode->SetAndObserveImageData(videoDevice->GetContent().image);
+        vtkSmartPointer<vtkUnsignedCharArray> frameData = vtkSmartPointer<vtkUnsignedCharArray>::New();
+        frameData->Allocate(videoDevice->GetContent().videoMessage->GetBitStreamSize());
+        memcpy(frameData->GetPointer(0), videoDevice->GetContent().frameData->GetPointer(0), videoDevice->GetContent().videoMessage->GetBitStreamSize());
+
+        std::string codecName = videoDevice->GetCurrentCodecType().substr(0, 4);
+        vtkSmartPointer<vtkStreamingVolumeFrame> frame = vtkSmartPointer<vtkStreamingVolumeFrame>::New();
+        frame->SetFrameData(frameData);
+        frame->SetFrameType(videoDevice->GetContent().frameType == igtl::FrameTypeKey ? vtkStreamingVolumeFrame::IFrame : vtkStreamingVolumeFrame::PFrame);
+        frame->SetDimensions(videoDevice->GetContent().image->GetDimensions());
+        frame->SetCodecFourCC(codecName);
+        if (!frame->IsKeyFrame() && this->PreviousIncomingFramesMap.find(videoDevice->GetDeviceName()) != this->PreviousIncomingFramesMap.end())
+        {
+          // If the current frame is not a keyframe, then it should maintain a reference to the previously received frame
+          // so that the current frame can be decoded
+          frame->SetPreviousFrame(this->PreviousIncomingFramesMap[videoDevice->GetDeviceName()]);
+        }
+        this->PreviousIncomingFramesMap[videoDevice->GetDeviceName()] = frame;
+
+        vtkMRMLStreamingVolumeNode* streamingVolumeNode = vtkMRMLStreamingVolumeNode::SafeDownCast(modifiedNode);
+        streamingVolumeNode->SetIJKToRASMatrix(videoDevice->GetContent().transform);
+        streamingVolumeNode->SetAndObserveFrame(frame);
       }
-      // The BitstreamNode has its own handling of the device modified event
     }
 #endif
     else if (strcmp(deviceType.c_str(), "STATUS") == 0)
@@ -438,13 +439,13 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
 #if defined(OpenIGTLink_ENABLE_VIDEOSTREAMING)
     if (this->External->UseStreamingVolume)
     {
-      volumeNode = vtkMRMLBitStreamNode::SafeDownCast(this->External->GetScene()->GetFirstNode(deviceName.c_str(), "vtkMRMLBitStreamNode"));
+      volumeNode = vtkMRMLStreamingVolumeNode::SafeDownCast(this->External->GetScene()->GetFirstNode(deviceName.c_str(), "vtkMRMLStreamingVolumeNode"));
       if (volumeNode)
       {
         this->External->RegisterIncomingMRMLNode(volumeNode, device);
         return volumeNode;
       }
-      volumeNode = vtkSmartPointer<vtkMRMLBitStreamNode>::New();
+      volumeNode = vtkSmartPointer<vtkMRMLStreamingVolumeNode>::New();
     }
     else
     {
@@ -497,19 +498,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
     volumeNode->SetDescription("Received by OpenIGTLink");
     vtkDebugWithObjectMacro(this->External, "Name vol node " << volumeNode->GetClassName());
     this->External->GetScene()->AddNode(volumeNode);
-#if defined(OpenIGTLink_ENABLE_VIDEOSTREAMING)
-    if (this->External->UseStreamingVolume)
-    {
-      vtkMRMLBitStreamNode * tempNode = vtkMRMLBitStreamNode::SafeDownCast(volumeNode);
-      tempNode->SetUpVideoDeviceByName(deviceName.c_str());
-      igtlioVideoDevice* videoDevice = static_cast<igtlioVideoDevice*>(tempNode->GetVideoMessageDevice());
-      igtlioVideoConverter::ContentData content;
-      content.image = imageDevice->GetContent().image;
-      videoDevice->SetContent(content);
-    }
-    //memcpy(imageData->GetScalarPointer(), srcImageData->GetScalarPointer(), dataSize);
-    //videoDevice->GetContent().image = imageData;
-#endif
+
     vtkDebugWithObjectMacro(this->External, "Set basic display info");
     bool scalarDisplayNodeRequired = (numberOfComponents == 1);
     vtkSmartPointer<vtkMRMLVolumeDisplayNode> displayNode;
@@ -552,21 +541,20 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
     vtkSmartPointer<vtkImageData> image = content.image;
     std::string deviceName = videoDevice->GetDeviceName().c_str();
 
-    vtkSmartPointer<vtkMRMLBitStreamNode> bitStreamNode =
-      vtkMRMLBitStreamNode::SafeDownCast(this->External->GetScene()->GetFirstNode(deviceName.c_str(), "vtkMRMLBitStreamNode"));
-    if (bitStreamNode)
+    vtkSmartPointer<vtkMRMLStreamingVolumeNode> streamingVolumeNode =
+      vtkMRMLStreamingVolumeNode::SafeDownCast(this->External->GetScene()->GetFirstNode(deviceName.c_str(), "vtkMRMLStreamingVolumeNode"));
+    if (streamingVolumeNode)
     {
-      this->External->RegisterIncomingMRMLNode(bitStreamNode, device);
-      return bitStreamNode;
+      this->External->RegisterIncomingMRMLNode(streamingVolumeNode, device);
+      return streamingVolumeNode;
     }
 
     this->External->GetScene()->SaveStateForUndo();
     bool scalarDisplayNodeRequired = (numberOfComponents == 1);
-    bitStreamNode = vtkSmartPointer<vtkMRMLBitStreamNode>::New();
-    bitStreamNode->SetName(deviceName.c_str());
-    bitStreamNode->SetDescription("Received by OpenIGTLink");
-    this->External->GetScene()->AddNode(bitStreamNode);
-    bitStreamNode->ObserveOutsideVideoDevice(reinterpret_cast<igtlioVideoDevice*>(device));
+    streamingVolumeNode = vtkSmartPointer<vtkMRMLStreamingVolumeNode>::New();
+    streamingVolumeNode->SetName(deviceName.c_str());
+    streamingVolumeNode->SetDescription("Received by OpenIGTLink");
+    this->External->GetScene()->AddNode(streamingVolumeNode);
     vtkSmartPointer<vtkMRMLVolumeDisplayNode> displayNode;
     if (scalarDisplayNodeRequired)
     {
@@ -586,9 +574,9 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
     {
       displayNode->SetDefaultColorMap();
     }
-    bitStreamNode->SetAndObserveDisplayNodeID(displayNode->GetID());
-    this->External->RegisterIncomingMRMLNode(bitStreamNode, device);
-    return bitStreamNode;
+    streamingVolumeNode->SetAndObserveDisplayNodeID(displayNode->GetID());
+    this->External->RegisterIncomingMRMLNode(streamingVolumeNode, device);
+    return streamingVolumeNode;
   }
 #endif
   else if (strcmp(device->GetDeviceType().c_str(), "STATUS") == 0)
@@ -750,9 +738,9 @@ vtkMRMLIGTLConnectorNode::vtkMRMLIGTLConnectorNode()
                              this->GetOutgoingNodeReferenceMRMLAttributeName());
 
   this->Internal->DeviceTypeToNodeTagMap.clear();
-  std::string volumeTags[] = {"Volume", "VectorVolume", "BitStream"};
+  std::string volumeTags[] = {"Volume", "VectorVolume", "StreamingVolume"};
   this->Internal->DeviceTypeToNodeTagMap["IMAGE"] = std::vector<std::string>(volumeTags, volumeTags+3);
-  this->Internal->DeviceTypeToNodeTagMap["VIDEO"] = std::vector<std::string>(1,"BitStream");
+  this->Internal->DeviceTypeToNodeTagMap["VIDEO"] = std::vector<std::string>(1,"StreamingVolume");
   this->Internal->DeviceTypeToNodeTagMap["STATUS"] = std::vector<std::string>(1,"IGTLStatus");
   this->Internal->DeviceTypeToNodeTagMap["TRANSFORM"] = std::vector<std::string>(1,"LinearTransform");
   std::string modelTags[] = {"Model", "FiberBundle"};
@@ -803,7 +791,7 @@ std::vector<std::string> vtkMRMLIGTLConnectorNode::GetNodeTagFromDeviceType(cons
 std::vector<std::string> vtkMRMLIGTLConnectorNode::GetDeviceTypeFromMRMLNodeType(const char* NodeTag)
 {
 #if defined(OpenIGTLink_ENABLE_VIDEOSTREAMING)
-  if(strcmp(NodeTag, "BitStream")==0)
+  if(strcmp(NodeTag, "StreamingVolume")==0)
     {
     std::vector<std::string> DeviceTypes;
     DeviceTypes.push_back("VIDEO");
@@ -1813,7 +1801,10 @@ int vtkMRMLIGTLConnectorNode::Stop()
 void vtkMRMLIGTLConnectorNode::PeriodicProcess()
 {
   qSlicerApplication* application = qSlicerApplication::application();
-  application->pauseRender();
+  if (application)
+  {
+    application->pauseRender();
+  }
 
   this->Internal->IOConnector->PeriodicProcess();
 
@@ -1823,7 +1814,11 @@ void vtkMRMLIGTLConnectorNode::PeriodicProcess()
     wasModifying.Node->EndModify(wasModifying.Modifying);
     this->Internal->PendingNodeModifications.pop_back();
     }
-  application->resumeRender();
+
+  if (application)
+  {
+    application->resumeRender();
+  }
 }
 
 //---------------------------------------------------------------------------

@@ -1,24 +1,30 @@
 #include "vtkSlicerConfigure.h" 
 
-//OpenIGTLink includes
+// OpenIGTLink includes
 #include "igtlOSUtil.h"
 #include "igtlioDevice.h"
 
 // IF module includes
 #include "vtkMRMLIGTLConnectorNode.h"
 
+// vtkAddon includes
+#include <vtkTestingOutputWindow.h>
+
 // VTK includes
-#include <vtkTimerLog.h>
-#include <vtksys/SystemTools.hxx>
-#include <vtkSmartPointer.h>
+#include <vtkCallbackCommand.h>
+#include <vtkImageData.h>
 #include <vtkObject.h>
 #include <vtkObjectFactory.h>
+#include <vtkSmartPointer.h>
+#include <vtkTimerLog.h>
 #include <vtkWeakPointer.h>
-#include <vtkCallbackCommand.h>
-#include "vtkMRMLBitStreamNode.h"
-#include "vtkImageData.h"
+
+// MRML includes
 #include "vtkMRMLCoreTestingMacros.h"
-#include "vtkTestingOutputWindow.h"
+#include <vtkMRMLStreamingVolumeNode.h>
+
+// vtksys includes
+#include <vtksys/SystemTools.hxx>
 
 class VideoObserver: public vtkObject
 {
@@ -104,7 +110,7 @@ int vtkMRMLConnectorVideoSendAndReceiveTest(int argc, char * argv [] )
   }
   std::string device_name = "TestDevice";
   vtkSmartPointer<vtkImageData> testImage = videoClientObsever->CreateTestImage();
-  vtkSmartPointer<vtkMRMLBitStreamNode> volumeNode = vtkSmartPointer<vtkMRMLBitStreamNode>::New();
+  vtkSmartPointer<vtkMRMLStreamingVolumeNode> volumeNode = vtkSmartPointer<vtkMRMLStreamingVolumeNode>::New();
   volumeNode->SetAndObserveImageData(testImage);
   scene->AddNode(volumeNode);
   igtlioDevicePointer videoDevice = reinterpret_cast<igtlioDevice*>(serverConnectorNode->CreateDeviceForOutgoingMRMLNode(volumeNode));
