@@ -28,7 +28,7 @@ Care Ontario.
 #include <vtkMatrix4x4.h>
 
 // vtksys includes
-#include <vtksys\SystemTools.hxx>
+#include <vtksys/SystemTools.hxx>
 
 vtkCodecNewMacro(vtkIGTLVP9VolumeCodec);
 
