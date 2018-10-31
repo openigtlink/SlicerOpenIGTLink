@@ -307,6 +307,15 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
         transfromMatrix->DeepCopy(transformDevice->GetContent().transform);
         transformNode->SetMatrixTransformToParent(transfromMatrix.GetPointer());
         transformNode->Modified();
+
+        // Copy transform status from metadata to node attributes
+        for (igtl::MessageBase::MetaDataMap::const_iterator iter = modifiedDevice->GetMetaData().begin(); iter != modifiedDevice->GetMetaData().end(); ++iter)
+        {
+          if (iter->first.find("Status") != std::string::npos)
+          {
+            transformNode->SetAttribute(iter->first.c_str(), iter->second.second.c_str());
+          }
+        }
       }
     }
     else if (strcmp(deviceType.c_str(), "POLYDATA") == 0)
@@ -868,6 +877,15 @@ void vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents(vtkObject *caller, unsig
   if (mrmlEvent == ConnectedEvent)
     {
     vtkInfoMacro("Connected: " << connector->GetServerHostname() << ":" << connector->GetServerPort());
+
+    // Slicer wants to make use of meta data in IGTL messages, so tell the server we can support v2 messages
+    igtlioStatusDevice* statusDevice = igtlioStatusDevice::New();
+    connector->AddDevice(statusDevice);
+    statusDevice->SetMetaDataElement("dummy", "dummy"); // existence of metadata makes the IO connector send a header v2 message
+    connector->SendMessage(igtlioDeviceKeyType::CreateDeviceKey(statusDevice));
+    connector->RemoveDevice(statusDevice);
+    statusDevice->Delete();
+
     }
   else if (mrmlEvent == DisconnectedEvent)
     {
