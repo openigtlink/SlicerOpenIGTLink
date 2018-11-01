@@ -119,6 +119,24 @@ vtkSlicerOpenIGTLinkIFLogic::~vtkSlicerOpenIGTLinkIFLogic()
     {
     this->DataCallbackCommand->Delete();
     }
+
+  // Connector nodes must be stopped at this point in the application destruction process
+  // If we rely on the node deconstructor, it will be too late to correctly terminate the server threads and the connector will hang indefinitely.
+  // TODO: The logic contained within the connector nodes should eventually be refactored to the logic classes. The connector nodes should not perform any
+  // resource allocation or thread management through OpenIGTLinkIO as they do now.
+  if (this->GetMRMLScene())
+    {
+    vtkSmartPointer<vtkCollection> connectorNodes = vtkSmartPointer<vtkCollection>::Take(this->GetMRMLScene()->GetNodesByClass("vtkMRMLIGTLConnectorNode"));
+    for (int i = 0; i < connectorNodes->GetNumberOfItems(); ++i)
+      {
+      vtkMRMLIGTLConnectorNode* connectorNode = vtkMRMLIGTLConnectorNode::SafeDownCast(connectorNodes->GetItemAsObject(i));
+      if (connectorNode)
+        {
+        connectorNode->Stop();
+        }
+      }
+    }
+
   delete this->Internal;
 }
 
