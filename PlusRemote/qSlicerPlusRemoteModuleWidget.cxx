@@ -261,6 +261,7 @@ void qSlicerPlusRemoteModuleWidget::updateWidgetFromMRML()
   }
 
   bool wasBlocked = false;
+  int cursorPosition = -1;
 
   // Remember button status for specific operations
   this->updateButtonsFromStatus();
@@ -369,7 +370,9 @@ void qSlicerPlusRemoteModuleWidget::updateWidgetFromMRML()
 
   std::string recordingFilename = d->ParameterNode->GetRecordingFilename();
   wasBlocked = d->RecordingFilenameLineEdit->blockSignals(true);
+  cursorPosition = d->RecordingFilenameLineEdit->cursorPosition();
   d->RecordingFilenameLineEdit->setText(QString::fromStdString(recordingFilename));
+  d->RecordingFilenameLineEdit->setCursorPosition(cursorPosition);
   d->RecordingFilenameLineEdit->blockSignals(wasBlocked);
 
   bool recordingFilenameCompletion = d->ParameterNode->GetRecordingFilenameCompletion();
@@ -392,7 +395,9 @@ void qSlicerPlusRemoteModuleWidget::updateWidgetFromMRML()
 
   std::string offlineOutputVolumeDevice = d->ParameterNode->GetOfflineReconstructionDevice();
   wasBlocked = d->OfflineReconstructionDeviceLineEdit->blockSignals(true);
+  cursorPosition = d->OfflineReconstructionDeviceLineEdit->cursorPosition();
   d->OfflineReconstructionDeviceLineEdit->setText(QString::fromStdString(offlineOutputVolumeDevice));
+  d->OfflineReconstructionDeviceLineEdit->setCursorPosition(cursorPosition);
   d->OfflineReconstructionDeviceLineEdit->blockSignals(wasBlocked);
 
   wasBlocked = d->OfflineReconstructionVolumeSelector->blockSignals(true);
@@ -436,7 +441,9 @@ void qSlicerPlusRemoteModuleWidget::updateWidgetFromMRML()
 
   std::string scoutScanFilename = d->ParameterNode->GetScoutScanFilename();
   wasBlocked = d->ScoutScanFilenameLineEdit->blockSignals(true);
+  cursorPosition = d->ScoutScanFilenameLineEdit->cursorPosition();
   d->ScoutScanFilenameLineEdit->setText(QString::fromStdString(scoutScanFilename));
+  d->ScoutScanFilenameLineEdit->setCursorPosition(cursorPosition);
   d->ScoutScanFilenameLineEdit->blockSignals(wasBlocked);
 
   bool scoutScanFilenameCompletion = d->ParameterNode->GetScoutScanFilenameCompletion();
@@ -471,12 +478,16 @@ void qSlicerPlusRemoteModuleWidget::updateWidgetFromMRML()
 
   std::string liveReconstructionDevice = d->ParameterNode->GetLiveReconstructionDevice();
   wasBlocked = d->LiveReconstructionDeviceLineEdit->blockSignals(true);
+  cursorPosition = d->LiveReconstructionDeviceLineEdit->cursorPosition();
   d->LiveReconstructionDeviceLineEdit->setText(QString::fromStdString(liveReconstructionDevice));
+  d->LiveReconstructionDeviceLineEdit->setCursorPosition(cursorPosition);
   d->LiveReconstructionDeviceLineEdit->blockSignals(wasBlocked);
 
   std::string liveReconstructionFilename = d->ParameterNode->GetLiveReconstructionFilename();
   wasBlocked = d->LiveReconstructionFilenameLineEdit->blockSignals(true);
+  cursorPosition = d->LiveReconstructionFilenameLineEdit->cursorPosition();
   d->LiveReconstructionFilenameLineEdit->setText(QString::fromStdString(liveReconstructionFilename));
+  d->LiveReconstructionFilenameLineEdit->setCursorPosition(cursorPosition);
   d->LiveReconstructionFilenameLineEdit->blockSignals(wasBlocked);
 
   double liveReconstructionSnapshotsIntervalSec = d->ParameterNode->GetLiveReconstructionSnapshotsIntervalSec();
@@ -512,7 +523,9 @@ void qSlicerPlusRemoteModuleWidget::updateWidgetFromMRML()
   /// Config file parameter
   std::string configFileName = d->ParameterNode->GetConfigFilename();
   wasBlocked = d->ConfigFilenameLineEdit->blockSignals(true);
+  cursorPosition = d->ConfigFilenameLineEdit->cursorPosition();
   d->ConfigFilenameLineEdit->setText(QString::fromStdString(configFileName));
+  d->ConfigFilenameLineEdit->setCursorPosition(cursorPosition);
   d->ConfigFilenameLineEdit->blockSignals(wasBlocked);
 
   /////////////////////////

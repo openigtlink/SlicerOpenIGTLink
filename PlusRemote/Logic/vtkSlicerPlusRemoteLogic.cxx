@@ -951,7 +951,7 @@ void vtkSlicerPlusRemoteLogic::onRequestCaptureDeviceIDsCompleted(vtkObject* cal
     return;
   }
 
-  vtkSmartPointer<vtkXMLDataElement> responseXML = vtkXMLUtilities::ReadElementFromString(responseContent.c_str());
+  vtkSmartPointer<vtkXMLDataElement> responseXML = vtkSmartPointer<vtkXMLDataElement>::Take(vtkXMLUtilities::ReadElementFromString(responseContent.c_str()));
   if (!responseXML)
   {
     return;
@@ -996,7 +996,7 @@ void vtkSlicerPlusRemoteLogic::onRequestVolumeReconstructorDeviceIDsCompleted(vt
   }
 
   std::string volumeReconstructorDeviceIDsListString = "";
-  vtkSmartPointer<vtkXMLDataElement> responseXML = vtkXMLUtilities::ReadElementFromString(responseContent.c_str());
+  vtkSmartPointer<vtkXMLDataElement> responseXML = vtkSmartPointer<vtkXMLDataElement>::Take(vtkXMLUtilities::ReadElementFromString(responseContent.c_str()));
   if (responseXML)
   {
     volumeReconstructorDeviceIDsListString = responseXML->GetAttribute("Message") ? responseXML->GetAttribute("Message") : "";
@@ -1040,7 +1040,7 @@ void vtkSlicerPlusRemoteLogic::onRequestDeviceIDsCompleted(vtkObject* caller, un
   }
 
   std::string deviceIDsListString = "";
-  vtkSmartPointer<vtkXMLDataElement> responseXML = vtkXMLUtilities::ReadElementFromString(responseContent.c_str());
+  vtkSmartPointer<vtkXMLDataElement> responseXML = vtkSmartPointer<vtkXMLDataElement>::Take(vtkXMLUtilities::ReadElementFromString(responseContent.c_str()));
   if (responseXML)
   {
     deviceIDsListString = responseXML->GetAttribute("Message") ? responseXML->GetAttribute("Message") : "";

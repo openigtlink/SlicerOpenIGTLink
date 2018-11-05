@@ -229,7 +229,7 @@ void qMRMLPlusServerLauncherRemoteWidgetPrivate::onStartServerResponse(vtkObject
   if (startServerCommand->GetSuccessful())
   {
     std::string responseContent = startServerCommand->GetResponseContent();
-    vtkSmartPointer<vtkXMLDataElement> responseXML = vtkXMLUtilities::ReadElementFromString(responseContent.c_str());
+    vtkSmartPointer<vtkXMLDataElement> responseXML = vtkSmartPointer<vtkXMLDataElement>::Take(vtkXMLUtilities::ReadElementFromString(responseContent.c_str()));
     if (responseXML)
     {
       vtkSmartPointer<vtkXMLDataElement> resultElement = responseXML->FindNestedElementWithName("Result");
@@ -297,7 +297,7 @@ void qMRMLPlusServerLauncherRemoteWidgetPrivate::onCommandReceived(vtkObject* ca
   }
 
   std::string name = command->GetName();
-  vtkSmartPointer<vtkXMLDataElement> rootElement = vtkXMLUtilities::ReadElementFromString(command->GetCommandContent().c_str());
+  vtkSmartPointer<vtkXMLDataElement> rootElement = vtkSmartPointer<vtkXMLDataElement>::Take(vtkXMLUtilities::ReadElementFromString(command->GetCommandContent().c_str()));
 
   if (name == "ServerStarted")
   {
@@ -495,7 +495,7 @@ void qMRMLPlusServerLauncherRemoteWidgetPrivate::onServerInfoResponse(vtkObject*
   if (getServerInfoCommand->GetSuccessful())
   {
     std::string responseContent = getServerInfoCommand->GetResponseContent();
-    vtkSmartPointer<vtkXMLDataElement> getServerInfoElement = vtkXMLUtilities::ReadElementFromString(responseContent.c_str());
+    vtkSmartPointer<vtkXMLDataElement> getServerInfoElement = vtkSmartPointer<vtkXMLDataElement>::Take(vtkXMLUtilities::ReadElementFromString(responseContent.c_str()));
     for (int i = 0; i < getServerInfoElement->GetNumberOfNestedElements(); ++i)
     {
       vtkSmartPointer<vtkXMLDataElement> nestedElement = getServerInfoElement->GetNestedElement(i);
@@ -1033,37 +1033,21 @@ void qMRMLPlusServerLauncherRemoteWidget::onHostChanged(const QString &text)
     tokens.push_back(item);
   }
 
-  std::string hostname = d->ParameterSetNode->GetServerLauncherHostname();
-  if (tokens.size() >= 1)
+  if (tokens.size() != 2)
   {
-    hostname = tokens[0];
+    return;
   }
 
-  int port = d->ParameterSetNode->GetServerLauncherPort();
-  if (tokens.size() > 1)
+  std::string hostname = tokens[0];
+  bool success = true;
+  int port = QVariant(tokens[1].c_str()).toInt(&success);
+  if (!success)
   {
-    bool success = false;
-    int parsedPort = QVariant(tokens[1].c_str()).toInt(&success);
-    if (success)
-    {
-      port = parsedPort;
-    }
+    return;
   }
 
   d->ParameterSetNode->SetServerLauncherHostname(hostname.c_str());
   d->ParameterSetNode->SetServerLauncherPort(port);
-
-  hostname = d->ParameterSetNode->GetServerLauncherHostname();
-  port = d->ParameterSetNode->GetServerLauncherPort();
-
-  // If the input string contained some invalid characters, update widget from parameter node to remove them
-  std::stringstream reformattedSS;
-  reformattedSS << hostname << ":" << port;
-  std::string reformattedString = reformattedSS.str();
-  if (strcmp(reformattedString.c_str(), hostnameAndPort.c_str()) != 0)
-  {
-    this->updateWidgetFromMRML();
-  }
 }
 
 //-----------------------------------------------------------------------------
