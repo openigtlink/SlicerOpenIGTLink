@@ -23,7 +23,7 @@ mark_as_superbuild(Slicer_DIR)
 
 #-----------------------------------------------------------------------------
 # Options
-option(SlicerOpenIGTLink_USE_VP9 "Build SlicerOpenIGTLink with VP9 support" ON)
+option(SlicerOpenIGTLink_USE_VP9 "Build SlicerOpenIGTLink with VP9 support" OFF)
 mark_as_superbuild(SlicerOpenIGTLink_USE_VP9)
 
 #-----------------------------------------------------------------------------

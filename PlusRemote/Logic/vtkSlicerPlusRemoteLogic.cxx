@@ -1078,9 +1078,18 @@ void vtkSlicerPlusRemoteLogic::onRecordingStarted(vtkObject* caller, unsigned lo
 
   std::string responseContent = command->GetResponseContent();
   parameterNode->SetResponseText(responseContent);
-  parameterNode->SetRecordingStatus(vtkMRMLPlusRemoteNode::PLUS_REMOTE_RECORDING);
-  parameterNode->SetRecordingMessage("Recording in progress");
-  parameterNode->InvokeEvent(vtkMRMLPlusRemoteNode::RecordingStartedEvent);
+  if (command->GetSuccessful())
+  {
+    parameterNode->SetRecordingMessage("Recording in progress");
+    parameterNode->SetRecordingStatus(vtkMRMLPlusRemoteNode::PLUS_REMOTE_RECORDING);
+    parameterNode->InvokeEvent(vtkMRMLPlusRemoteNode::RecordingStartedEvent);
+  }
+  else
+  {
+    parameterNode->SetRecordingMessage(command->GetErrorMessage());
+    parameterNode->SetRecordingStatus(vtkMRMLPlusRemoteNode::PLUS_REMOTE_FAILED);
+    parameterNode->InvokeEvent(vtkMRMLPlusRemoteNode::RecordingCompletedEvent);
+  }  
 }
 
 //---------------------------------------------------------------------------
@@ -1099,7 +1108,7 @@ void vtkSlicerPlusRemoteLogic::onRecordingCompleted(vtkObject* caller, unsigned 
   std::string responseContent = command->GetResponseContent();
   parameterNode->SetResponseText(responseContent);
 
-  vtkSmartPointer<vtkXMLDataElement> responseXML = vtkXMLUtilities::ReadElementFromString(responseContent.c_str());
+  vtkSmartPointer<vtkXMLDataElement> responseXML = vtkSmartPointer<vtkXMLDataElement>::Take(vtkXMLUtilities::ReadElementFromString(responseContent.c_str()));
 
   int status = command->GetStatus();
   if (status == igtlioCommandStatus::CommandExpired)
@@ -1160,7 +1169,7 @@ void vtkSlicerPlusRemoteLogic::onOfflineVolumeReconstructionCompleted(vtkObject*
     return;
   }
 
-  vtkSmartPointer<vtkXMLDataElement> responseXML = vtkXMLUtilities::ReadElementFromString(responseContent.c_str());
+  vtkSmartPointer<vtkXMLDataElement> responseXML = vtkSmartPointer<vtkXMLDataElement>::Take(vtkXMLUtilities::ReadElementFromString(responseContent.c_str()));
   if (responseXML)
   {
     std::string messageString = responseXML->GetAttribute("Message") ? responseXML->GetAttribute("Message") : "";

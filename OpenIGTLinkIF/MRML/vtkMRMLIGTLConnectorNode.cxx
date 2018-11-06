@@ -271,7 +271,11 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
         vtkSmartPointer<vtkStreamingVolumeFrame> frame = vtkSmartPointer<vtkStreamingVolumeFrame>::New();
         frame->SetFrameData(frameData);
         frame->SetFrameType(videoDevice->GetContent().frameType == igtl::FrameTypeKey ? vtkStreamingVolumeFrame::IFrame : vtkStreamingVolumeFrame::PFrame);
-        frame->SetDimensions(videoDevice->GetContent().image->GetDimensions());
+        videoDevice->GetContent().videoMessage->Unpack(false);
+        frame->SetDimensions(videoDevice->GetContent().videoMessage->GetWidth(),
+                             videoDevice->GetContent().videoMessage->GetHeight(),
+                             videoDevice->GetContent().videoMessage->GetAdditionalZDimension());
+        frame->SetNumberOfComponents(videoDevice->GetContent().grayscale ? 1 : 3);
         frame->SetCodecFourCC(codecName);
         if (!frame->IsKeyFrame() && this->PreviousIncomingFramesMap.find(videoDevice->GetDeviceName()) != this->PreviousIncomingFramesMap.end())
         {
@@ -541,13 +545,13 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
   {
     igtlioVideoDevice* videoDevice = reinterpret_cast<igtlioVideoDevice*>(device);
     igtlioVideoConverter::ContentData content = videoDevice->GetContent();
-    if (!content.image)
+    if (!content.frameData)
     {
-      // Image data has not been set yet
+      // frame data has not been set yet
       return NULL;
     }
-    int numberOfComponents = content.image->GetNumberOfScalarComponents(); //to improve the io module to be able to cope with video data
-    vtkSmartPointer<vtkImageData> image = content.image;
+    int numberOfComponents = content.grayscale ? 1 : 3;
+
     std::string deviceName = videoDevice->GetDeviceName().c_str();
 
     vtkSmartPointer<vtkMRMLStreamingVolumeNode> streamingVolumeNode =
@@ -1724,6 +1728,11 @@ int vtkMRMLIGTLConnectorNode::GetIGTLTimeStamp(vtkMRMLNode* node, int& second, i
 //---------------------------------------------------------------------------
 int vtkMRMLIGTLConnectorNode::GetState()
 {
+  if (!this->Internal->IOConnector)
+  {
+    return StateOff;
+  }
+
   switch (this->Internal->IOConnector->GetState())
   {
   case igtlioConnector::STATE_OFF: return StateOff;
