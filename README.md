@@ -2,7 +2,7 @@
 
 ### Overview
 
-OpenIGTLinkIF is a [3D Slicer](http://slicer.org) extension designed for faciliate the communication between 3D Slicer and other platform via OpenIGTLink.
+OpenIGTLinkIF is a [3D Slicer](http://slicer.org) extension designed for faciliate the communication between 3D Slicer and other platform via [OpenIGTLink](http://openigtlink.org/).
 ![Alt text](Screenshots/Overview.png?raw=true "Overview")
 ### Usage:
 1. After install the extension, the user need to switch to the module `OpenIGTLinkIF`.
