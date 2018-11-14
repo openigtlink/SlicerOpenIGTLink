@@ -47,7 +47,7 @@ vtkMRMLNodeNewMacro(vtkMRMLPlusRemoteNode);
 //----------------------------------------------------------------------------
 vtkMRMLPlusRemoteNode::vtkMRMLPlusRemoteNode()
   : RecordingStatus(PLUS_REMOTE_IDLE)
-  , RecordingFilename("Recording.mha")
+  , RecordingFilename("Recording.igs.mha")
   , RecordingFilenameCompletion(false)
   , RecordingEnableCompression(false)
 
@@ -59,7 +59,7 @@ vtkMRMLPlusRemoteNode::vtkMRMLPlusRemoteNode()
 
   , ScoutScanStatus(PLUS_REMOTE_IDLE)
   , ScoutScanSpacing(3.0)
-  , ScoutScanFilename("ScoutScanRecording.mha")
+  , ScoutScanFilename("ScoutScanRecording.igs.mha")
   , ScoutScanFilenameCompletion(false)
   , ScoutScanShowResultOnCompletion(true)
 
