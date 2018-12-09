@@ -28,9 +28,9 @@ public:
   {
   vtkObject::PrintSelf(os, indent);
   };
-  
+
   ~CommandObserver(){};
-  
+
   void onCommandReceivedEventFunc(vtkObject* caller, unsigned long eid, void *calldata)
   {
   igtlioCommand* command = reinterpret_cast<igtlioCommand*>(calldata);
@@ -40,7 +40,7 @@ public:
   std::cout << command->GetCommandContent() << std::endl;
   testSuccessful +=1;
   }
-  
+
   void onCommandResponseReceivedEventFunc(vtkObject* caller, unsigned long eid,  void *calldata)
   {
   std::cout << "*** COMMAND response received from server:" << std::endl;
@@ -54,7 +54,7 @@ public:
   int testSuccessful;
   std::string ResponseString;
   vtkMRMLIGTLConnectorNode* ConnectorNode;
-  
+
 protected:
   CommandObserver()
   {
@@ -62,7 +62,7 @@ protected:
   ConnectorNode = NULL;
   ResponseString = "<Command>\n <Result success=\"true\"> <Parameter Name=\"Depth\" /> </Result>\n</Command>";
   };
-  
+
 };
 
 int vtkMRMLConnectorCommandSendAndReceiveTest(int argc, char * argv [] )
@@ -70,7 +70,7 @@ int vtkMRMLConnectorCommandSendAndReceiveTest(int argc, char * argv [] )
   int port = 18955;
 
   // Setup the Server and client, as well as the event observers.
-  vtkSmartPointer<CommandObserver> commandServerObsever = CommandObserver::New();
+  vtkSmartPointer<CommandObserver> commandServerObsever = vtkSmartPointer<CommandObserver>::New();
   vtkSmartPointer<vtkMRMLIGTLConnectorNode> serverConnectorNode = vtkMRMLIGTLConnectorNode::New();
   commandServerObsever->ConnectorNode = serverConnectorNode.GetPointer();
   serverConnectorNode->AddObserver(serverConnectorNode->CommandReceivedEvent, commandServerObsever, &CommandObserver::onCommandReceivedEventFunc);
@@ -83,18 +83,18 @@ int vtkMRMLConnectorCommandSendAndReceiveTest(int argc, char * argv [] )
   clientConnectorNode->AddObserver(clientConnectorNode->CommandResponseReceivedEvent, commandServerObsever, &CommandObserver::onCommandResponseReceivedEventFunc);
   clientConnectorNode->SetTypeClient("localhost", port);
   clientConnectorNode->Start();
-  
+
   // Make sure the server and client are connected.
   double timeout = 5;
   double starttime = vtkTimerLog::GetUniversalTime();
-  
+
   // Client connects to server.
   while (vtkTimerLog::GetUniversalTime() - starttime < timeout)
     {
     serverConnectorNode->PeriodicProcess();
     clientConnectorNode->PeriodicProcess();
     vtksys::SystemTools::Delay(5);
-    
+
     if (clientConnectorNode->GetState() == vtkMRMLIGTLConnectorNode::StateConnected)
       {
       std::cout << "SUCCESS: connected to server" << std::endl;
@@ -112,7 +112,7 @@ int vtkMRMLConnectorCommandSendAndReceiveTest(int argc, char * argv [] )
     }
 
   clientConnectorNode->SendCommand("Get", "<Command>\n <Parameter Name=\"Depth\" />\n </Command>", false);
-  
+
   // Make sure the Server receive the command message.
   starttime = vtkTimerLog::GetUniversalTime();
   while (vtkTimerLog::GetUniversalTime() - starttime < timeout)
@@ -120,7 +120,7 @@ int vtkMRMLConnectorCommandSendAndReceiveTest(int argc, char * argv [] )
     serverConnectorNode->PeriodicProcess();
     vtksys::SystemTools::Delay(5);
     }
-  
+
   // Make sure the Client receive the response message.
   starttime = vtkTimerLog::GetUniversalTime();
   while (vtkTimerLog::GetUniversalTime() - starttime < timeout)
@@ -132,14 +132,8 @@ int vtkMRMLConnectorCommandSendAndReceiveTest(int argc, char * argv [] )
   serverConnectorNode->Stop();
   clientConnectorNode->Delete();
   serverConnectorNode->Delete();
+
   //Condition only holds when both onCommandReceivedEventFunc and onCommandResponseReceivedEventFunc are called.
-  
-  std::cout<<"Test variable value: "<<commandServerObsever->testSuccessful<<std::endl;
-  if (commandServerObsever->testSuccessful==2)
-    {
-    commandServerObsever->Delete();
-    return EXIT_SUCCESS;
-    }
-  commandServerObsever->Delete();
-  return EXIT_FAILURE;
+  CHECK_INT(commandServerObsever->testSuccessful, 2);
+  return EXIT_SUCCESS;
 }

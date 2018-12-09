@@ -883,12 +883,18 @@ void vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents(vtkObject *caller, unsig
     vtkInfoMacro("Connected: " << connector->GetServerHostname() << ":" << connector->GetServerPort());
 
     // Slicer wants to make use of meta data in IGTL messages, so tell the server we can support v2 messages
-    igtlioStatusDevice* statusDevice = igtlioStatusDevice::New();
-    connector->AddDevice(statusDevice);
+    igtlioDeviceKeyType key;
+    key.name = "";
+    key.type = "STATUS";
+    vtkSmartPointer<igtlioStatusDevice> statusDevice = igtlioStatusDevice::SafeDownCast(this->Internal->IOConnector->GetDevice(key));
+    if (!statusDevice)
+    {
+      statusDevice = vtkSmartPointer<igtlioStatusDevice>::New();
+      connector->AddDevice(statusDevice);
+    }
     statusDevice->SetMetaDataElement("dummy", "dummy"); // existence of metadata makes the IO connector send a header v2 message
     connector->SendMessage(igtlioDeviceKeyType::CreateDeviceKey(statusDevice));
     connector->RemoveDevice(statusDevice);
-    statusDevice->Delete();
 
     }
   else if (mrmlEvent == DisconnectedEvent)
@@ -915,7 +921,7 @@ void vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents(vtkObject *caller, unsig
 
   if (mrmlEvent > 0)
     {
-    this->InvokeEvent(mrmlEvent);
+    this->InvokeEvent(mrmlEvent, callData);
     }
 }
 

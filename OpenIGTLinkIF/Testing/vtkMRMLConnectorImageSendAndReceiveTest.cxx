@@ -1,8 +1,10 @@
-#include "vtkSlicerConfigure.h" 
+#include "vtkSlicerConfigure.h"
 
 //OpenIGTLink includes
 #include "igtlOSUtil.h"
-#include "igtlioDevice.h"
+
+// OpenIGTLinkIO includes
+#include <igtlioDevice.h>
 
 // IF module includes
 #include "vtkMRMLIGTLConnectorNode.h"
@@ -35,11 +37,15 @@ public:
   };
   void onImagedReceivedEventFunc(vtkObject* caller, unsigned long eid,  void *calldata)
   {
-    std::cout << "*** Image received from server" << std::endl;
-    testSuccessful +=1;
+    vtkSmartPointer<igtlioDevice> device = (igtlioDevice*)calldata;
+    if (device->GetDeviceType() == "IMAGE")
+    {
+      std::cout << "*** Image received from server" << std::endl;
+      testSuccessful += 1;
+    }
   };
   int testSuccessful;
-  
+
   vtkSmartPointer<vtkImageData> CreateTestImage()
   {
     vtkSmartPointer<vtkImageData> image = vtkSmartPointer<vtkImageData>::New();
@@ -74,11 +80,11 @@ int vtkMRMLConnectorImageSendAndReceiveTest(int argc, char * argv [] )
   serverConnectorNode->SetScene(scene);
   igtl::Sleep(20);
   vtkSmartPointer<vtkMRMLIGTLConnectorNode> clientConnectorNode = vtkMRMLIGTLConnectorNode::New();
-  vtkSmartPointer<ImageObserver> imageClientObsever = ImageObserver::New();
+  vtkSmartPointer<ImageObserver> imageClientObsever = vtkSmartPointer<ImageObserver>::New();
   clientConnectorNode->AddObserver(clientConnectorNode->NewDeviceEvent, imageClientObsever, &ImageObserver::onImagedReceivedEventFunc);
   clientConnectorNode->SetTypeClient("localhost", 18945);
   clientConnectorNode->Start();
-  
+
   // Make sure the server and client are connected.
   double timeout = 5;
   double starttime = vtkTimerLog::GetUniversalTime();
@@ -106,7 +112,7 @@ int vtkMRMLConnectorImageSendAndReceiveTest(int argc, char * argv [] )
       return EXIT_FAILURE;
     }
   }
-  
+
   std::string device_name = "TestDevice";
   vtkSmartPointer<vtkImageData> testImage = imageClientObsever->CreateTestImage();
   vtkSmartPointer<vtkMRMLVectorVolumeNode> volumeNode = vtkSmartPointer<vtkMRMLVectorVolumeNode>::New();
@@ -123,7 +129,7 @@ int vtkMRMLConnectorImageSendAndReceiveTest(int argc, char * argv [] )
     return EXIT_FAILURE;
     }
   serverConnectorNode->PushNode(volumeNode);
-  
+
   // Make sure the Client receive the response message.
   starttime = vtkTimerLog::GetUniversalTime();
   while (vtkTimerLog::GetUniversalTime() - starttime < timeout)
@@ -138,11 +144,6 @@ int vtkMRMLConnectorImageSendAndReceiveTest(int argc, char * argv [] )
   serverConnectorNode->Delete();
   scene->Delete();
   //Condition only holds when both onCommandReceivedEventFunc and onCommanResponseReceivedEventFunc are called.
-  if (imageClientObsever->testSuccessful==1)
-    {
-    imageClientObsever->Delete();
-    return EXIT_SUCCESS;
-    }
-  imageClientObsever->Delete();
-  return EXIT_FAILURE;
+  CHECK_INT(imageClientObsever->testSuccessful, 1);
+  return EXIT_SUCCESS;
 }
