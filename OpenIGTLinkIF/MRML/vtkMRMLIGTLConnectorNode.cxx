@@ -45,11 +45,11 @@ Version:   $Revision: 1.2 $
 
 // VTK includes
 #include <vtkCollection.h>
-#include <vtkMutexLock.h>
-#include <vtkTimerLog.h>
 #include <vtkImageData.h>
 #include <vtkMatrix4x4.h>
+#include <vtkMutexLock.h>
 #include <vtkPolyData.h>
+#include <vtkTimerLog.h>
 
 // vtksys includes
 #include <vtksys/SystemTools.hxx>

@@ -19,18 +19,19 @@
 
 #include "vtkSlicerOpenIGTLinkIFModuleLogicExport.h"
 
-#include "vtkSlicerBaseLogic.h"
-#include "vtkSlicerModuleLogic.h"
-#include "vtkCallbackCommand.h"
+// Slicer includes
+#include <vtkSlicerBaseLogic.h>
+#include <vtkSlicerModuleLogic.h>
 
 // MRML includes
-#include <vtkMRMLTransformNode.h>
 #include <vtkMRMLFiducialListNode.h>
 #include <vtkMRMLScene.h>
 
+// OpenIGTLinkIF includes
 #include "vtkMRMLIGTLConnectorNode.h"
 
 // VTK includes
+#include <vtkCallbackCommand.h>
 #include <vtkMultiThreader.h>
 
 // STD includes
@@ -93,7 +94,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_LOGIC_EXPORT vtkSlicerOpenIGTLinkIFLogic :
   vtkMRMLIGTLConnectorNode* GetConnector(const char* conID);
 
   // Call timer-driven routines for each connector
-  void                      CallConnectorTimerHander(); 
+  void                      CallConnectorTimerHander();
 
   // Device Name management
   int  SetRestrictDeviceName(int f);
@@ -109,7 +110,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_LOGIC_EXPORT vtkSlicerOpenIGTLinkIFLogic :
   //----------------------------------------------------------------
   // MRML Management
   //----------------------------------------------------------------
-  
+
   virtual void ProcessMRMLNodesEvents(vtkObject* caller, unsigned long event, void * callData) VTK_OVERRIDE;
   //virtual void ProcessLogicEvents(vtkObject * caller, unsigned long event, void * callData);
 
@@ -118,6 +119,9 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_LOGIC_EXPORT vtkSlicerOpenIGTLinkIFLogic :
   void GetDeviceNamesFromMrml(IGTLMrmlNodeListType &list);
   void GetDeviceNamesFromMrml(IGTLMrmlNodeListType &list, const char* mrmlTagName);
   //void GetDeviceTypes(std::vector<char*> &list);
+
+  // Transform locator model node reference role
+  vtkGetStringMacro(LocatorModelReferenceRole);
 
  protected:
 
@@ -153,6 +157,11 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_LOGIC_EXPORT vtkSlicerOpenIGTLinkIFLogic :
   int RestrictDeviceName;
 
   
+  char* LocatorModelReferenceRole;
+
+  // Transform locator model node reference role
+  vtkSetStringMacro(LocatorModelReferenceRole);
+
 private:
   class vtkInternal;
   vtkInternal * Internal;
