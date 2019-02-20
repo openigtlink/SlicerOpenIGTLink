@@ -40,12 +40,23 @@
 // OpenIGTLinkIF Logic includes
 #include "vtkSlicerOpenIGTLinkIFLogic.h"
 
-// VTK includes
-#include <vtkNew.h>
-#include <vtkCallbackCommand.h>
-#include <vtkImageData.h>
-#include <vtkTransform.h>
+// MRML includes
+#include <vtkMRMLModelDisplayNode.h>
+#include <vtkMRMLModelNode.h>
+#include <vtkMRMLTransformNode.h>
 
+// VTK includes
+#include <vtkAppendPolyData.h>
+#include <vtkCallbackCommand.h>
+#include <vtkCylinderSource.h>
+#include <vtkImageData.h>
+#include <vtkNew.h>
+#include <vtkPolyData.h>
+#include <vtkSphereSource.h>
+#include <vtkTransform.h>
+#include <vtkTransformPolyDataFilter.h>
+
+// vtkAddon includes
 #include <vtkStreamingVolumeCodecFactory.h>
 
 #if defined(OpenIGTLink_USE_VP9)
@@ -70,6 +81,11 @@ public:
 
   igtlioMessageDeviceListType      MessageDeviceList;
   igtlioDeviceFactoryPointer DeviceFactory;
+
+  // Update state of node locator model to reflect the IGTLVisible attribute of the nodes
+  void SetLocatorVisibility(bool visible, vtkMRMLTransformNode* transform);
+  // Add a node locator to the mrml scene
+  vtkMRMLModelNode* AddLocatorModel(vtkMRMLScene* scene, std::string nodeName, double r, double g, double b);
 };
 
 //----------------------------------------------------------------------------
@@ -102,14 +118,15 @@ vtkSlicerOpenIGTLinkIFLogic::vtkSlicerOpenIGTLinkIFLogic()
 
   this->Initialized   = 0;
   this->RestrictDeviceName = 0;
-  
+
   std::vector<std::string> deviceTypes = this->Internal->DeviceFactory->GetAvailableDeviceTypes();
   for (size_t typeIndex = 0; typeIndex<deviceTypes.size();typeIndex++)
   {
     this->Internal->MessageDeviceList.push_back(this->Internal->DeviceFactory->GetCreator(deviceTypes[typeIndex])->Create(""));
   }
-    
-  //this->LocatorTransformNode = NULL;
+
+  this->LocatorModelReferenceRole = NULL;
+  this->SetLocatorModelReferenceRole("LocatorModel");
 }
 
 //---------------------------------------------------------------------------
@@ -514,7 +531,6 @@ IGTLDevicePointer vtkSlicerOpenIGTLinkIFLogic::GetDeviceByDeviceType(const char*
 //---------------------------------------------------------------------------
 void vtkSlicerOpenIGTLinkIFLogic::ProcessMRMLNodesEvents(vtkObject * caller, unsigned long event, void * callData)
 {
-
   if (caller != NULL)
     {
     vtkSlicerModuleLogic::ProcessMRMLNodesEvents(caller, event, callData);
@@ -532,18 +548,17 @@ void vtkSlicerOpenIGTLinkIFLogic::ProcessMRMLNodesEvents(vtkObject * caller, uns
         vtkMRMLNode* inode = cnode->GetIncomingMRMLNode(i);
         if (inode)
           {
-          igtlioDevice* Device = static_cast<igtlioDevice*>(GetDeviceByMRMLTag(inode->GetNodeTagName()));
-          if (Device)
+          const char * attr = inode->GetAttribute("IGTLVisible");
+          bool visible = (attr && strcmp(attr, "true") == 0);
+          igtlioDevice* device = static_cast<igtlioDevice*>(this->GetDeviceByMRMLTag(inode->GetNodeTagName()));
+          if (device)
             {
-            const char * attr = inode->GetAttribute("IGTLVisible");
-            if (attr && strcmp(attr, "true") == 0)
-              {
-              Device->SetVisibility(1);
-              }
-            else
-              {
-              Device->SetVisibility(0);
-              }
+            device->SetVisibility(visible);
+            }
+          vtkMRMLTransformNode* transformNode = vtkMRMLTransformNode::SafeDownCast(inode);
+          if (transformNode)
+            {
+            this->Internal->SetLocatorVisibility(visible, transformNode);
             }
           }
         }
@@ -555,18 +570,17 @@ void vtkSlicerOpenIGTLinkIFLogic::ProcessMRMLNodesEvents(vtkObject * caller, uns
         vtkMRMLNode* inode = cnode->GetOutgoingMRMLNode(i);
         if (inode)
           {
-          igtlioDevice* Device = static_cast<igtlioDevice*>(GetDeviceByMRMLTag(inode->GetNodeTagName()));
-          if (Device)
+          const char * attr = inode->GetAttribute("IGTLVisible");
+          bool visible = (attr && strcmp(attr, "true") == 0);
+          igtlioDevice* device = static_cast<igtlioDevice*>(this->GetDeviceByMRMLTag(inode->GetNodeTagName()));
+          if (device)
             {
-            const char * attr = inode->GetAttribute("IGTLVisible");
-            if (attr && strcmp(attr, "true") == 0)
-              {
-              Device->SetVisibility(1);
-              }
-            else
-              {
-              Device->SetVisibility(0);
-              }
+            device->SetVisibility(visible);
+            }
+          vtkMRMLTransformNode* transformNode = vtkMRMLTransformNode::SafeDownCast(inode);
+          if (transformNode)
+            {
+            this->Internal->SetLocatorVisibility(visible, transformNode);
             }
           }
         }
@@ -611,9 +625,6 @@ void vtkSlicerOpenIGTLinkIFLogic::ProcessMRMLNodesEvents(vtkObject * caller, uns
     //    } // for (iter)
     //  } // for (cliter)
 }
-
-
-
 
 //---------------------------------------------------------------------------
 void vtkSlicerOpenIGTLinkIFLogic::ProcCommand(const char* vtkNotUsed(nodeName), int vtkNotUsed(size), unsigned char* vtkNotUsed(data))
@@ -690,8 +701,82 @@ void vtkSlicerOpenIGTLinkIFLogic::GetDeviceNamesFromMrml(IGTLMrmlNodeListType &l
     }
 }
 
-////---------------------------------------------------------------------------
-//const char* vtkSlicerOpenIGTLinkIFLogic::MRMLTagToIGTLName(const char* mrmlTagName);
-//{
-//
-//}
+//---------------------------------------------------------------------------
+void vtkSlicerOpenIGTLinkIFLogic::vtkInternal::SetLocatorVisibility(bool visible, vtkMRMLTransformNode* transformNode)
+{
+  if (!transformNode || !this->External->GetMRMLScene())
+    {
+    vtkErrorWithObjectMacro(this->External, "Invalid transform node or scene");
+    return;
+    }
+
+  // Set visibility of attached model node
+  vtkMRMLModelNode* locatorModel = vtkMRMLModelNode::SafeDownCast(
+    transformNode->GetNodeReference(this->External->GetLocatorModelReferenceRole()));
+
+  // Locator model is required, but has not been added yet
+  if (!locatorModel && visible)
+    {
+    if (this->External->GetMRMLScene())
+      {
+      std::stringstream ss;
+      ss << "Locator_" << transformNode->GetName();
+      locatorModel = this->AddLocatorModel(this->External->GetMRMLScene(), ss.str(), 0.0, 1.0, 1.0);
+      if (locatorModel)
+        {
+        locatorModel->SetAndObserveTransformNodeID(transformNode->GetID());
+        transformNode->SetNodeReferenceID(this->External->GetLocatorModelReferenceRole(), locatorModel->GetID());
+        }
+      }
+    }
+  if (locatorModel)
+    {
+    locatorModel->SetDisplayVisibility(visible);
+    }
+}
+
+//---------------------------------------------------------------------------
+vtkMRMLModelNode* vtkSlicerOpenIGTLinkIFLogic::vtkInternal::AddLocatorModel(vtkMRMLScene * scene, std::string nodeName, double r, double g, double b)
+{
+  if (!this->External->GetMRMLScene())
+    {
+    return NULL;
+    }
+
+  vtkSmartPointer<vtkMRMLModelNode> locatorModelNode = vtkMRMLModelNode::SafeDownCast(
+    this->External->GetMRMLScene()->AddNewNodeByClass("vtkMRMLModelNode", nodeName.c_str()));
+  locatorModelNode->CreateDefaultDisplayNodes();
+
+  // Cylinder represents the locator stick
+  vtkSmartPointer<vtkCylinderSource> cylinder = vtkSmartPointer<vtkCylinderSource>::New();
+  cylinder->SetRadius(1.5);
+  cylinder->SetHeight(100);
+  cylinder->SetCenter(0, 0, 0);
+
+  // Rotate cylinder
+  vtkSmartPointer<vtkTransformPolyDataFilter> transformFilter = vtkSmartPointer<vtkTransformPolyDataFilter>::New();
+  vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
+  transform->RotateX(90.0);
+  transform->Translate(0.0, -50.0, 0.0);
+  transform->Update();
+  transformFilter->SetInputConnection(cylinder->GetOutputPort());
+  transformFilter->SetTransform(transform);
+
+  // Sphere represents the locator tip
+  vtkSmartPointer<vtkSphereSource> sphere = vtkSmartPointer<vtkSphereSource>::New();
+  sphere->SetRadius(3.0);
+  sphere->SetCenter(0, 0, 0);
+
+  vtkSmartPointer<vtkAppendPolyData> append = vtkSmartPointer<vtkAppendPolyData>::New();
+  append->AddInputConnection(sphere->GetOutputPort());
+  append->AddInputConnection(transformFilter->GetOutputPort());
+  append->Update();
+
+  locatorModelNode->SetAndObservePolyData(append->GetOutput());
+
+  vtkMRMLModelDisplayNode* locatorDisplayNode = vtkMRMLModelDisplayNode::SafeDownCast(locatorModelNode->GetDisplayNode());
+  locatorDisplayNode->SetColor(r, g, b);
+
+  return vtkMRMLModelNode::SafeDownCast(locatorModelNode);
+
+}
