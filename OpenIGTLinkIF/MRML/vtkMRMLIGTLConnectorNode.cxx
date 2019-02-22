@@ -896,6 +896,7 @@ void vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents(vtkObject *caller, unsig
     connector->SendMessage(igtlioDeviceKeyType::CreateDeviceKey(statusDevice));
     connector->RemoveDevice(statusDevice);
 
+    this->PushOnConnect();
     }
   else if (mrmlEvent == DisconnectedEvent)
     {
@@ -922,6 +923,20 @@ void vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents(vtkObject *caller, unsig
   if (mrmlEvent > 0)
     {
     this->InvokeEvent(mrmlEvent, callData);
+    }
+}
+
+//----------------------------------------------------------------------------
+void vtkMRMLIGTLConnectorNode::PushOnConnect()
+{
+  for (int i = 0; i < this->GetNumberOfOutgoingMRMLNodes(); ++i)
+    {
+    vtkMRMLNode* node = this->GetOutgoingMRMLNode(i);
+    const char* pushOnConnect = node->GetAttribute("OpenIGTLinkIF.pushOnConnect");
+    if (pushOnConnect && strcmp(pushOnConnect, "true") == 0)
+      {
+      this->PushNode(node);
+      }
     }
 }
 
