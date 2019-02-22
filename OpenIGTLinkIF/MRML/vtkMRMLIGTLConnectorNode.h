@@ -214,6 +214,10 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   // external nodes or MRML event hander in the connector node.
   int PushNode(vtkMRMLNode* node);
 
+  // Description:
+  // Calls PushNode() for all nodes with the "OpenIGTLinkIF.pushOnConnect" attribute set to "true"
+  void PushOnConnect();
+
   // Query queueing mechanism is needed to send all queries from the connector thread.
   // Queries can be pushed to the end of the QueryQueue by calling RequestInvoke from any thread,
   // and they will be Invoked in the main thread.
