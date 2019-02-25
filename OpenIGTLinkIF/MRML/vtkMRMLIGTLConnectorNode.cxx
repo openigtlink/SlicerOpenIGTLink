@@ -1604,6 +1604,36 @@ int vtkMRMLIGTLConnectorNode::PushNode(vtkMRMLNode* node)
   key.type = device->GetDeviceType();
   device->ClearMetaData();
   device->SetMetaDataElement(MEMLNodeNameKey, IANA_TYPE_US_ASCII, node->GetNodeTagName());
+
+  if (node->IsA("vtkMRMLTransformNode"))
+    {
+    const char* transformStatusAttribute = node->GetAttribute("TransformStatus");
+    if (transformStatusAttribute)
+      {
+    device->SetMetaDataElement("TransformStatus", transformStatusAttribute);
+      }
+    else
+      {
+      // If no transform status is specified, the transform node is assumed to be valid.
+      // Transform status should be set to "OK", rather than "UNKNOWN" to reflect this.
+      device->SetMetaDataElement("TransformStatus", "OK");
+      }
+    }
+  else
+    {
+    const char* statusAttribute = node->GetAttribute("Status");
+    if (statusAttribute)
+      {
+      device->SetMetaDataElement("Status", statusAttribute);
+      }
+    else
+      {
+      // If no status is specified, the node is assumed to be valid.
+      // Status should be set to "OK", rather than "UNKNOWN" to reflect this.
+      device->SetMetaDataElement("Status", "OK");
+      }
+    }
+
   device->RemoveObservers(device->GetDeviceContentModifiedEvent());
   this->Internal->AssignOutGoingNodeToDevice(node, device); // update the device content
   device->AddObserver(device->GetDeviceContentModifiedEvent(),  this, &vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents);
