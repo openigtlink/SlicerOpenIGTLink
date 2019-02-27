@@ -48,7 +48,7 @@ public:
 
   ///
   /// Set text encoding
-  vtkSetStringMacro(Text);
+  virtual void SetText(const char* text);
   vtkGetStringMacro(Text);
 
   ///
