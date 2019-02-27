@@ -19,6 +19,41 @@ vtkMRMLTextNode::~vtkMRMLTextNode()
 }
 
 //----------------------------------------------------------------------------
+void vtkMRMLTextNode::SetText(const char* text)
+{
+  vtkDebugMacro(<< this->GetClassName() << " (" << this << "): setting Text to " << (text ? text : "(null)")); \
+  if (this->Text == nullptr && text == nullptr)
+    {
+      return;
+    }
+  if (this->Text && text && (!strcmp(this->Text, text)))
+    {
+    return;
+    }
+
+  delete[] this->Text;
+  if (text)
+    {
+    size_t n = strlen(text) + 1;
+    char *cp1 = new char[n];
+    const char *cp2 = (text);
+    this->Text = cp1;
+    do
+      {
+      *cp1++ = *cp2++;
+      }
+      while (--n);
+    }
+  else
+    {
+    this->Text = nullptr;
+    }
+
+  this->InvokeCustomModifiedEvent(vtkMRMLTextNode::TextModifiedEvent);
+  this->Modified();
+}
+
+//----------------------------------------------------------------------------
 void vtkMRMLTextNode::ReadXMLAttributes(const char** atts)
 {
   int disabledModify = this->StartModify();

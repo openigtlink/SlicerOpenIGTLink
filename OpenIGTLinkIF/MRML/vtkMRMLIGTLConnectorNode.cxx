@@ -187,7 +187,12 @@ unsigned int vtkMRMLIGTLConnectorNode::vtkInternal::AssignOutGoingNodeToDevice(v
   {
     igtlioStringDevice* stringDevice = static_cast<igtlioStringDevice*>(device.GetPointer());
     vtkMRMLTextNode* textNode = vtkMRMLTextNode::SafeDownCast(node);
-    igtlioStringConverter::ContentData content = { static_cast<unsigned int>(textNode->GetEncoding()), textNode->GetText() };
+    std::string text;
+    if (textNode->GetText())
+    {
+      text = textNode->GetText();
+    }
+    igtlioStringConverter::ContentData content = { static_cast<unsigned int>(textNode->GetEncoding()), text };
     stringDevice->SetContent(content);
     modifiedEvent = vtkMRMLTextNode::TextModifiedEvent;
   }
@@ -846,11 +851,11 @@ void vtkMRMLIGTLConnectorNode::ProcessMRMLEvents( vtkObject *caller, unsigned lo
     {
     return;
     }
-  int n = this->GetNumberOfNodeReferences(this->GetOutgoingNodeReferenceRole());
 
+  int n = this->GetNumberOfNodeReferences(this->GetOutgoingNodeReferenceRole());
   for (int i = 0; i < n; i ++)
   {
-    const char* id = GetNthNodeReferenceID(this->GetOutgoingNodeReferenceRole(), i);
+    const char* id = this->GetNthNodeReferenceID(this->GetOutgoingNodeReferenceRole(), i);
     if (strcmp(node->GetID(), id) == 0)
     {
       this->PushNode(node);
@@ -1236,7 +1241,7 @@ void vtkMRMLIGTLConnectorNode::OnNodeReferenceAdded(vtkMRMLNodeReference *refere
       {
       igtlioDeviceKeyType key;
       key.name = node->GetName();
-      std::vector<std::string> deviceTypes = GetDeviceTypeFromMRMLNodeType(node->GetNodeTagName());
+      std::vector<std::string> deviceTypes = this->GetDeviceTypeFromMRMLNodeType(node->GetNodeTagName());
       for (size_t typeIndex = 0; typeIndex < deviceTypes.size(); typeIndex++)
         {
         key.type = deviceTypes[typeIndex];
@@ -1268,8 +1273,8 @@ void vtkMRMLIGTLConnectorNode::OnNodeReferenceAdded(vtkMRMLNodeReference *refere
     return;
       }
     device->SetMessageDirection(igtlioDevice::MESSAGE_DIRECTION_OUT);
-    unsigned int NodeModifiedEvent = this->Internal->AssignOutGoingNodeToDevice(node, device);
-    node->AddObserver(NodeModifiedEvent,  this, &vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents);
+    unsigned int nodeModifiedEvent = this->Internal->AssignOutGoingNodeToDevice(node, device);
+    node->AddObserver(nodeModifiedEvent, this, &vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents);
 
     // Need to update the events here because observed events are not saved in the scene
     // for each reference and therefore only the role-default event observers are added.
@@ -1280,15 +1285,13 @@ void vtkMRMLIGTLConnectorNode::OnNodeReferenceAdded(vtkMRMLNodeReference *refere
     int n = this->GetNumberOfNodeReferences(this->GetOutgoingNodeReferenceRole());
     for (int i = 0; i < n; i ++)
     {
-      const char* id = GetNthNodeReferenceID(this->GetOutgoingNodeReferenceRole(), i);
+      const char* id = this->GetNthNodeReferenceID(this->GetOutgoingNodeReferenceRole(), i);
       if (strcmp(node->GetID(), id) == 0)
       {
-        vtkIntArray* nodeEvents;
-        nodeEvents = vtkIntArray::New();
-        nodeEvents->InsertNextValue(NodeModifiedEvent);
+        vtkSmartPointer<vtkIntArray> nodeEvents = vtkSmartPointer<vtkIntArray>::New();
+        nodeEvents->InsertNextValue(nodeModifiedEvent);
         this->SetAndObserveNthNodeReferenceID(this->GetOutgoingNodeReferenceRole(), i,
                                               node->GetID(),nodeEvents );
-        nodeEvents->Delete();
         break;
       }
     }
@@ -1483,7 +1486,7 @@ int vtkMRMLIGTLConnectorNode::RegisterOutgoingMRMLNode(vtkMRMLNode* node, const 
   int n = this->GetNumberOfNodeReferences(this->GetOutgoingNodeReferenceRole());
   for (int i = 0; i < n; i ++)
     {
-    const char* id = GetNthNodeReferenceID(this->GetOutgoingNodeReferenceRole(), i);
+    const char* id = this->GetNthNodeReferenceID(this->GetOutgoingNodeReferenceRole(), i);
     if (strcmp(node->GetID(), id) == 0)
       {
       // Alredy on the list. Remove it.
@@ -1497,7 +1500,7 @@ int vtkMRMLIGTLConnectorNode::RegisterOutgoingMRMLNode(vtkMRMLNode* node, const 
     igtlioDevicePointer device = NULL;
     igtlioDeviceKeyType key;
     key.name = node->GetName();
-    std::vector<std::string> deviceTypes = GetDeviceTypeFromMRMLNodeType(node->GetNodeTagName());
+    std::vector<std::string> deviceTypes = this->GetDeviceTypeFromMRMLNodeType(node->GetNodeTagName());
     for (size_t typeIndex = 0; typeIndex < deviceTypes.size(); typeIndex++)
       {
       key.type = deviceTypes[typeIndex];
@@ -1528,7 +1531,7 @@ int vtkMRMLIGTLConnectorNode::RegisterOutgoingMRMLNode(vtkMRMLNode* node, const 
     int n = this->GetNumberOfNodeReferences(this->GetOutgoingNodeReferenceRole());
     for (int i = 0; i < n; i ++)
     {
-      const char* id = GetNthNodeReferenceID(this->GetOutgoingNodeReferenceRole(), i);
+      const char* id = this->GetNthNodeReferenceID(this->GetOutgoingNodeReferenceRole(), i);
       if (strcmp(node->GetID(), id) == 0)
       {
         // Alredy on the list. Remove it.
