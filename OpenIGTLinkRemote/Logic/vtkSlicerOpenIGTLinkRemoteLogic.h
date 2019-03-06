@@ -30,6 +30,7 @@
 class vtkMRMLIGTLQueryNode;
 class vtkSlicerOpenIGTLinkIFLogic;
 class igtlioCommand;
+class vtkSlicerOpenIGTLinkCommand;
 
 /// \ingroup Slicer_QtModules_ExtensionTemplate
 class VTK_SLICER_OPENIGTLINKREMOTE_MODULE_LOGIC_EXPORT vtkSlicerOpenIGTLinkRemoteLogic :
@@ -39,7 +40,7 @@ public:
   static vtkSlicerOpenIGTLinkRemoteLogic *New();
   vtkTypeMacro(vtkSlicerOpenIGTLinkRemoteLogic, vtkSlicerModuleLogic);
   void PrintSelf(ostream& os, vtkIndent indent);
-  
+
   void SetIFLogic( vtkSlicerOpenIGTLinkIFLogic* ifLogic );
 
   /// Send an OpenIGTLink command
@@ -61,11 +62,13 @@ public:
   ///       print "Command completed: ", command.StatusToString(command.GetStatus())
   ///     cmd.AddObserver(igtlioLogicPython.igtlioCommand.CommandCompletedEvent, notificationMethod)
   bool SendCommand(igtlioCommand* command, const char* connectorNodeId);
+  bool SendCommand(vtkSlicerOpenIGTLinkCommand* command, const char* connectorNodeId);
 
   /// Cancel a command: removes from the OpenIGTLink connector's query queue, removes the
   /// association with the query node (so that it is reusable for sending another command),
   /// and sets the command state to cancelled.
   bool CancelCommand(igtlioCommand* command);
+  bool CancelCommand(vtkSlicerOpenIGTLinkCommand* command);
 
 protected:
   vtkSlicerOpenIGTLinkRemoteLogic();
@@ -82,6 +85,7 @@ protected:
   virtual void ProcessMRMLNodesEvents(vtkObject* caller, unsigned long event, void * callData);
 
   vtkMRMLIGTLQueryNode* GetCommandQueryNode(igtlioCommand* command);
+  vtkMRMLIGTLQueryNode* GetCommandQueryNode(vtkSlicerOpenIGTLinkCommand* command);
   void ReleaseCommandQueryNode(vtkMRMLIGTLQueryNode* commandQueryNode);
 
   /// Creates a command query node and corresponding response node.
@@ -89,7 +93,7 @@ protected:
   /// to avoid the overhead of creating and deleting nodes in the scene at each
   /// command execution.
   vtkMRMLIGTLQueryNode* CreateCommandQueryNode();
-  
+
   /// Deletes a command query node and corresponding response node
   void DeleteCommandQueryNode(vtkMRMLIGTLQueryNode* commandQueryNode);
 
@@ -97,7 +101,7 @@ private:
 
   vtkSlicerOpenIGTLinkRemoteLogic(const vtkSlicerOpenIGTLinkRemoteLogic&); // Not implemented
   void operator=(const vtkSlicerOpenIGTLinkRemoteLogic&);               // Not implemented
-  
+
   class vtkInternal;
   vtkInternal* Internal;
 

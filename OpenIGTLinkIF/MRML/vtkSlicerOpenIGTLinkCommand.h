@@ -43,7 +43,7 @@ private:
   void operator=(const vtkSlicerOpenIGTLinkCommand&);               // Not implemented
   //
 //    igtlioCommandStatus::CommandExpired
-    
+
 public:
   enum
   {
@@ -92,6 +92,8 @@ public:
 
   std::string GetErrorMessage();
   void SetErrorMessage(std::string);
+
+  igtlioCommand* GetCommand() { return this->Command; };
 
   void ClearCommand();
 

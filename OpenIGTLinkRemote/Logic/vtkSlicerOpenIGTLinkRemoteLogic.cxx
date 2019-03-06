@@ -1,15 +1,42 @@
+/*==============================================================================
+
+Program: 3D Slicer
+
+Portions (c) Copyright Brigham and Women's Hospital (BWH) All Rights Reserved.
+
+See COPYRIGHT.txt
+or http://www.slicer.org/copyright/copyright.txt for details.
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+==============================================================================*/
+
+// MRML includes
+#include <vtkMRMLScene.h>
+
+// OpenIGTLinkIF MRML includes
 #include "vtkMRMLIGTLConnectorNode.h"
 #include "vtkMRMLIGTLQueryNode.h"
-#include "vtkMRMLScene.h"
 #include "vtkMRMLTextNode.h"
+#include "vtkSlicerOpenIGTLinkCommand.h"
+
+// OpenIGTLinkRemote logic includes
 #include "vtkSlicerOpenIGTLinkIFLogic.h"
+
+// OpenIGTLinkIF logic includes
 #include "vtkSlicerOpenIGTLinkRemoteLogic.h"
 
+// STD includes
 #include <cassert>
 #include <sstream>
 #include <string>
 #include <vector>
 
+// VTK includes
 #include <vtkNew.h>
 #include <vtkObjectFactory.h>
 #include <vtkXMLDataElement.h>
@@ -133,8 +160,25 @@ void vtkSlicerOpenIGTLinkRemoteLogic::DeleteCommandQueryNode(vtkMRMLIGTLQueryNod
 }
 
 //----------------------------------------------------------------------------
+vtkMRMLIGTLQueryNode* vtkSlicerOpenIGTLinkRemoteLogic::GetCommandQueryNode(vtkSlicerOpenIGTLinkCommand* command)
+{
+  if (command == NULL)
+  {
+    vtkErrorMacro("vtkSlicerOpenIGTLinkRemoteLogic::CancelCommand failed: invalid input command");
+    return false;
+  }
+  this->GetCommandQueryNode(command->GetCommand());
+}
+
+//----------------------------------------------------------------------------
 vtkMRMLIGTLQueryNode* vtkSlicerOpenIGTLinkRemoteLogic::GetCommandQueryNode(igtlioCommand* command)
 {
+  if (command == NULL)
+  {
+    vtkErrorMacro("vtkSlicerOpenIGTLinkRemoteLogic::CancelCommand failed: invalid input command");
+    return false;
+  }
+
   // If we find an unassigned command query node then use that
   for (std::vector<vtkSlicerOpenIGTLinkRemoteLogic::vtkInternal::CommandInfo>::iterator it=this->Internal->Commands.begin();
     it!=this->Internal->Commands.end(); ++it)
@@ -175,6 +219,17 @@ void vtkSlicerOpenIGTLinkRemoteLogic::ReleaseCommandQueryNode(vtkMRMLIGTLQueryNo
 }
 
 //----------------------------------------------------------------------------
+bool vtkSlicerOpenIGTLinkRemoteLogic::SendCommand(vtkSlicerOpenIGTLinkCommand* command, const char* connectorNodeId)
+{
+  if (command == NULL)
+  {
+    vtkErrorMacro("SendCommand failed: command is invalid");
+    return false;
+  }
+  this->SendCommand(command->GetCommand(), connectorNodeId);
+}
+
+//----------------------------------------------------------------------------
 bool vtkSlicerOpenIGTLinkRemoteLogic::SendCommand(igtlioCommand* command, const char* connectorNodeId)
 {
   if ( command == NULL )
@@ -186,7 +241,7 @@ bool vtkSlicerOpenIGTLinkRemoteLogic::SendCommand(igtlioCommand* command, const 
   {
     vtkErrorMacro( "MRML Scene is invalid" );
     return false;
-  }  
+  }
   vtkMRMLIGTLConnectorNode* connectorNode = vtkMRMLIGTLConnectorNode::SafeDownCast( this->GetMRMLScene()->GetNodeByID( connectorNodeId ) );
   if ( connectorNode == NULL )
   {
@@ -243,8 +298,19 @@ bool vtkSlicerOpenIGTLinkRemoteLogic::SendCommand(igtlioCommand* command, const 
   connectorNode->SendCommand(command);
   return true;
   }
-  
+
   return false;
+}
+
+//----------------------------------------------------------------------------
+bool vtkSlicerOpenIGTLinkRemoteLogic::CancelCommand(vtkSlicerOpenIGTLinkCommand* command)
+{
+  if (command == NULL)
+  {
+    vtkErrorMacro("vtkSlicerOpenIGTLinkRemoteLogic::CancelCommand failed: invalid input command");
+    return false;
+  }
+  this->CancelCommand(command->GetCommand());
 }
 
 //----------------------------------------------------------------------------
@@ -320,7 +386,7 @@ void vtkSlicerOpenIGTLinkRemoteLogic::UpdateFromMRMLScene()
     // command query node is not in the scene anymore, cancel the command
     this->CancelCommand(it->Command);
     commandInfoToBeDeleted.push_back(&(*it));
-  } 
+  }
 
   // Delete all cancelled items
   // Do it in a separate loop from the checking, as cancelling a command might have the side effect of adding/removing commands
