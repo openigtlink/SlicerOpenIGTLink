@@ -165,7 +165,7 @@ vtkMRMLIGTLQueryNode* vtkSlicerOpenIGTLinkRemoteLogic::GetCommandQueryNode(vtkSl
   if (command == NULL)
   {
     vtkErrorMacro("vtkSlicerOpenIGTLinkRemoteLogic::CancelCommand failed: invalid input command");
-    return false;
+    return NULL;
   }
   this->GetCommandQueryNode(command->GetCommand());
 }
@@ -176,7 +176,7 @@ vtkMRMLIGTLQueryNode* vtkSlicerOpenIGTLinkRemoteLogic::GetCommandQueryNode(igtli
   if (command == NULL)
   {
     vtkErrorMacro("vtkSlicerOpenIGTLinkRemoteLogic::CancelCommand failed: invalid input command");
-    return false;
+    return NULL;
   }
 
   // If we find an unassigned command query node then use that
