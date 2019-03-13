@@ -806,36 +806,36 @@ std::vector<std::string> vtkMRMLIGTLConnectorNode::GetNodeTagFromDeviceType(cons
 }
 
 //----------------------------------------------------------------------------
-std::vector<std::string> vtkMRMLIGTLConnectorNode::GetDeviceTypeFromMRMLNodeType(const char* NodeTag)
+std::vector<std::string> vtkMRMLIGTLConnectorNode::GetDeviceTypeFromMRMLNodeType(const char* nodeTag)
 {
 #if defined(OpenIGTLink_ENABLE_VIDEOSTREAMING)
-  if(strcmp(NodeTag, "StreamingVolume")==0)
+  if(strcmp(nodeTag, "StreamingVolume")==0)
     {
-    std::vector<std::string> DeviceTypes;
-    DeviceTypes.push_back("VIDEO");
-    DeviceTypes.push_back("IMAGE");
-    return DeviceTypes;
+    std::vector<std::string> deviceTypes;
+    deviceTypes.push_back("VIDEO");
+    deviceTypes.push_back("IMAGE");
+    return deviceTypes;
     }
 #endif
-  if(strcmp(NodeTag, "Volume")==0 || strcmp(NodeTag, "VectorVolume")==0)
+  if(strcmp(nodeTag, "Volume")==0 || strcmp(nodeTag, "VectorVolume")==0)
     {
-    std::vector<std::string> DeviceTypes;
-    DeviceTypes.push_back("IMAGE");
-    return DeviceTypes;
+    std::vector<std::string> deviceTypes;
+    deviceTypes.push_back("IMAGE");
+    return deviceTypes;
     }
-  if(strcmp(NodeTag, "IGTLStatus")==0)
+  if(strcmp(nodeTag, "IGTLStatus")==0)
     {
     return std::vector<std::string>(1, "STATUS");
     }
-  if(strcmp(NodeTag, "LinearTransform")==0)
+  if(strcmp(nodeTag, "LinearTransform")==0)
     {
     return std::vector<std::string>(1, "TRANSFORM");
     }
-  if(strcmp(NodeTag, "Model")==0 || strcmp(NodeTag, "FiberBundle")==0)
+  if(strcmp(nodeTag, "Model")==0 || strcmp(nodeTag, "FiberBundle")==0)
     {
     return std::vector<std::string>(1, "POLYDATA");
     }
-  if(strcmp(NodeTag, "Text")==0)
+  if(strcmp(nodeTag, "Text")==0)
     {
     return std::vector<std::string>(1, "STRING");
     }
@@ -1366,6 +1366,38 @@ void vtkMRMLIGTLConnectorNode::OnNodeReferenceModified(vtkMRMLNodeReference *ref
   else
   {
   }
+}
+
+//---------------------------------------------------------------------------
+bool vtkMRMLIGTLConnectorNode::RegisterIncomingMRMLNode(vtkMRMLNode* node)
+{
+  if (!node)
+  {
+    return false;
+  }
+
+  igtlioDevicePointer device = NULL;
+  igtlioDeviceKeyType key;
+  key.name = node->GetName();
+  std::vector<std::string> deviceTypes = this->GetDeviceTypeFromMRMLNodeType(node->GetNodeTagName());
+  for (size_t typeIndex = 0; typeIndex < deviceTypes.size(); typeIndex++)
+  {
+    key.type = deviceTypes[typeIndex];
+    device = this->Internal->IOConnector->GetDevice(key);
+    if (device != NULL)
+    {
+      break;
+    }
+  }
+
+  if (device == NULL)
+  {
+    device = this->Internal->IOConnector->GetDeviceFactory()->create(key.type, key.name);
+  }
+
+  this->RegisterIncomingMRMLNode(node, device);
+
+  return true;
 }
 
 //---------------------------------------------------------------------------
