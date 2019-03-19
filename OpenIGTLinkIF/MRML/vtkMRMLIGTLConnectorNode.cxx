@@ -1373,6 +1373,13 @@ bool vtkMRMLIGTLConnectorNode::RegisterIncomingMRMLNode(vtkMRMLNode* node)
 {
   if (!node)
   {
+    vtkErrorMacro("Error registering incoming node. Incoming node is NULL");
+    return false;
+  }
+
+  if (!node->GetScene())
+  {
+    vtkErrorMacro("Error registering incoming node. Node scene is NULL");
     return false;
   }
 
@@ -1395,19 +1402,24 @@ bool vtkMRMLIGTLConnectorNode::RegisterIncomingMRMLNode(vtkMRMLNode* node)
     device = this->Internal->IOConnector->GetDeviceFactory()->create(key.type, key.name);
   }
 
-  this->RegisterIncomingMRMLNode(node, device);
-
-  return true;
+  return this->RegisterIncomingMRMLNode(node, device);;
 }
 
 //---------------------------------------------------------------------------
 bool vtkMRMLIGTLConnectorNode::RegisterIncomingMRMLNode(vtkMRMLNode* node, IGTLDevicePointer device)
 {
-
   if (!node)
   {
+    vtkErrorMacro("Error registering incoming node. Incoming node is NULL");
     return false;
   }
+
+  if (!node->GetScene())
+  {
+    vtkErrorMacro("Error registering incoming node. Node scene is NULL");
+    return false;
+  }
+
   igtlioDevice* igtlDevice = static_cast< igtlioDevice* >(device);
 
   // Check if the node has already been registered.
@@ -1431,9 +1443,15 @@ bool vtkMRMLIGTLConnectorNode::RegisterIncomingMRMLNode(vtkMRMLNode* node, IGTLD
 //---------------------------------------------------------------------------
 void vtkMRMLIGTLConnectorNode::UnregisterIncomingMRMLNode(vtkMRMLNode* node)
 {
-
   if (!node)
   {
+    vtkErrorMacro("Error registering incoming node. Incoming node is NULL");
+    return;
+  }
+
+  if (!node->GetScene())
+  {
+    vtkErrorMacro("Error registering incoming node. Node scene is NULL");
     return;
   }
 
@@ -1496,9 +1514,15 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::GetOutgoingMRMLNode(unsigned int i)
 //---------------------------------------------------------------------------
 int vtkMRMLIGTLConnectorNode::RegisterOutgoingMRMLNode(vtkMRMLNode* node, const char* devType)
 {
-
   if (!node)
     {
+    vtkErrorMacro("Error registering outgoing node. Incoming node is NULL");
+    return 0;
+    }
+
+  if (!node->GetScene())
+    {
+    vtkErrorMacro("Error registering outgoing node. Node scene is NULL");
     return 0;
     }
 
