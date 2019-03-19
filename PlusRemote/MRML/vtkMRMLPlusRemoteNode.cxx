@@ -94,15 +94,21 @@ const char* vtkMRMLPlusRemoteNode::GetPlusRemoteStatusAsString(int id)
 {
   switch (id)
   {
-  case PLUS_REMOTE_FAILED: return "Failed";
-  case PLUS_REMOTE_IDLE: return "Idle";
-  case PLUS_REMOTE_IN_PROGRESS: return "InProgress";
-  case PLUS_REMOTE_RECONSTRUCTING: return "Reconstructing";
-  case PLUS_REMOTE_RECORDING: return "Recording";
-  case PLUS_REMOTE_SUCCESS: return "Success";
-  default:
-    // invalid id
-    return "";
+    case PLUS_REMOTE_FAILED:
+      return "Failed";
+    case PLUS_REMOTE_IDLE:
+      return "Idle";
+    case PLUS_REMOTE_IN_PROGRESS:
+      return "InProgress";
+    case PLUS_REMOTE_RECONSTRUCTING:
+      return "Reconstructing";
+    case PLUS_REMOTE_RECORDING:
+      return "Recording";
+    case PLUS_REMOTE_SUCCESS:
+      return "Success";
+    default:
+      // invalid id
+      return "";
   }
 }
 
@@ -229,7 +235,7 @@ void vtkMRMLPlusRemoteNode::SetAndObserveLiveReconstructionROINode(vtkMRMLAnnota
 }
 
 //----------------------------------------------------------------------------
-void vtkMRMLPlusRemoteNode::OnROINodeModified(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void *vtkNotUsed(calldata))
+void vtkMRMLPlusRemoteNode::OnROINodeModified(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void* vtkNotUsed(calldata))
 {
   vtkSmartPointer<vtkMRMLAnnotationROINode> roiNode = vtkMRMLAnnotationROINode::SafeDownCast(caller);
 
@@ -248,7 +254,8 @@ void vtkMRMLPlusRemoteNode::OnROINodeModified(vtkObject* caller, unsigned long v
   }
 
   double outputSpacing = self->GetLiveReconstructionSpacing();
-  int outputDimensions[3] = {
+  int outputDimensions[3] =
+  {
     (int)std::ceil((2 * roiRadius[0]) / outputSpacing),
     (int)std::ceil((2 * roiRadius[1]) / outputSpacing),
     (int)std::ceil((2 * roiRadius[2]) / outputSpacing)
@@ -292,7 +299,7 @@ void vtkMRMLPlusRemoteNode::SetLiveReconstructionSpacing(double spacing)
   int newDimensions[3] = { 0, 0, 0 };
   for (int i = 0; i < 3; ++i)
   {
-    newDimensions[i] = std::ceil((oldSpacing*oldDimensions[i]) / spacing);
+    newDimensions[i] = std::ceil((oldSpacing * oldDimensions[i]) / spacing);
   }
   this->SetLiveReconstructionROIDimensions(newDimensions);
   this->Modified();
@@ -461,7 +468,7 @@ void vtkMRMLPlusRemoteNode::ReadXMLAttributes(const char** atts)
 //----------------------------------------------------------------------------
 // Copy the node's attributes to this object.
 // Does NOT copy: ID, FilePrefix, Name, VolumeID
-void vtkMRMLPlusRemoteNode::Copy(vtkMRMLNode *anode)
+void vtkMRMLPlusRemoteNode::Copy(vtkMRMLNode* anode)
 {
   Superclass::Copy(anode);
   this->DisableModifiedEventOn();

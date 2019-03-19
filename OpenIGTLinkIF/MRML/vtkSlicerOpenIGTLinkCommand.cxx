@@ -69,7 +69,7 @@ void vtkSlicerOpenIGTLinkCommand::SendCommand(vtkMRMLIGTLConnectorNode* connecto
 }
 
 //---------------------------------------------------------------------------
-void vtkSlicerOpenIGTLinkCommand::CommandCallback(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata)
+void vtkSlicerOpenIGTLinkCommand::CommandCallback(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata)
 {
   vtkSlicerOpenIGTLinkCommand* self = static_cast<vtkSlicerOpenIGTLinkCommand*>(clientdata);
   self->InvokeEvent(eid);

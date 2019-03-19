@@ -28,15 +28,15 @@
 /// \ingroup Slicer_QtModules_ExtensionTemplate
 class qSlicerOpenIGTLinkRemoteCommandWidgetPrivate: public Ui_qSlicerOpenIGTLinkRemoteCommandWidget
 {
-Q_DECLARE_PUBLIC( qSlicerOpenIGTLinkRemoteCommandWidget );
+  Q_DECLARE_PUBLIC(qSlicerOpenIGTLinkRemoteCommandWidget);
 
 protected:
   qSlicerOpenIGTLinkRemoteCommandWidget* const q_ptr;
 
 public:
-  qSlicerOpenIGTLinkRemoteCommandWidgetPrivate( qSlicerOpenIGTLinkRemoteCommandWidget& object );
-  
-  vtkSlicerOpenIGTLinkRemoteLogic * logic();
+  qSlicerOpenIGTLinkRemoteCommandWidgetPrivate(qSlicerOpenIGTLinkRemoteCommandWidget& object);
+
+  vtkSlicerOpenIGTLinkRemoteLogic* logic();
 
   igtlioCommandPointer command;
 };
@@ -47,16 +47,16 @@ public:
 // Private class
 
 //------------------------------------------------------------------------------
-qSlicerOpenIGTLinkRemoteCommandWidgetPrivate::qSlicerOpenIGTLinkRemoteCommandWidgetPrivate( qSlicerOpenIGTLinkRemoteCommandWidget& object )
-  : q_ptr( &object )
+qSlicerOpenIGTLinkRemoteCommandWidgetPrivate::qSlicerOpenIGTLinkRemoteCommandWidgetPrivate(qSlicerOpenIGTLinkRemoteCommandWidget& object)
+  : q_ptr(&object)
 {
 }
 
 //------------------------------------------------------------------------------
-vtkSlicerOpenIGTLinkRemoteLogic * qSlicerOpenIGTLinkRemoteCommandWidgetPrivate::logic()
+vtkSlicerOpenIGTLinkRemoteLogic* qSlicerOpenIGTLinkRemoteCommandWidgetPrivate::logic()
 {
-  Q_Q( qSlicerOpenIGTLinkRemoteCommandWidget );
-  return vtkSlicerOpenIGTLinkRemoteLogic::SafeDownCast( q->CommandLogic );
+  Q_Q(qSlicerOpenIGTLinkRemoteCommandWidget);
+  return vtkSlicerOpenIGTLinkRemoteLogic::SafeDownCast(q->CommandLogic);
 }
 
 //------------------------------------------------------------------------------
@@ -77,16 +77,16 @@ void qSlicerOpenIGTLinkRemoteCommandWidget::setup()
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     d->tableWidget_metaData->horizontalHeader()->setSectionResizeMode(c, QHeaderView::Stretch);
     d->tableWidget_responseMetaData->horizontalHeader()->setSectionResizeMode(c, QHeaderView::Stretch);
-#else 
+#else
     d->tableWidget_metaData->horizontalHeader()->setResizeMode(c, QHeaderView::Stretch);
     d->tableWidget_responseMetaData->horizontalHeader()->setResizeMode(c, QHeaderView::Stretch);
 #endif
   }
-  connect( d->pushButton_addMetaData, SIGNAL( clicked() ), this, SLOT( onAddMetaDataClicked() ) );
-  connect( d->pushButton_removeMetaData, SIGNAL( clicked() ), this, SLOT( onRemoveMetaDataClicked() ) );
-  connect( d->radioButton_versionString, SIGNAL( clicked() ), this, SLOT( onVersionButtonClicked() ) );
-  connect( d->radioButton_versionCommand, SIGNAL( clicked() ), this, SLOT( onVersionButtonClicked() ) );
-  connect( d->SendCommandButton, SIGNAL( clicked() ), this, SLOT( onSendCommandClicked() ) );
+  connect(d->pushButton_addMetaData, SIGNAL(clicked()), this, SLOT(onAddMetaDataClicked()));
+  connect(d->pushButton_removeMetaData, SIGNAL(clicked()), this, SLOT(onRemoveMetaDataClicked()));
+  connect(d->radioButton_versionString, SIGNAL(clicked()), this, SLOT(onVersionButtonClicked()));
+  connect(d->radioButton_versionCommand, SIGNAL(clicked()), this, SLOT(onVersionButtonClicked()));
+  connect(d->SendCommandButton, SIGNAL(clicked()), this, SLOT(onSendCommandClicked()));
   qvtkConnect(d->command, igtlioCommand::CommandCompletedEvent, this, SLOT(onQueryResponseReceived()));
 }
 
@@ -95,9 +95,9 @@ void qSlicerOpenIGTLinkRemoteCommandWidget::setup()
 // qSlicerOpenIGTLinkRemoteCommandWidget methods
 
 // Constructor
-qSlicerOpenIGTLinkRemoteCommandWidget::qSlicerOpenIGTLinkRemoteCommandWidget( QWidget* _parent )
-  : Superclass( _parent )
-  , d_ptr( new qSlicerOpenIGTLinkRemoteCommandWidgetPrivate( *this ) )
+qSlicerOpenIGTLinkRemoteCommandWidget::qSlicerOpenIGTLinkRemoteCommandWidget(QWidget* _parent)
+  : Superclass(_parent)
+  , d_ptr(new qSlicerOpenIGTLinkRemoteCommandWidgetPrivate(*this))
 {
   Q_D(qSlicerOpenIGTLinkRemoteCommandWidget);
 
@@ -111,16 +111,16 @@ qSlicerOpenIGTLinkRemoteCommandWidget::~qSlicerOpenIGTLinkRemoteCommandWidget()
   Q_D(qSlicerOpenIGTLinkRemoteCommandWidget);
   qvtkDisconnect(d->command, igtlioCommand::CommandCompletedEvent, this, SLOT(onQueryResponseReceived()));
   this->setMRMLScene(NULL);
-  if ( this->CommandLogic != NULL )
+  if (this->CommandLogic != NULL)
   {
     this->CommandLogic->UnRegister(NULL);
     this->CommandLogic = NULL;
   }
-  disconnect( d->pushButton_addMetaData, SIGNAL(clicked()), this, SLOT(onAddMetaDataClicked()) );
-  disconnect( d->pushButton_removeMetaData, SIGNAL(clicked()), this, SLOT(onRemoveMetaDataClicked()) );
-  disconnect( d->radioButton_versionString, SIGNAL(clicked()), this, SLOT(onVersionButtonClicked()) );
-  disconnect( d->radioButton_versionCommand, SIGNAL(clicked()), this, SLOT(onVersionButtonClicked()) );
-  disconnect( d->SendCommandButton, SIGNAL(clicked()), this, SLOT(onSendCommandClicked()) );
+  disconnect(d->pushButton_addMetaData, SIGNAL(clicked()), this, SLOT(onAddMetaDataClicked()));
+  disconnect(d->pushButton_removeMetaData, SIGNAL(clicked()), this, SLOT(onRemoveMetaDataClicked()));
+  disconnect(d->radioButton_versionString, SIGNAL(clicked()), this, SLOT(onVersionButtonClicked()));
+  disconnect(d->radioButton_versionCommand, SIGNAL(clicked()), this, SLOT(onVersionButtonClicked()));
+  disconnect(d->SendCommandButton, SIGNAL(clicked()), this, SLOT(onSendCommandClicked()));
 }
 
 //------------------------------------------------------------------------------
@@ -132,20 +132,20 @@ void qSlicerOpenIGTLinkRemoteCommandWidget::onSendCommandClicked()
   if (d->command->GetStatus() == igtlioCommandStatus::CommandWaiting)
   {
     qDebug("qSlicerOpenIGTLinkRemoteCommandWidget::sendCommand: previous command was already in progress, cancelling it now.");
-    d->logic()->CancelCommand( d->command );
+    d->logic()->CancelCommand(d->command);
   }
 
   vtkMRMLNode* connectorNode = d->ConnectorComboBox->currentNode();
-  if ( connectorNode == NULL )
+  if (connectorNode == NULL)
   {
-    d->ResponseTextEdit->setPlainText( "Connector node not selected!" );
+    d->ResponseTextEdit->setPlainText("Connector node not selected!");
     return;
   }
-  
+
   std::string commandString = d->CommandTextEdit->toPlainText().toStdString();
-  if ( commandString.size() < 1 )
+  if (commandString.size() < 1)
   {
-    d->ResponseTextEdit->setPlainText( "Please type command XML in the Command field!" );
+    d->ResponseTextEdit->setPlainText("Please type command XML in the Command field!");
     return;
   }
 
@@ -160,8 +160,8 @@ void qSlicerOpenIGTLinkRemoteCommandWidget::onSendCommandClicked()
     d->command->SetName(d->lineEdit_commandName->text().toStdString());
     for (int i = 0; i < d->tableWidget_metaData->rowCount(); i++)
     {
-      QTableWidgetItem *keyItem = d->tableWidget_metaData->item(i, 0);
-      QTableWidgetItem *valueItem = d->tableWidget_metaData->item(i, 0);
+      QTableWidgetItem* keyItem = d->tableWidget_metaData->item(i, 0);
+      QTableWidgetItem* valueItem = d->tableWidget_metaData->item(i, 0);
 
       if (keyItem->text().isEmpty())
       {
@@ -174,7 +174,7 @@ void qSlicerOpenIGTLinkRemoteCommandWidget::onSendCommandClicked()
 
   // Removed until command version support is re-added
   //d->command->SetCommandVersion(d->radioButton_versionCommand->isChecked() ? IGTL_HEADER_VERSION_2 : IGTL_HEADER_VERSION_1);
-  
+
   // Logic sends command message.
   //if (d->command->SetCommandContent(d->CommandTextEdit->toPlainText().toStdString().c_str()))
   //{
@@ -195,19 +195,19 @@ void qSlicerOpenIGTLinkRemoteCommandWidget::onSendCommandClicked()
 void qSlicerOpenIGTLinkRemoteCommandWidget::onQueryResponseReceived()
 {
   Q_D(qSlicerOpenIGTLinkRemoteCommandWidget);
-  
+
   vtkMRMLNode* node = d->ConnectorComboBox->currentNode();
-  if ( node == NULL )
+  if (node == NULL)
   {
-    d->ResponseTextEdit->setPlainText( "Connector node not selected!" );
+    d->ResponseTextEdit->setPlainText("Connector node not selected!");
     return;
   }
-  
+
   std::string message;
   std::string parameters;
   int status = d->command->GetStatus();
 
-  QString responseGroupBoxTitle="Response details for command ID: "+QString::number(d->command->GetCommandId())+"";
+  QString responseGroupBoxTitle = "Response details for command ID: " + QString::number(d->command->GetCommandId()) + "";
   d->responseGroupBox->setTitle(responseGroupBoxTitle);
   std::string displayedText = !d->command->GetResponseContent().empty() ? d->command->GetResponseContent() : "";
 
@@ -223,9 +223,9 @@ void qSlicerOpenIGTLinkRemoteCommandWidget::onQueryResponseReceived()
   {
     d->ResponseTextEdit->setPlainText("Command timed out");
   }
-  else 
+  else
   {
-    d->ResponseTextEdit->setPlainText("Command failed.\n"+QString(displayedText.c_str()));
+    d->ResponseTextEdit->setPlainText("Command failed.\n" + QString(displayedText.c_str()));
   }
 
   d->tableWidget_responseMetaData->clear();
@@ -259,15 +259,15 @@ void qSlicerOpenIGTLinkRemoteCommandWidget::onRemoveMetaDataClicked()
   QList<QTableWidgetItem*> items = d->tableWidget_metaData->selectedItems();
 
   QSet<int> selectedRows;
-  QTableWidgetItem * item;
-  foreach(item, items)
+  QTableWidgetItem* item;
+  foreach (item, items)
   {
     selectedRows.insert(item->row());
   }
   QList<int> rows = selectedRows.toList();
   std::sort(rows.begin(), rows.end());
 
-  foreach(int row, rows)
+  foreach (int row, rows)
   {
     d->tableWidget_metaData->removeRow(row);
   }
@@ -285,7 +285,7 @@ void qSlicerOpenIGTLinkRemoteCommandWidget::onVersionButtonClicked()
 }
 
 //------------------------------------------------------------------------------
-void qSlicerOpenIGTLinkRemoteCommandWidget::setMRMLScene(vtkMRMLScene *newScene)
+void qSlicerOpenIGTLinkRemoteCommandWidget::setMRMLScene(vtkMRMLScene* newScene)
 {
   Q_D(qSlicerOpenIGTLinkRemoteCommandWidget);
 
@@ -293,32 +293,32 @@ void qSlicerOpenIGTLinkRemoteCommandWidget::setMRMLScene(vtkMRMLScene *newScene)
   // log a warning if it is not so.
   // During scene opening or closing it is normal to have one of the scene pointers
   // still/already NULL while the other is non-NULL.
-  if ( this->CommandLogic->GetMRMLScene() != newScene
-    && newScene != NULL && this->CommandLogic->GetMRMLScene() != NULL)
-    {
-    qWarning( "Inconsistent MRML scene in OpenIGTLinkRemote logic" );
-    }
-  
+  if (this->CommandLogic->GetMRMLScene() != newScene
+      && newScene != NULL && this->CommandLogic->GetMRMLScene() != NULL)
+  {
+    qWarning("Inconsistent MRML scene in OpenIGTLinkRemote logic");
+  }
+
   this->Superclass::setMRMLScene(newScene);
 }
 
 //------------------------------------------------------------------------------
 void qSlicerOpenIGTLinkRemoteCommandWidget::setCommandLogic(vtkMRMLAbstractLogic* newCommandLogic)
 {
-  if ( newCommandLogic == NULL )
+  if (newCommandLogic == NULL)
   {
-    qWarning( "Trying to set NULL as logic" );
+    qWarning("Trying to set NULL as logic");
     return;
   }
-  
-  this->CommandLogic = vtkSlicerOpenIGTLinkRemoteLogic::SafeDownCast( newCommandLogic );
-  if ( this->CommandLogic != NULL )
+
+  this->CommandLogic = vtkSlicerOpenIGTLinkRemoteLogic::SafeDownCast(newCommandLogic);
+  if (this->CommandLogic != NULL)
   {
     this->CommandLogic->Register(NULL);
   }
   else
   {
-    qWarning( "Logic is not an OpenIGTLinkRemoteLogic type!" );
+    qWarning("Logic is not an OpenIGTLinkRemoteLogic type!");
   }
 }
 

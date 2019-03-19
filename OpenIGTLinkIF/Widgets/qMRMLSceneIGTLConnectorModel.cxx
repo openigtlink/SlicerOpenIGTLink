@@ -46,12 +46,12 @@
 #include <vtkVariantArray.h>
 
 //------------------------------------------------------------------------------
-qMRMLSceneIGTLConnectorModel::qMRMLSceneIGTLConnectorModel(QObject *vparent)
-  :qMRMLSceneDisplayableModel(vparent)
+qMRMLSceneIGTLConnectorModel::qMRMLSceneIGTLConnectorModel(QObject* vparent)
+  : qMRMLSceneDisplayableModel(vparent)
 {
   this->setIDColumn(-1);
   this->setHorizontalHeaderLabels(
-        QStringList() << "Name" << "Type" << "Status" << "Hostname" << "Port");
+    QStringList() << "Name" << "Type" << "Status" << "Hostname" << "Port");
 }
 
 //------------------------------------------------------------------------------
@@ -65,7 +65,7 @@ QStandardItem* qMRMLSceneIGTLConnectorModel::insertNode(vtkMRMLNode* node, QStan
   QStandardItem* insertedItem = this->Superclass::insertNode(node, parent, row);
   if (this->listenNodeModifiedEvent() &&
       node->IsA("vtkMRMLIGTLConnectorNode"))
-    {
+  {
     qvtkConnect(node, vtkMRMLIGTLConnectorNode::ConnectedEvent,
                 this, SLOT(onMRMLNodeModified(vtkObject*)));
     qvtkConnect(node, vtkMRMLIGTLConnectorNode::DisconnectedEvent,
@@ -74,7 +74,7 @@ QStandardItem* qMRMLSceneIGTLConnectorModel::insertNode(vtkMRMLNode* node, QStan
                 this, SLOT(onMRMLNodeModified(vtkObject*)));
     qvtkConnect(node, vtkMRMLIGTLConnectorNode::DeactivatedEvent,
                 this, SLOT(onMRMLNodeModified(vtkObject*)));
-    }
+  }
   return insertedItem;
 }
 
@@ -84,33 +84,33 @@ void qMRMLSceneIGTLConnectorModel::updateNodeFromItemData(vtkMRMLNode* node, QSt
   //int oldChecked = node->GetSelected();
   vtkMRMLIGTLConnectorNode* cnode = vtkMRMLIGTLConnectorNode::SafeDownCast(node);
   if (!cnode)
-    {
+  {
     return;
-    }
+  }
   this->qMRMLSceneDisplayableModel::updateNodeFromItemData(node, item);
 
   switch (item->column())
-    {
+  {
     case qMRMLSceneIGTLConnectorModel::NameColumn:
-      {
+    {
       cnode->SetName(item->text().toLatin1());
       break;
-      }
+    }
     case qMRMLSceneIGTLConnectorModel::TypeColumn:
-      {
-      }
+    {
+    }
     case qMRMLSceneIGTLConnectorModel::StatusColumn:
-      {
-      }
+    {
+    }
     case qMRMLSceneIGTLConnectorModel::HostnameColumn:
-      {
-      }
+    {
+    }
     case qMRMLSceneIGTLConnectorModel::PortColumn:
-      {
-      }
+    {
+    }
     default:
       break;
-    }
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -118,59 +118,69 @@ void qMRMLSceneIGTLConnectorModel::updateItemDataFromNode(QStandardItem* item, v
 {
   vtkMRMLIGTLConnectorNode* cnode = vtkMRMLIGTLConnectorNode::SafeDownCast(node);
   if (!cnode)
-    {
+  {
     return;
-    }
+  }
   switch (column)
-    {
+  {
     case qMRMLSceneIGTLConnectorModel::NameColumn:
-      {
+    {
       item->setText(cnode->GetName());
       break;
-      }
+    }
     case qMRMLSceneIGTLConnectorModel::TypeColumn:
-      {
+    {
       switch (cnode->GetType())
-        {
-        case vtkMRMLIGTLConnectorNode::TypeClient: item->setText(tr("C")); break;
-        case vtkMRMLIGTLConnectorNode::TypeServer: item->setText(tr("S")); break;
+      {
+        case vtkMRMLIGTLConnectorNode::TypeClient:
+          item->setText(tr("C"));
+          break;
+        case vtkMRMLIGTLConnectorNode::TypeServer:
+          item->setText(tr("S"));
+          break;
         default:
           item->setText(tr("?"));
-        }
-      break;
       }
-    case qMRMLSceneIGTLConnectorModel::StatusColumn:
-      {
-      switch (cnode->GetState())
-        {
-        case vtkMRMLIGTLConnectorNode::StateOff: item->setText(tr("OFF")); break;
-        case vtkMRMLIGTLConnectorNode::StateWaitConnection: item->setText(tr("WAIT")); break;
-        case vtkMRMLIGTLConnectorNode::StateConnected: item->setText(tr("ON")); break;
-        default:
-          item->setText("");
-        }
-      break;
-      }
-    case qMRMLSceneIGTLConnectorModel::HostnameColumn:
-      {
-      if (cnode->GetType() == vtkMRMLIGTLConnectorNode::TypeClient)
-        {
-        item->setText(QString(cnode->GetServerHostname()));
-        }
-      else
-        {
-        item->setText(QString("--"));
-        }
-      break;
-      }
-    case qMRMLSceneIGTLConnectorModel::PortColumn:
-      {
-      item->setText(QString("%1").arg(cnode->GetServerPort()));
-      break;
-      }
-    default:
       break;
     }
+    case qMRMLSceneIGTLConnectorModel::StatusColumn:
+    {
+      switch (cnode->GetState())
+      {
+        case vtkMRMLIGTLConnectorNode::StateOff:
+          item->setText(tr("OFF"));
+          break;
+        case vtkMRMLIGTLConnectorNode::StateWaitConnection:
+          item->setText(tr("WAIT"));
+          break;
+        case vtkMRMLIGTLConnectorNode::StateConnected:
+          item->setText(tr("ON"));
+          break;
+        default:
+          item->setText("");
+      }
+      break;
+    }
+    case qMRMLSceneIGTLConnectorModel::HostnameColumn:
+    {
+      if (cnode->GetType() == vtkMRMLIGTLConnectorNode::TypeClient)
+      {
+        item->setText(QString(cnode->GetServerHostname()));
+      }
+      else
+      {
+        item->setText(QString("--"));
+      }
+      break;
+    }
+    case qMRMLSceneIGTLConnectorModel::PortColumn:
+    {
+      item->setText(QString("%1").arg(cnode->GetServerPort()));
+      break;
+    }
+    default:
+      break;
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -180,14 +190,14 @@ QFlags<Qt::ItemFlag> qMRMLSceneIGTLConnectorModel::nodeFlags(vtkMRMLNode* node, 
   // remove the ItemIsEditable flag from any possible item (typically at column 0)
   flags = flags & ~Qt::ItemIsEditable;
   // and set it to the right column
-  switch(column)
-    {
+  switch (column)
+  {
     //case qMRMLSceneIGTLConnectorModel::TextColumn:
     //  flags = flags | Qt::ItemIsEditable;
     //  break;
     default:
       break;
-    }
+  }
   return flags;
 }
 
@@ -195,43 +205,43 @@ QFlags<Qt::ItemFlag> qMRMLSceneIGTLConnectorModel::nodeFlags(vtkMRMLNode* node, 
 vtkMRMLNode* qMRMLSceneIGTLConnectorModel::parentNode(vtkMRMLNode* node)const
 {
   if (node == NULL)
-    {
+  {
     return 0;
-    }
+  }
 
   // MRML Displayable nodes (inherits from transformable)
-  vtkMRMLDisplayableNode *displayableNode = vtkMRMLDisplayableNode::SafeDownCast(node);
-  vtkMRMLDisplayableHierarchyNode * displayableHierarchyNode = NULL;
+  vtkMRMLDisplayableNode* displayableNode = vtkMRMLDisplayableNode::SafeDownCast(node);
+  vtkMRMLDisplayableHierarchyNode* displayableHierarchyNode = NULL;
   if (displayableNode &&
       displayableNode->GetScene() &&
       displayableNode->GetID())
-    {
+  {
     // get the displayable hierarchy node associated with this displayable node
     displayableHierarchyNode = vtkMRMLDisplayableHierarchyNode::GetDisplayableHierarchyNode(displayableNode->GetScene(), displayableNode->GetID());
 
     if (displayableHierarchyNode)
-      {
+    {
       if (displayableHierarchyNode->GetHideFromEditors())
-        {
+      {
         // this is a hidden hierarchy node, so we do not want to display it
         // instead, we will return the parent of the hidden hierarchy node
         // to be used as the parent for the displayableNode
         return displayableHierarchyNode->GetParentNode();
-        }
-      return displayableHierarchyNode;
       }
+      return displayableHierarchyNode;
     }
+  }
   if (displayableHierarchyNode == NULL)
-    {
+  {
     // the passed in node might have been a hierarchy node instead, try to
     // cast it
     displayableHierarchyNode = vtkMRMLDisplayableHierarchyNode::SafeDownCast(node);
-    }
+  }
   if (displayableHierarchyNode)
-    {
+  {
     // return it's parent
     return displayableHierarchyNode->GetParentNode();
-    }
+  }
   return 0;
 }
 
@@ -242,8 +252,8 @@ vtkMRMLNode* qMRMLSceneIGTLConnectorModel::parentNode(vtkMRMLNode* node)const
 void qMRMLSceneIGTLConnectorModel::setLogic(vtkSlicerOpenIGTLinkIFLogic* logic)
 {
   if (!logic)
-    {
+  {
     return;
-    }
+  }
   this->Logic = logic;
 }

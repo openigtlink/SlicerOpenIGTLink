@@ -116,7 +116,7 @@ bool vtkIGTLVP9VolumeCodec::DecodeFrameInternal(vtkStreamingVolumeFrame* inputFr
     this->YUVImage = vtkSmartPointer<vtkImageData>::New();
   }
 
-  int dimensions[3] = { 0,0,0 };
+  int dimensions[3] = { 0, 0, 0 };
   inputFrame->GetDimensions(dimensions);
 
   unsigned int numberOfVoxels = dimensions[0] * dimensions[1] * dimensions[2];
@@ -144,9 +144,9 @@ bool vtkIGTLVP9VolumeCodec::DecodeFrameInternal(vtkStreamingVolumeFrame* inputFr
 
   // Convert YUV image to RGB image
   if (saveDecodedImage)
-    {
+  {
     this->Decoder->ConvertYUVToRGB((igtl_uint8*)yuvPointer, (igtl_uint8*)imagePointer, dimensions[1], dimensions[0]);
-    }
+  }
 
   return true;
 }
@@ -180,7 +180,7 @@ bool vtkIGTLVP9VolumeCodec::EncodeImageDataInternal(vtkImageData* inputImageData
 
   memcpy(frameData->GetPointer(0), framePointer, bitstreamSize);
 
-  int dimensions[3] = { 0,0,0 };
+  int dimensions[3] = { 0, 0, 0 };
   inputImageData->GetDimensions(dimensions);
   outputFrame->SetDimensions(dimensions);
   outputFrame->SetFrameData(frameData);

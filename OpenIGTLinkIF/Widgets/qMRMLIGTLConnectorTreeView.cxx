@@ -88,7 +88,7 @@ void qMRMLIGTLConnectorTreeViewPrivate::init()
 }
 
 //------------------------------------------------------------------------------
-qMRMLIGTLConnectorTreeView::qMRMLIGTLConnectorTreeView(QWidget *_parent)
+qMRMLIGTLConnectorTreeView::qMRMLIGTLConnectorTreeView(QWidget* _parent)
   : Superclass(_parent)
   , d_ptr(new qMRMLIGTLConnectorTreeViewPrivate(*this))
 {
@@ -127,10 +127,10 @@ bool qMRMLIGTLConnectorTreeView::viewportEvent(QEvent* e)
 {
 
   // reset the cursor if we leave the viewport
-  if(e->type() == QEvent::Leave)
-    {
+  if (e->type() == QEvent::Leave)
+  {
     setCursor(QCursor());
-    }
+  }
 
   return QTreeView::viewportEvent(e);
 }
@@ -173,9 +173,9 @@ void qMRMLIGTLConnectorTreeView::setSelectedNode(const char* id)
   vtkMRMLNode* node = this->mrmlScene()->GetNodeByID(id);
 
   if (node)
-    {
+  {
     this->setCurrentIndex(d->SortFilterModel->indexFromMRMLNode(node));
-    }
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -198,9 +198,9 @@ void qMRMLIGTLConnectorTreeView::setLogic(vtkSlicerOpenIGTLinkIFLogic* logic)
 {
   Q_D(qMRMLIGTLConnectorTreeView);
   if (!logic)
-    {
+  {
     return;
-    }
+  }
 
   d->Logic = logic;
 

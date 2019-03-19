@@ -75,14 +75,14 @@ public slots:
   virtual void onLoadConfigFile();
   virtual void onConfigFileChanged(vtkMRMLNode* configFileNode);
   virtual void onLogLevelChanged(int index);
-  virtual void onHostChanged(const QString &text);
+  virtual void onHostChanged(const QString& text);
   virtual void onStartStopButton();
   virtual void onClearLogButton();
 
   virtual void launchServer();
   virtual void stopServer();
   virtual void subscribeToLogMessages();
- 
+
   void setAndObserveLauncherConnectorNode(vtkMRMLIGTLConnectorNode*);
   void setParameterSetNode(vtkMRMLPlusServerLauncherRemoteNode*);
 

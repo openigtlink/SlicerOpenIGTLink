@@ -20,25 +20,25 @@
 class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLSensorNode : public vtkMRMLNode
 {
 public:
-  static vtkMRMLIGTLSensorNode *New();
+  static vtkMRMLIGTLSensorNode* New();
 
-  vtkTypeMacro(vtkMRMLIGTLSensorNode,vtkMRMLNode);
+  vtkTypeMacro(vtkMRMLIGTLSensorNode, vtkMRMLNode);
 
   void PrintSelf(ostream& os, vtkIndent indent) override;
 
   virtual vtkMRMLNode* CreateNodeInstance() override;
 
-  /// 
+  ///
   /// Read node attributes from XML file
-  virtual void ReadXMLAttributes( const char** atts) override;
+  virtual void ReadXMLAttributes(const char** atts) override;
 
-  /// 
+  ///
   /// Write this node's information to a MRML file in XML format.
   virtual void WriteXML(ostream& of, int indent) override;
 
-  /// 
+  ///
   /// Get node XML tag name (like Volume, Model)
-  virtual const char* GetNodeTagName() override{return "IGTLSensor";};
+  virtual const char* GetNodeTagName() override {return "IGTLSensor";};
 
   /// Set length of data array
   int SetArrayLength(vtkTypeUInt8 length);
@@ -63,7 +63,7 @@ public:
 
   /// Set data value of element
   int SetDataValue(unsigned int index, double value);
-  
+
   /// Get data value of element
   double GetDataValue(unsigned int index);
 
@@ -79,7 +79,7 @@ protected:
   void operator=(const vtkMRMLIGTLSensorNode&);
 
 private:
-  
+
   vtkTypeUInt8 ArrayLength;
   vtkTypeUInt8 SensorStatus;
   vtkTypeUInt64  DataUnit;

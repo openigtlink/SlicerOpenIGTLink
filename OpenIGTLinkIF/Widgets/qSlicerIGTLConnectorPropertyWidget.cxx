@@ -20,7 +20,7 @@ public:
   qSlicerIGTLConnectorPropertyWidgetPrivate(qSlicerIGTLConnectorPropertyWidget& object);
   void init();
 
-  vtkMRMLIGTLConnectorNode * IGTLConnectorNode;
+  vtkMRMLIGTLConnectorNode* IGTLConnectorNode;
 
   QButtonGroup ConnectorTypeButtonGroup;
 };
@@ -60,7 +60,7 @@ void qSlicerIGTLConnectorPropertyWidgetPrivate::init()
 }
 
 //------------------------------------------------------------------------------
-qSlicerIGTLConnectorPropertyWidget::qSlicerIGTLConnectorPropertyWidget(QWidget *_parent)
+qSlicerIGTLConnectorPropertyWidget::qSlicerIGTLConnectorPropertyWidget(QWidget* _parent)
   : Superclass(_parent)
   , d_ptr(new qSlicerIGTLConnectorPropertyWidgetPrivate(*this))
 {
@@ -74,21 +74,21 @@ qSlicerIGTLConnectorPropertyWidget::~qSlicerIGTLConnectorPropertyWidget()
 }
 
 //------------------------------------------------------------------------------
-void qSlicerIGTLConnectorPropertyWidget::setMRMLIGTLConnectorNode(vtkMRMLIGTLConnectorNode * connectorNode)
+void qSlicerIGTLConnectorPropertyWidget::setMRMLIGTLConnectorNode(vtkMRMLIGTLConnectorNode* connectorNode)
 {
   Q_D(qSlicerIGTLConnectorPropertyWidget);
   qvtkReconnect(d->IGTLConnectorNode, connectorNode, vtkCommand::ModifiedEvent,
                 this, SLOT(onMRMLNodeModified()));
 
-  foreach(int evendId, QList<int>()
-          << vtkMRMLIGTLConnectorNode::ActivatedEvent
-          << vtkMRMLIGTLConnectorNode::ConnectedEvent
-          << vtkMRMLIGTLConnectorNode::DisconnectedEvent
-          << vtkMRMLIGTLConnectorNode::DeactivatedEvent)
-    {
+  foreach (int evendId, QList<int>()
+           << vtkMRMLIGTLConnectorNode::ActivatedEvent
+           << vtkMRMLIGTLConnectorNode::ConnectedEvent
+           << vtkMRMLIGTLConnectorNode::DisconnectedEvent
+           << vtkMRMLIGTLConnectorNode::DeactivatedEvent)
+  {
     qvtkReconnect(d->IGTLConnectorNode, connectorNode, evendId,
                   this, SLOT(onMRMLNodeModified()));
-    }
+  }
 
   d->IGTLConnectorNode = connectorNode;
 
@@ -104,42 +104,42 @@ void qSlicerIGTLConnectorPropertyWidget::setMRMLIGTLConnectorNode(vtkMRMLNode* n
 
 namespace
 {
-//------------------------------------------------------------------------------
-void setNameEnabled(qSlicerIGTLConnectorPropertyWidgetPrivate * d, bool enabled)
-{
-  d->ConnectorNameEdit->setEnabled(enabled);
-  d->ConnectorNameLabel->setEnabled(enabled);
-}
+  //------------------------------------------------------------------------------
+  void setNameEnabled(qSlicerIGTLConnectorPropertyWidgetPrivate* d, bool enabled)
+  {
+    d->ConnectorNameEdit->setEnabled(enabled);
+    d->ConnectorNameLabel->setEnabled(enabled);
+  }
 
-//------------------------------------------------------------------------------
-void setTypeEnabled(qSlicerIGTLConnectorPropertyWidgetPrivate * d, bool enabled)
-{
-  d->ConnectorTypeLabel->setEnabled(enabled);
-  d->ConnectorServerRadioButton->setEnabled(enabled);
-  d->ConnectorClientRadioButton->setEnabled(enabled);
-  d->UseStreamingVolumeCheckBox->setEnabled(enabled);
-}
+  //------------------------------------------------------------------------------
+  void setTypeEnabled(qSlicerIGTLConnectorPropertyWidgetPrivate* d, bool enabled)
+  {
+    d->ConnectorTypeLabel->setEnabled(enabled);
+    d->ConnectorServerRadioButton->setEnabled(enabled);
+    d->ConnectorClientRadioButton->setEnabled(enabled);
+    d->UseStreamingVolumeCheckBox->setEnabled(enabled);
+  }
 
-//------------------------------------------------------------------------------
-void setStateEnabled(qSlicerIGTLConnectorPropertyWidgetPrivate * d, bool enabled)
-{
-  d->ConnectorStateLabel->setEnabled(enabled);
-  d->ConnectorStateCheckBox->setEnabled(enabled);
-}
+  //------------------------------------------------------------------------------
+  void setStateEnabled(qSlicerIGTLConnectorPropertyWidgetPrivate* d, bool enabled)
+  {
+    d->ConnectorStateLabel->setEnabled(enabled);
+    d->ConnectorStateCheckBox->setEnabled(enabled);
+  }
 
-//------------------------------------------------------------------------------
-void setHostnameEnabled(qSlicerIGTLConnectorPropertyWidgetPrivate * d, bool enabled)
-{
-  d->ConnectorHostNameEdit->setEnabled(enabled);
-  d->ConnectorHostnameLabel->setEnabled(enabled);
-}
+  //------------------------------------------------------------------------------
+  void setHostnameEnabled(qSlicerIGTLConnectorPropertyWidgetPrivate* d, bool enabled)
+  {
+    d->ConnectorHostNameEdit->setEnabled(enabled);
+    d->ConnectorHostnameLabel->setEnabled(enabled);
+  }
 
-//------------------------------------------------------------------------------
-void setPortEnabled(qSlicerIGTLConnectorPropertyWidgetPrivate * d, bool enabled)
-{
-  d->ConnectorPortEdit->setEnabled(enabled);
-  d->ConnectorPortLabel->setEnabled(enabled);
-}
+  //------------------------------------------------------------------------------
+  void setPortEnabled(qSlicerIGTLConnectorPropertyWidgetPrivate* d, bool enabled)
+  {
+    d->ConnectorPortEdit->setEnabled(enabled);
+    d->ConnectorPortLabel->setEnabled(enabled);
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -147,9 +147,9 @@ void qSlicerIGTLConnectorPropertyWidget::onMRMLNodeModified()
 {
   Q_D(qSlicerIGTLConnectorPropertyWidget);
   if (!d->IGTLConnectorNode)
-    {
+  {
     return;
-    }
+  }
   d->ConnectorNameEdit->setText(d->IGTLConnectorNode->GetName());
   d->ConnectorHostNameEdit->setText(d->IGTLConnectorNode->GetServerHostname());
   d->ConnectorPortEdit->setText(QString("%1").arg(d->IGTLConnectorNode->GetServerPort()));
@@ -163,19 +163,19 @@ void qSlicerIGTLConnectorPropertyWidget::onMRMLNodeModified()
 
   bool deactivated = d->IGTLConnectorNode->GetState() == vtkMRMLIGTLConnectorNode::StateOff;
   if (deactivated)
-    {
+  {
     setNameEnabled(d, true);
     setTypeEnabled(d, true);
     setHostnameEnabled(d, type == vtkMRMLIGTLConnectorNode::TypeClient);
     setPortEnabled(d, type != vtkMRMLIGTLConnectorNode::TypeNotDefined);
-    }
+  }
   else
-    {
+  {
     setNameEnabled(d, false);
     setTypeEnabled(d, false);
     setHostnameEnabled(d, false);
     setPortEnabled(d, false);
-    }
+  }
   d->ConnectorStateCheckBox->setChecked(!deactivated);
   d->PersistentStateCheckBox->setChecked(d->IGTLConnectorNode->GetPersistent());
 }
@@ -186,13 +186,13 @@ void qSlicerIGTLConnectorPropertyWidget::startCurrentIGTLConnector(bool value)
   Q_D(qSlicerIGTLConnectorPropertyWidget);
   Q_ASSERT(d->IGTLConnectorNode);
   if (value)
-    {
+  {
     d->IGTLConnectorNode->Start();
-    }
+  }
   else
-    {
+  {
     d->IGTLConnectorNode->Stop();
-    }
+  }
 }
 
 //------------------------------------------------------------------------------

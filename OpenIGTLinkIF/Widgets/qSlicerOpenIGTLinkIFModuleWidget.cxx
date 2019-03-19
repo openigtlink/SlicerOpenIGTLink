@@ -26,7 +26,7 @@ protected:
 public:
   qSlicerOpenIGTLinkIFModuleWidgetPrivate(qSlicerOpenIGTLinkIFModuleWidget& object);
 
-  vtkSlicerOpenIGTLinkIFLogic * logic();
+  vtkSlicerOpenIGTLinkIFLogic* logic();
 
 };
 
@@ -35,12 +35,12 @@ public:
 
 //-----------------------------------------------------------------------------
 qSlicerOpenIGTLinkIFModuleWidgetPrivate::qSlicerOpenIGTLinkIFModuleWidgetPrivate(qSlicerOpenIGTLinkIFModuleWidget& object)
- : q_ptr(&object)
+  : q_ptr(&object)
 {
 }
 
 //-----------------------------------------------------------------------------
-vtkSlicerOpenIGTLinkIFLogic * qSlicerOpenIGTLinkIFModuleWidgetPrivate::logic()
+vtkSlicerOpenIGTLinkIFLogic* qSlicerOpenIGTLinkIFModuleWidgetPrivate::logic()
 {
   Q_Q(qSlicerOpenIGTLinkIFModuleWidget);
   return vtkSlicerOpenIGTLinkIFLogic::SafeDownCast(q->logic());
@@ -51,8 +51,8 @@ vtkSlicerOpenIGTLinkIFLogic * qSlicerOpenIGTLinkIFModuleWidgetPrivate::logic()
 
 //-----------------------------------------------------------------------------
 qSlicerOpenIGTLinkIFModuleWidget::qSlicerOpenIGTLinkIFModuleWidget(QWidget* _parent)
-  : Superclass( _parent )
-  , d_ptr( new qSlicerOpenIGTLinkIFModuleWidgetPrivate(*this) )
+  : Superclass(_parent)
+  , d_ptr(new qSlicerOpenIGTLinkIFModuleWidgetPrivate(*this))
 {
 }
 
@@ -67,7 +67,7 @@ void qSlicerOpenIGTLinkIFModuleWidget::setup()
   Q_D(qSlicerOpenIGTLinkIFModuleWidget);
   d->setupUi(this);
   this->Superclass::setup();
-  
+
   // --------------------------------------------------
   // Connectors section
   //  Connector List View
@@ -85,8 +85,8 @@ void qSlicerOpenIGTLinkIFModuleWidget::setup()
   //  I/O Configuration Section
   connect(this, SIGNAL(mrmlSceneChanged(vtkMRMLScene*)),
           d->IGTIONodeSelectorWidget, SLOT(setMRMLScene(vtkMRMLScene*)));
-  connect(d->IOTreeView, SIGNAL(ioTreeViewUpdated(int,vtkMRMLIGTLConnectorNode*,int, vtkMRMLNode*)),
-          d->IGTIONodeSelectorWidget, SLOT(updateEnabledStatus(int,vtkMRMLIGTLConnectorNode*,int, vtkMRMLNode*)));
+  connect(d->IOTreeView, SIGNAL(ioTreeViewUpdated(int, vtkMRMLIGTLConnectorNode*, int, vtkMRMLNode*)),
+          d->IGTIONodeSelectorWidget, SLOT(updateEnabledStatus(int, vtkMRMLIGTLConnectorNode*, int, vtkMRMLNode*)));
 
 }
 
@@ -97,9 +97,9 @@ void qSlicerOpenIGTLinkIFModuleWidget::setMRMLScene(vtkMRMLScene* scene)
 
   this->Superclass::setMRMLScene(scene);
   if (scene == NULL)
-    {
+  {
     return;
-    }
+  }
   d->ConnectorListView->setMRMLScene(scene);
   d->IOTreeView->setMRMLScene(scene);
 
@@ -111,17 +111,17 @@ void qSlicerOpenIGTLinkIFModuleWidget::onAddConnectorButtonClicked()
   Q_D(qSlicerOpenIGTLinkIFModuleWidget);
 
   if (this->mrmlScene())
-    {
-    vtkMRMLIGTLConnectorNode* node = 
+  {
+    vtkMRMLIGTLConnectorNode* node =
       vtkMRMLIGTLConnectorNode::SafeDownCast(this->mrmlScene()->CreateNodeByClass("vtkMRMLIGTLConnectorNode"));
     if (node)
-      {
+    {
       this->mrmlScene()->AddNode(node);
       d->ConnectorListView->setSelectedNode(node->GetID());
       node->SetType(vtkMRMLIGTLConnectorNode::TypeClient);
       node->Delete();
-      }
     }
+  }
   //qMRMLNodeFactory::createNode(this->mrmlScene(), "vtkMRMLIGTLConnectorNode");
 }
 
@@ -129,12 +129,12 @@ void qSlicerOpenIGTLinkIFModuleWidget::onAddConnectorButtonClicked()
 void qSlicerOpenIGTLinkIFModuleWidget::onRemoveConnectorButtonClicked()
 {
   Q_D(qSlicerOpenIGTLinkIFModuleWidget);
-  vtkMRMLNode * node = d->ConnectorListView->currentNode();
+  vtkMRMLNode* node = d->ConnectorListView->currentNode();
   if (!node)
-    {
+  {
     return;
-    }
-  vtkMRMLIGTLConnectorNode * connectorNode = vtkMRMLIGTLConnectorNode::SafeDownCast(node);
+  }
+  vtkMRMLIGTLConnectorNode* connectorNode = vtkMRMLIGTLConnectorNode::SafeDownCast(node);
   Q_ASSERT(connectorNode);
   connectorNode->Stop();
   this->mrmlScene()->RemoveNode(connectorNode);

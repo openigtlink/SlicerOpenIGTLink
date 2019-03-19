@@ -17,38 +17,39 @@
 #include "vtkMRMLCoreTestingMacros.h"
 #include "vtkTestingOutputWindow.h"
 
-class CommandObserver:public vtkObject
+class CommandObserver: public vtkObject
 {
 public:
-  static CommandObserver *New(){
+  static CommandObserver* New()
+  {
     VTK_STANDARD_NEW_BODY(CommandObserver);
   };
   vtkTypeMacro(CommandObserver, vtkObject);
   void PrintSelf(ostream& os, vtkIndent indent) override
   {
-  vtkObject::PrintSelf(os, indent);
+    vtkObject::PrintSelf(os, indent);
   };
 
-  ~CommandObserver(){};
+  ~CommandObserver() {};
 
-  void onCommandReceivedEventFunc(vtkObject* caller, unsigned long eid, void *calldata)
+  void onCommandReceivedEventFunc(vtkObject* caller, unsigned long eid, void* calldata)
   {
-  igtlioCommand* command = reinterpret_cast<igtlioCommand*>(calldata);
-  command->SetResponseContent(ResponseString.c_str());
-  ConnectorNode->SendCommandResponse(command);
-  std::cout << "*** COMMAND received from client:" << std::endl;
-  std::cout << command->GetCommandContent() << std::endl;
-  testSuccessful +=1;
+    igtlioCommand* command = reinterpret_cast<igtlioCommand*>(calldata);
+    command->SetResponseContent(ResponseString.c_str());
+    ConnectorNode->SendCommandResponse(command);
+    std::cout << "*** COMMAND received from client:" << std::endl;
+    std::cout << command->GetCommandContent() << std::endl;
+    testSuccessful += 1;
   }
 
-  void onCommandResponseReceivedEventFunc(vtkObject* caller, unsigned long eid,  void *calldata)
+  void onCommandResponseReceivedEventFunc(vtkObject* caller, unsigned long eid,  void* calldata)
   {
-  std::cout << "*** COMMAND response received from server:" << std::endl;
-  igtlioCommand* command = reinterpret_cast<igtlioCommand*>(calldata);
-  std::cout << command->GetResponseContent() << std::endl;
-  if (ResponseString.compare(command->GetResponseContent()) == 0)
+    std::cout << "*** COMMAND response received from server:" << std::endl;
+    igtlioCommand* command = reinterpret_cast<igtlioCommand*>(calldata);
+    std::cout << command->GetResponseContent() << std::endl;
+    if (ResponseString.compare(command->GetResponseContent()) == 0)
     {
-    testSuccessful +=1;
+      testSuccessful += 1;
     }
   }
   int testSuccessful;
@@ -58,14 +59,14 @@ public:
 protected:
   CommandObserver()
   {
-  testSuccessful = 0;
-  ConnectorNode = NULL;
-  ResponseString = "<Command>\n <Result success=\"true\"> <Parameter Name=\"Depth\" /> </Result>\n</Command>";
+    testSuccessful = 0;
+    ConnectorNode = NULL;
+    ResponseString = "<Command>\n <Result success=\"true\"> <Parameter Name=\"Depth\" /> </Result>\n</Command>";
   };
 
 };
 
-int vtkMRMLConnectorCommandSendAndReceiveTest(int argc, char * argv [] )
+int vtkMRMLConnectorCommandSendAndReceiveTest(int argc, char* argv [])
 {
   int port = 18955;
 
@@ -90,44 +91,44 @@ int vtkMRMLConnectorCommandSendAndReceiveTest(int argc, char * argv [] )
 
   // Client connects to server.
   while (vtkTimerLog::GetUniversalTime() - starttime < timeout)
-    {
+  {
     serverConnectorNode->PeriodicProcess();
     clientConnectorNode->PeriodicProcess();
     vtksys::SystemTools::Delay(5);
 
     if (clientConnectorNode->GetState() == vtkMRMLIGTLConnectorNode::StateConnected)
-      {
+    {
       std::cout << "SUCCESS: connected to server" << std::endl;
       break;
-      }
+    }
     if (clientConnectorNode->GetState() == vtkMRMLIGTLConnectorNode::StateOff)
-      {
+    {
       std::cout << "FAILURE to connect to server" << std::endl;
       clientConnectorNode->Stop();
       serverConnectorNode->Stop();
       clientConnectorNode->Delete();
       serverConnectorNode->Delete();
       return EXIT_FAILURE;
-      }
     }
+  }
 
   clientConnectorNode->SendCommand("Get", "<Command>\n <Parameter Name=\"Depth\" />\n </Command>", false);
 
   // Make sure the Server receive the command message.
   starttime = vtkTimerLog::GetUniversalTime();
   while (vtkTimerLog::GetUniversalTime() - starttime < timeout)
-    {
+  {
     serverConnectorNode->PeriodicProcess();
     vtksys::SystemTools::Delay(5);
-    }
+  }
 
   // Make sure the Client receive the response message.
   starttime = vtkTimerLog::GetUniversalTime();
   while (vtkTimerLog::GetUniversalTime() - starttime < timeout)
-    {
+  {
     clientConnectorNode->PeriodicProcess();
     vtksys::SystemTools::Delay(5);
-    }
+  }
   clientConnectorNode->Stop();
   serverConnectorNode->Stop();
   clientConnectorNode->Delete();

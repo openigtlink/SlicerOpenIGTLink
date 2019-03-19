@@ -64,7 +64,7 @@ void vtkMRMLLabelMetaListNode::ReadXMLAttributes(const char** atts)
 //----------------------------------------------------------------------------
 // Copy the node's attributes to this object.
 // Does NOT copy: ID, FilePrefix, Name, VolumeID
-void vtkMRMLLabelMetaListNode::Copy(vtkMRMLNode *anode)
+void vtkMRMLLabelMetaListNode::Copy(vtkMRMLNode* anode)
 {
 
   Superclass::Copy(anode);
@@ -75,7 +75,7 @@ void vtkMRMLLabelMetaListNode::Copy(vtkMRMLNode *anode)
 }
 
 //----------------------------------------------------------------------------
-void vtkMRMLLabelMetaListNode::ProcessMRMLEvents( vtkObject *caller, unsigned long event, void *callData )
+void vtkMRMLLabelMetaListNode::ProcessMRMLEvents(vtkObject* caller, unsigned long event, void* callData)
 {
 
   Superclass::ProcessMRMLEvents(caller, event, callData);
@@ -85,7 +85,7 @@ void vtkMRMLLabelMetaListNode::ProcessMRMLEvents( vtkObject *caller, unsigned lo
 //----------------------------------------------------------------------------
 void vtkMRMLLabelMetaListNode::PrintSelf(ostream& os, vtkIndent indent)
 {
-  vtkMRMLNode::PrintSelf(os,indent);
+  vtkMRMLNode::PrintSelf(os, indent);
 }
 
 
@@ -105,13 +105,13 @@ void vtkMRMLLabelMetaListNode::AddLabelMetaElement(LabelMetaElement element)
 void vtkMRMLLabelMetaListNode::GetLabelMetaElement(int index, LabelMetaElement* element)
 {
   if (index >= 0 && index < (int) this->LabelMetaList.size())
-    {
+  {
     *element = this->LabelMetaList[index];
-    }
+  }
   else
-    {
+  {
     element->DeviceName = "";
-    }
+  }
 }
 
 //----------------------------------------------------------------------------

@@ -19,48 +19,48 @@
 class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLStatusNode : public vtkMRMLNode
 {
 public:
-  static vtkMRMLIGTLStatusNode *New();
+  static vtkMRMLIGTLStatusNode* New();
 
-  vtkTypeMacro(vtkMRMLIGTLStatusNode,vtkMRMLNode);
+  vtkTypeMacro(vtkMRMLIGTLStatusNode, vtkMRMLNode);
 
   void PrintSelf(ostream& os, vtkIndent indent) override;
 
   virtual vtkMRMLNode* CreateNodeInstance() override;
 
-  /// 
+  ///
   /// Read node attributes from XML file
-  virtual void ReadXMLAttributes( const char** atts) override;
+  virtual void ReadXMLAttributes(const char** atts) override;
 
-  /// 
+  ///
   /// Write this node's information to a MRML file in XML format.
   virtual void WriteXML(ostream& of, int indent) override;
 
-  /// 
+  ///
   /// Get node XML tag name (like Volume, Model)
   virtual const char* GetNodeTagName() override {return "IGTLStatus";};
 
   /// Set a status code. Return 0 if the code is invalid.
   int SetCode(vtkTypeUInt16 code);
-  
+
   /// Get a status code.
-  vtkTypeUInt16 GetCode();  
+  vtkTypeUInt16 GetCode();
 
   /// Set a sub code. Return 0 if the code is invalid.
   int SetSubCode(vtkTypeInt64 code);
 
   /// Get a sub code.
-  vtkTypeInt64 GetSubCode();  
+  vtkTypeInt64 GetSubCode();
 
   /// Set an error name. Return 0 if the name is not accpeted.
   int SetErrorName(const char* name);
-  
+
   /// Get an error name.
   const char*  GetErrorName();
 
   /// Set a status string. Return 0 if the string is not accepted.
   int SetStatusString(const char* name);
 
-  /// Get a message string. 
+  /// Get a message string.
   const char*  GetStatusString();
 
   /// Set all status information
@@ -68,7 +68,8 @@ public:
 
 
   /// Status codes -- see igtl_status.h
-  enum {
+  enum
+  {
     STATUS_INVALID             = 0,
     STATUS_OK                  = 1,
     STATUS_UNKNOWN_ERROR       = 2,

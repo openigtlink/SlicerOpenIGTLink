@@ -29,7 +29,7 @@
 #include <vtkXMLUtilities.h>
 
 //-----------------------------------------------------------------------------
-qSlicerAbstractUltrasoundParameterWidgetPrivate::qSlicerAbstractUltrasoundParameterWidgetPrivate(qSlicerAbstractUltrasoundParameterWidget *q)
+qSlicerAbstractUltrasoundParameterWidgetPrivate::qSlicerAbstractUltrasoundParameterWidgetPrivate(qSlicerAbstractUltrasoundParameterWidget* q)
   : q_ptr(q)
   , CmdSetParameter(igtlioCommandPointer::New())
   , CmdGetParameter(igtlioCommandPointer::New())
@@ -203,7 +203,7 @@ void qSlicerAbstractUltrasoundParameterWidget::getUltrasoundParameter()
 
 //-----------------------------------------------------------------------------
 const char* qSlicerAbstractUltrasoundParameterWidget::parameterName()
-  {
+{
   Q_D(qSlicerAbstractUltrasoundParameterWidget);
   return d->ParameterName.c_str();
 }

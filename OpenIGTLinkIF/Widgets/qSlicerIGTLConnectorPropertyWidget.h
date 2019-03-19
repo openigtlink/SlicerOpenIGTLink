@@ -42,12 +42,12 @@ class Q_SLICER_MODULE_OPENIGTLINKIF_WIDGETS_EXPORT qSlicerIGTLConnectorPropertyW
   QVTK_OBJECT
 public:
   typedef QWidget Superclass;
-  qSlicerIGTLConnectorPropertyWidget(QWidget *parent = 0);
+  qSlicerIGTLConnectorPropertyWidget(QWidget* parent = 0);
   virtual ~qSlicerIGTLConnectorPropertyWidget();
 
 public slots:
   /// Set the MRML node of interest
-  void setMRMLIGTLConnectorNode(vtkMRMLIGTLConnectorNode * connectorNode);
+  void setMRMLIGTLConnectorNode(vtkMRMLIGTLConnectorNode* connectorNode);
 
   /// Utility function that calls setMRMLIGTLConnectorNode(vtkMRMLIGTLConnectorNode*)
   /// It's useful to connect to vtkMRMLNode* signals when you are sure of

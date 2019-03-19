@@ -16,13 +16,13 @@
 /// \ingroup Slicer_QtModules_ExtensionTemplate
 class qSlicerOpenIGTLinkRemoteModuleWidgetPrivate: public Ui_qSlicerOpenIGTLinkRemoteModuleWidget
 {
-Q_DECLARE_PUBLIC( qSlicerOpenIGTLinkRemoteModuleWidget );
+  Q_DECLARE_PUBLIC(qSlicerOpenIGTLinkRemoteModuleWidget);
 
 protected:
   qSlicerOpenIGTLinkRemoteModuleWidget* const q_ptr;
 
 public:
-  qSlicerOpenIGTLinkRemoteModuleWidgetPrivate( qSlicerOpenIGTLinkRemoteModuleWidget& object );
+  qSlicerOpenIGTLinkRemoteModuleWidgetPrivate(qSlicerOpenIGTLinkRemoteModuleWidget& object);
 
 };
 
@@ -34,16 +34,16 @@ public:
 
 
 qSlicerOpenIGTLinkRemoteModuleWidgetPrivate
-::qSlicerOpenIGTLinkRemoteModuleWidgetPrivate( qSlicerOpenIGTLinkRemoteModuleWidget& object )
-  : q_ptr( &object )
+::qSlicerOpenIGTLinkRemoteModuleWidgetPrivate(qSlicerOpenIGTLinkRemoteModuleWidget& object)
+  : q_ptr(&object)
 {
 }
 
 // Constructor
 qSlicerOpenIGTLinkRemoteModuleWidget
-::qSlicerOpenIGTLinkRemoteModuleWidget( QWidget* _parent )
-  : Superclass( _parent )
-  , d_ptr( new qSlicerOpenIGTLinkRemoteModuleWidgetPrivate( *this ) )
+::qSlicerOpenIGTLinkRemoteModuleWidget(QWidget* _parent)
+  : Superclass(_parent)
+  , d_ptr(new qSlicerOpenIGTLinkRemoteModuleWidgetPrivate(*this))
 {
 }
 
@@ -56,18 +56,18 @@ void qSlicerOpenIGTLinkRemoteModuleWidget::setup()
 {
   Q_D(qSlicerOpenIGTLinkRemoteModuleWidget);
   d->setupUi(this);
-  
-  d->commandWidget->setCommandLogic( this->logic() );
-  
+
+  d->commandWidget->setCommandLogic(this->logic());
+
   this->Superclass::setup();
 }
 
 
 //-----------------------------------------------------------------------------
-void qSlicerOpenIGTLinkRemoteModuleWidget::setMRMLScene(vtkMRMLScene *newScene)
+void qSlicerOpenIGTLinkRemoteModuleWidget::setMRMLScene(vtkMRMLScene* newScene)
 {
   this->Superclass::setMRMLScene(newScene);
-  
+
   Q_D(qSlicerOpenIGTLinkRemoteModuleWidget);
 
   d->queryWidget->setMRMLScene(newScene);
@@ -75,7 +75,7 @@ void qSlicerOpenIGTLinkRemoteModuleWidget::setMRMLScene(vtkMRMLScene *newScene)
 }
 
 
-void qSlicerOpenIGTLinkRemoteModuleWidget::setIFLogic(vtkSlicerOpenIGTLinkIFLogic *ifLogic)
+void qSlicerOpenIGTLinkRemoteModuleWidget::setIFLogic(vtkSlicerOpenIGTLinkIFLogic* ifLogic)
 {
   Q_D(qSlicerOpenIGTLinkRemoteModuleWidget);
 

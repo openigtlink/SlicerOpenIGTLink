@@ -36,7 +36,7 @@ class Q_SLICER_QTMODULES_PLUSREMOTE_EXPORT qSlicerPlusRemoteModuleWidget :
 
 public:
   typedef qSlicerAbstractModuleWidget Superclass;
-  qSlicerPlusRemoteModuleWidget(QWidget *parent = 0);
+  qSlicerPlusRemoteModuleWidget(QWidget* parent = 0);
   virtual ~qSlicerPlusRemoteModuleWidget();
 
 public slots:
@@ -48,7 +48,7 @@ public slots:
 
 public:
   // Set the current parameter node
-  void setParameterNode(vtkMRMLNode *node);
+  void setParameterNode(vtkMRMLNode* node);
 
 protected:
   QScopedPointer<qSlicerPlusRemoteModuleWidgetPrivate> d_ptr;

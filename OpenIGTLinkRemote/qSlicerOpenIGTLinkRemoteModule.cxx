@@ -39,8 +39,8 @@
 
 //-----------------------------------------------------------------------------
 #if (QT_VERSION < QT_VERSION_CHECK(5, 0, 0))
-#include <QtPlugin>
-Q_EXPORT_PLUGIN2(qSlicerOpenIGTLinkRemoteModule, qSlicerOpenIGTLinkRemoteModule);
+  #include <QtPlugin>
+  Q_EXPORT_PLUGIN2(qSlicerOpenIGTLinkRemoteModule, qSlicerOpenIGTLinkRemoteModule);
 #endif
 
 //-----------------------------------------------------------------------------
@@ -126,20 +126,20 @@ void qSlicerOpenIGTLinkRemoteModule
 {
   this->Superclass::setup();
 
-  qSlicerOpenIGTLinkRemoteModuleWidget *widget =
+  qSlicerOpenIGTLinkRemoteModuleWidget* widget =
     dynamic_cast<qSlicerOpenIGTLinkRemoteModuleWidget*>(this->widgetRepresentation());
 
-  qSlicerAbstractCoreModule* IFModule = qSlicerCoreApplication::application()->moduleManager()->module( "OpenIGTLinkIF" );
-  if ( IFModule )
+  qSlicerAbstractCoreModule* IFModule = qSlicerCoreApplication::application()->moduleManager()->module("OpenIGTLinkIF");
+  if (IFModule)
   {
-    vtkSlicerOpenIGTLinkIFLogic* IFLogic = vtkSlicerOpenIGTLinkIFLogic::SafeDownCast( IFModule->logic() );
-    widget->setIFLogic( IFLogic );
+    vtkSlicerOpenIGTLinkIFLogic* IFLogic = vtkSlicerOpenIGTLinkIFLogic::SafeDownCast(IFModule->logic());
+    widget->setIFLogic(IFLogic);
   }
 }
 
 
 
-qSlicerAbstractModuleRepresentation * qSlicerOpenIGTLinkRemoteModule
+qSlicerAbstractModuleRepresentation* qSlicerOpenIGTLinkRemoteModule
 ::createWidgetRepresentation()
 {
   return new qSlicerOpenIGTLinkRemoteModuleWidget;

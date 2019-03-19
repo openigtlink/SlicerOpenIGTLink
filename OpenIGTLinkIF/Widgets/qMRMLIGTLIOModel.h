@@ -37,9 +37,10 @@ class Q_SLICER_MODULE_OPENIGTLINKIF_WIDGETS_EXPORT qMRMLIGTLIOModel : public qMR
 {
   Q_OBJECT
 
- public:
-  
-  enum Columns{
+public:
+
+  enum Columns
+  {
     NameColumn = 0,
     TypeColumn,
     StatusColumn,
@@ -47,15 +48,16 @@ class Q_SLICER_MODULE_OPENIGTLINKIF_WIDGETS_EXPORT qMRMLIGTLIOModel : public qMR
     PushOnConnectColumn,
     NumColumns
   };
-  enum Direction{
+  enum Direction
+  {
     UNDEFINED = 0,
     INCOMING,
     OUTGOING,
   };
 
- public:
+public:
   typedef qMRMLSceneModel Superclass;
-  qMRMLIGTLIOModel(QObject *parent=0);
+  qMRMLIGTLIOModel(QObject* parent = 0);
   virtual ~qMRMLIGTLIOModel();
 
   void setLogic(vtkSlicerOpenIGTLinkIFLogic* logic);
@@ -64,21 +66,21 @@ class Q_SLICER_MODULE_OPENIGTLINKIF_WIDGETS_EXPORT qMRMLIGTLIOModel : public qMR
   virtual void updateItemDataFromNode(QStandardItem* item, vtkMRMLNode* node, int column);
   virtual void updateNodeFromItem(vtkMRMLNode* node, QStandardItem* item);
 
- protected:
-  qMRMLIGTLIOModel(qMRMLIGTLIOModelPrivate* pimpl, QObject *parent=0);
+protected:
+  qMRMLIGTLIOModel(qMRMLIGTLIOModelPrivate* pimpl, QObject* parent = 0);
 
   virtual void updateIOTreeBranch(vtkMRMLIGTLConnectorNode* node, QStandardItem* item, qMRMLIGTLIOModel::Direction dir);
   virtual QStandardItem* insertIOTree(vtkMRMLNode* node);
   virtual QStandardItem* insertNode(vtkMRMLNode* node);
 
- protected slots:
+protected slots:
   virtual void onDeviceVisibilityModified(vtkObject*);
   virtual void onMRMLSceneNodeAdded(vtkMRMLScene* scene, vtkMRMLNode* node);
   virtual void onMRMLSceneNodeAboutToBeRemoved(vtkMRMLScene* scene, vtkMRMLNode* node);
   virtual void onMRMLSceneNodeRemoved(vtkMRMLScene* scene, vtkMRMLNode* node);
 
 
- private:
+private:
   Q_DECLARE_PRIVATE(qMRMLIGTLIOModel);
   Q_DISABLE_COPY(qMRMLIGTLIOModel);
 

@@ -54,16 +54,16 @@ void vtkMRMLIGTLSensorNode::ReadXMLAttributes(const char** atts)
 //----------------------------------------------------------------------------
 void vtkMRMLIGTLSensorNode::PrintSelf(ostream& os, vtkIndent indent)
 {
-  Superclass::PrintSelf(os,indent);
+  Superclass::PrintSelf(os, indent);
 }
 
 //----------------------------------------------------------------------------
 int vtkMRMLIGTLSensorNode::SetArrayLength(vtkTypeUInt8 length)
 {
   if (this->Data.size() != length)
-    {
+  {
     this->Data.resize(length);
-    }
+  }
 
   return 1;
 }
@@ -114,13 +114,13 @@ int vtkMRMLIGTLSensorNode::InsertDataValue(double value)
 int vtkMRMLIGTLSensorNode::SetDataValue(unsigned int index, double value)
 {
   if (index < this->Data.size())
-    {
+  {
     this->Data[index] = value;
-    }
+  }
   else
-    {
+  {
     this->InsertDataValue(value);
-    }
+  }
   this->InvokeEvent(SensorModifiedEvent, NULL);
   return 1;
 }
@@ -129,9 +129,9 @@ int vtkMRMLIGTLSensorNode::SetDataValue(unsigned int index, double value)
 double vtkMRMLIGTLSensorNode::GetDataValue(unsigned int index)
 {
   if (index < this->Data.size())
-    {
+  {
     return this->Data[index];
-    }
+  }
   return 0;
 }
 

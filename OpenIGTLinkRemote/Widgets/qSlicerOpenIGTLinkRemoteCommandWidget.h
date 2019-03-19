@@ -38,12 +38,12 @@ class Q_SLICER_QTMODULES_OPENIGTLINKREMOTE_WIDGETS_EXPORT qSlicerOpenIGTLinkRemo
 
 public:
   typedef qSlicerWidget Superclass;
-  qSlicerOpenIGTLinkRemoteCommandWidget(QWidget *parent=0);
+  qSlicerOpenIGTLinkRemoteCommandWidget(QWidget* parent = 0);
   virtual ~qSlicerOpenIGTLinkRemoteCommandWidget();
 
-  void setMRMLScene(vtkMRMLScene *scene);
+  void setMRMLScene(vtkMRMLScene* scene);
   void setCommandLogic(vtkMRMLAbstractLogic* newCommandLogic);
-  void setIFLogic(vtkSlicerOpenIGTLinkIFLogic *logic);
+  void setIFLogic(vtkSlicerOpenIGTLinkIFLogic* logic);
 
 
 protected slots:
@@ -63,12 +63,12 @@ protected:
 
 protected:
   QScopedPointer<qSlicerOpenIGTLinkRemoteCommandWidgetPrivate> d_ptr;
-  
+
 private:
   Q_DECLARE_PRIVATE(qSlicerOpenIGTLinkRemoteCommandWidget);
   Q_DISABLE_COPY(qSlicerOpenIGTLinkRemoteCommandWidget);
-  
-  vtkSlicerOpenIGTLinkRemoteLogic *CommandLogic;
+
+  vtkSlicerOpenIGTLinkRemoteLogic* CommandLogic;
 };
 
 #endif

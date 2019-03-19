@@ -21,28 +21,28 @@
 #include "vtkSlicerOpenIGTLinkRemoteModuleMRMLExport.h"
 
 class VTK_SLICER_OPENIGTLINKREMOTE_MODULE_MRML_EXPORT vtkMRMLOpenIGTLinkRemoteNode
-: public vtkMRMLNode
+  : public vtkMRMLNode
 {
 public:
-  static vtkMRMLOpenIGTLinkRemoteNode *New();
-  vtkTypeMacro( vtkMRMLOpenIGTLinkRemoteNode, vtkMRMLNode );
-  void PrintSelf( ostream& os, vtkIndent indent );
-  
+  static vtkMRMLOpenIGTLinkRemoteNode* New();
+  vtkTypeMacro(vtkMRMLOpenIGTLinkRemoteNode, vtkMRMLNode);
+  void PrintSelf(ostream& os, vtkIndent indent);
+
   // Standard MRML node methods
-  virtual vtkMRMLNode* CreateNodeInstance();  
+  virtual vtkMRMLNode* CreateNodeInstance();
   virtual const char* GetNodeTagName() { return "OpenIGTLinkRemote"; };
-  virtual void ReadXMLAttributes( const char** atts );
-  virtual void WriteXML( ostream& of, int indent );
-  virtual void Copy( vtkMRMLNode *node );
-  
+  virtual void ReadXMLAttributes(const char** atts);
+  virtual void WriteXML(ostream& of, int indent);
+  virtual void Copy(vtkMRMLNode* node);
+
 protected:
   vtkMRMLOpenIGTLinkRemoteNode();
   virtual ~vtkMRMLOpenIGTLinkRemoteNode();
-  vtkMRMLOpenIGTLinkRemoteNode ( const vtkMRMLOpenIGTLinkRemoteNode& );
-  void operator=( const vtkMRMLOpenIGTLinkRemoteNode& );
+  vtkMRMLOpenIGTLinkRemoteNode(const vtkMRMLOpenIGTLinkRemoteNode&);
+  void operator=(const vtkMRMLOpenIGTLinkRemoteNode&);
 
 private:
 
-};  
+};
 
 #endif

@@ -31,18 +31,20 @@ class vtkMRMLIGTLConnectorNode;
 
 class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLQueryNode : public vtkMRMLNode
 {
- public:
+public:
 
   //----------------------------------------------------------------
   // Constants Definitions
   //----------------------------------------------------------------
 
   // Events
-  enum {
+  enum
+  {
     ResponseEvent        = 128940,
   };
 
-  enum {
+  enum
+  {
     TYPE_NOT_DEFINED,
     TYPE_GET,
     TYPE_START,
@@ -50,7 +52,8 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLQueryNode : public 
     NUM_TYPE,
   };
 
-  enum {
+  enum
+  {
     STATUS_NOT_DEFINED,
     STATUS_PREPARED,     // Ready to query
     STATUS_WAITING,      // Waiting for response from server
@@ -60,45 +63,45 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLQueryNode : public 
     NUM_STATUS,
   };
 
- public:
+public:
 
   //----------------------------------------------------------------
   // Access functions
   //----------------------------------------------------------------
-  vtkGetMacro( QueryStatus, int );
-  vtkSetMacro( QueryStatus, int );
-  vtkGetMacro( QueryType, int );
-  vtkSetMacro( QueryType, int );
+  vtkGetMacro(QueryStatus, int);
+  vtkSetMacro(QueryStatus, int);
+  vtkGetMacro(QueryType, int);
+  vtkSetMacro(QueryType, int);
 
   // Description:
   // Get OpenIGTLink type name. If the query node is for IMAGE, "IMAGE" is returned.
   virtual void SetIGTLName(const char* name);
   virtual const char* GetIGTLName() { return IGTLName.c_str(); };
-  
+
   // Description:
   // Get OpenIGTLink device name. If it is empty then the query will look for any device name with a matching type (IGTLName).
   virtual void SetIGTLDeviceName(const char* name);
   virtual const char* GetIGTLDeviceName() { return IGTLDeviceName.c_str(); };
-  
+
   // Description:
   // Time when the query issued in Universal Time in seconds (see vtkTimerLog::GetUniversalTime())
-  vtkGetMacro( TimeStamp, double );
-  vtkSetMacro( TimeStamp, double );
+  vtkGetMacro(TimeStamp, double);
+  vtkSetMacro(TimeStamp, double);
 
   // Description:
   // Timeout of the query in seconds.
   // If TimeOut>0 then it means that QueryStatus has to be changed to STATUS_TIMEOUT if the status
   // is still STATUS_WAITING and more than TimeOut time elapsed since the TimeStamp.
   // If TimeOut==0 then there is no limit on the amount of time waiting for a query response.
-  vtkGetMacro( TimeOut, double );
-  vtkSetMacro( TimeOut, double );
+  vtkGetMacro(TimeOut, double);
+  vtkSetMacro(TimeOut, double);
 
   //----------------------------------------------------------------
   // Standard methods for MRML nodes
   //----------------------------------------------------------------
 
-  static vtkMRMLIGTLQueryNode *New();
-  vtkTypeMacro(vtkMRMLIGTLQueryNode,vtkMRMLNode);
+  static vtkMRMLIGTLQueryNode* New();
+  vtkTypeMacro(vtkMRMLIGTLQueryNode, vtkMRMLNode);
 
   void PrintSelf(ostream& os, vtkIndent indent) override;
 
@@ -106,7 +109,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLQueryNode : public 
 
   // Description:
   // Set node attributes
-  virtual void ReadXMLAttributes( const char** atts) override;
+  virtual void ReadXMLAttributes(const char** atts) override;
 
   // Description:
   // Write this node's information to a MRML file in XML format.
@@ -114,7 +117,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLQueryNode : public 
 
   // Description:
   // Copy the node's attributes to this object
-  virtual void Copy(vtkMRMLNode *node) override;
+  virtual void Copy(vtkMRMLNode* node) override;
 
   // Description:
   // Get node XML tag name (like Volume, Model)
@@ -140,7 +143,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLQueryNode : public 
   static const char* QueryStatusToString(int queryStatus);
   static const char* QueryTypeToString(int queryType);
 
- protected:
+protected:
   //----------------------------------------------------------------
   // Constructor and destroctor
   //----------------------------------------------------------------
@@ -150,13 +153,13 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLQueryNode : public 
   vtkMRMLIGTLQueryNode(const vtkMRMLIGTLQueryNode&);
   void operator=(const vtkMRMLIGTLQueryNode&);
 
- public:
+public:
   //----------------------------------------------------------------
   // Connector configuration
   //----------------------------------------------------------------
 
 
- private:
+private:
   //----------------------------------------------------------------
   // Data
   //----------------------------------------------------------------

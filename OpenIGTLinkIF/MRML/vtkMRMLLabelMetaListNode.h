@@ -34,33 +34,35 @@
 
 class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLLabelMetaListNode : public vtkMRMLNode
 {
- public:
+public:
 
   //----------------------------------------------------------------
   // Constants Definitions
   //----------------------------------------------------------------
 
   // Events
-  enum {
+  enum
+  {
     NewDeviceEvent        = 118949,
   };
 
 
-  typedef struct {
+  typedef struct
+  {
     std::string   Name;        /* name / description (< 64 bytes)*/
     std::string   DeviceName;  /* device name to query the LABEL and COLORT */
     std::string   Owner;       /* owner of the label (name of image node) */
     int           Size[3];     /* entire label volume size */
   } LabelMetaElement;
 
- public:
+public:
 
   //----------------------------------------------------------------
   // Standard methods for MRML nodes
   //----------------------------------------------------------------
 
-  static vtkMRMLLabelMetaListNode *New();
-  vtkTypeMacro(vtkMRMLLabelMetaListNode,vtkMRMLNode);
+  static vtkMRMLLabelMetaListNode* New();
+  vtkTypeMacro(vtkMRMLLabelMetaListNode, vtkMRMLNode);
 
   void PrintSelf(ostream& os, vtkIndent indent) override;
 
@@ -68,7 +70,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLLabelMetaListNode : pub
 
   // Description:
   // Set node attributes
-  virtual void ReadXMLAttributes( const char** atts) override;
+  virtual void ReadXMLAttributes(const char** atts) override;
 
   // Description:
   // Write this node's information to a MRML file in XML format.
@@ -76,7 +78,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLLabelMetaListNode : pub
 
   // Description:
   // Copy the node's attributes to this object
-  virtual void Copy(vtkMRMLNode *node) override;
+  virtual void Copy(vtkMRMLNode* node) override;
 
   // Description:
   // Get node XML tag name (like Volume, Model)
@@ -84,7 +86,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLLabelMetaListNode : pub
   {return "LabelMetaList";};
 
   // method to propagate events generated in mrml
-  virtual void ProcessMRMLEvents ( vtkObject *caller, unsigned long event, void *callData ) override;
+  virtual void ProcessMRMLEvents(vtkObject* caller, unsigned long event, void* callData) override;
 
   // Description:
   // Get number of label meta element stored in this class instance
@@ -103,7 +105,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLLabelMetaListNode : pub
   // Clear label meta element list
   void ClearLabelMetaElement();
 
- protected:
+protected:
   //----------------------------------------------------------------
   // Constructor and destroctor
   //----------------------------------------------------------------
@@ -113,13 +115,13 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLLabelMetaListNode : pub
   vtkMRMLLabelMetaListNode(const vtkMRMLLabelMetaListNode&);
   void operator=(const vtkMRMLLabelMetaListNode&);
 
- public:
+public:
   //----------------------------------------------------------------
   // Connector configuration
   //----------------------------------------------------------------
 
 
- private:
+private:
   //----------------------------------------------------------------
   // Data
   //----------------------------------------------------------------

@@ -33,10 +33,10 @@ class vtkMutexLock;
 
 class vtkIGTLCircularBuffer : public vtkObject
 {
- public:
+public:
 
-  static vtkIGTLCircularBuffer *New();
-  vtkTypeMacro(vtkIGTLCircularBuffer,vtkObject);
+  static vtkIGTLCircularBuffer* New();
+  vtkTypeMacro(vtkIGTLCircularBuffer, vtkObject);
 
   void PrintSelf(ostream& os, vtkIndent indent);
 
@@ -52,11 +52,11 @@ class vtkIGTLCircularBuffer : public vtkObject
 
   int            IsUpdated() { return this->UpdateFlag; };
 
- protected:
+protected:
   vtkIGTLCircularBuffer();
   virtual ~vtkIGTLCircularBuffer();
 
- protected:
+protected:
 
   vtkMutexLock*      Mutex;
   int                Last;        // updated by connector thread

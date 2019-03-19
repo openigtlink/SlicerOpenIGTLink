@@ -23,7 +23,7 @@ class Q_SLICER_QTMODULES_OPENIGTLINKIF_EXPORT qSlicerOpenIGTLinkIFModule :
 public:
 
   typedef qSlicerLoadableModule Superclass;
-  explicit qSlicerOpenIGTLinkIFModule(QObject *parent=0);
+  explicit qSlicerOpenIGTLinkIFModule(QObject* parent = 0);
   virtual ~qSlicerOpenIGTLinkIFModule();
 
   qSlicerGetTitleMacro(QTMODULE_TITLE);
@@ -45,7 +45,7 @@ protected:
   virtual void setup();
 
   /// Create and return the widget representation associated to this module
-  virtual qSlicerAbstractModuleRepresentation * createWidgetRepresentation();
+  virtual qSlicerAbstractModuleRepresentation* createWidgetRepresentation();
 
   /// Create and return the logic associated to this module
   virtual vtkMRMLAbstractLogic* createLogic();

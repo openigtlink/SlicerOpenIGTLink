@@ -27,7 +27,7 @@ class qSlicerOpenIGTLinkRemoteModulePrivate;
 
 /// \ingroup Slicer_QtModules_ExtensionTemplate
 class Q_SLICER_QTMODULES_OPENIGTLINKREMOTE_EXPORT
-qSlicerOpenIGTLinkRemoteModule
+  qSlicerOpenIGTLinkRemoteModule
   : public qSlicerLoadableModule
 {
   Q_OBJECT
@@ -39,7 +39,7 @@ qSlicerOpenIGTLinkRemoteModule
 public:
 
   typedef qSlicerLoadableModule Superclass;
-  explicit qSlicerOpenIGTLinkRemoteModule(QObject *parent=0);
+  explicit qSlicerOpenIGTLinkRemoteModule(QObject* parent = 0);
   virtual ~qSlicerOpenIGTLinkRemoteModule();
 
   qSlicerGetTitleMacro(QTMODULE_TITLE);
@@ -59,7 +59,7 @@ protected:
   virtual void setup();
 
   /// Create and return the widget representation associated to this module
-  virtual qSlicerAbstractModuleRepresentation * createWidgetRepresentation();
+  virtual qSlicerAbstractModuleRepresentation* createWidgetRepresentation();
 
   /// Create and return the logic associated to this module
   virtual vtkMRMLAbstractLogic* createLogic();

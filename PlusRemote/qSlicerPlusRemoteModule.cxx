@@ -43,8 +43,8 @@ static const double UPDATE_PLUS_REMOTE_NODES_PERIOD_SEC = 0.2;
 
 //-----------------------------------------------------------------------------
 #if (QT_VERSION < QT_VERSION_CHECK(5, 0, 0))
-#include <QtPlugin>
-Q_EXPORT_PLUGIN2(qSlicerPlusRemoteModule, qSlicerPlusRemoteModule);
+  #include <QtPlugin>
+  Q_EXPORT_PLUGIN2(qSlicerPlusRemoteModule, qSlicerPlusRemoteModule);
 #endif
 
 //-----------------------------------------------------------------------------
@@ -81,7 +81,7 @@ qSlicerPlusRemoteModule::qSlicerPlusRemoteModule(QObject* _parent)
 {
   Q_D(qSlicerPlusRemoteModule);
 
-  vtkMRMLScene * scene = qSlicerCoreApplication::application()->mrmlScene();
+  vtkMRMLScene* scene = qSlicerCoreApplication::application()->mrmlScene();
   if (scene)
   {
     connect(&d->UpdateAllPlusRemoteNodesTimer, SIGNAL(timeout()), this, SLOT(updateAllPlusRemoteNodes()));
@@ -163,7 +163,7 @@ void qSlicerPlusRemoteModule::setMRMLScene(vtkMRMLScene* _mrmlScene)
 qSlicerAbstractModuleRepresentation* qSlicerPlusRemoteModule::createWidgetRepresentation()
 {
   Q_D(qSlicerPlusRemoteModule);
-  qSlicerPlusRemoteModuleWidget * plusRemoteWidget = new qSlicerPlusRemoteModuleWidget;
+  qSlicerPlusRemoteModuleWidget* plusRemoteWidget = new qSlicerPlusRemoteModuleWidget;
   return plusRemoteWidget;
 }
 
@@ -184,7 +184,7 @@ void qSlicerPlusRemoteModule::onNodeAddedEvent(vtkObject*, vtkObject* node)
     // If the timer is not active
     if (!d->UpdateAllPlusRemoteNodesTimer.isActive())
     {
-      d->UpdateAllPlusRemoteNodesTimer.start(UPDATE_PLUS_REMOTE_NODES_PERIOD_SEC*1000.0);
+      d->UpdateAllPlusRemoteNodesTimer.start(UPDATE_PLUS_REMOTE_NODES_PERIOD_SEC * 1000.0);
     }
   }
 }
@@ -201,10 +201,10 @@ void qSlicerPlusRemoteModule::onNodeRemovedEvent(vtkObject*, vtkObject* node)
     if (d->UpdateAllPlusRemoteNodesTimer.isActive())
     {
       // Check if there is any other plus remote node left in the Scene
-      vtkMRMLScene * scene = qSlicerCoreApplication::application()->mrmlScene();
+      vtkMRMLScene* scene = qSlicerCoreApplication::application()->mrmlScene();
       if (scene)
       {
-        std::vector<vtkMRMLNode *> nodes;
+        std::vector<vtkMRMLNode*> nodes;
         this->mrmlScene()->GetNodesByClass("vtkMRMLPlusRemoteNode", nodes);
         if (nodes.size() == 0)
         {

@@ -37,11 +37,11 @@ class VTK_SLICER_OPENIGTLINKREMOTE_MODULE_LOGIC_EXPORT vtkSlicerOpenIGTLinkRemot
   public vtkSlicerModuleLogic
 {
 public:
-  static vtkSlicerOpenIGTLinkRemoteLogic *New();
+  static vtkSlicerOpenIGTLinkRemoteLogic* New();
   vtkTypeMacro(vtkSlicerOpenIGTLinkRemoteLogic, vtkSlicerModuleLogic);
   void PrintSelf(ostream& os, vtkIndent indent);
 
-  void SetIFLogic( vtkSlicerOpenIGTLinkIFLogic* ifLogic );
+  void SetIFLogic(vtkSlicerOpenIGTLinkIFLogic* ifLogic);
 
   /// Send an OpenIGTLink command
   /// OpenIGTLink STRING command query nodes are automatically created and associated
@@ -82,7 +82,7 @@ protected:
   virtual void OnMRMLSceneNodeRemoved(vtkMRMLNode* node);
 
   /// Receives all the events fired by the nodes.
-  virtual void ProcessMRMLNodesEvents(vtkObject* caller, unsigned long event, void * callData);
+  virtual void ProcessMRMLNodesEvents(vtkObject* caller, unsigned long event, void* callData);
 
   vtkMRMLIGTLQueryNode* GetCommandQueryNode(igtlioCommand* command);
   vtkMRMLIGTLQueryNode* GetCommandQueryNode(vtkSlicerOpenIGTLinkCommand* command);

@@ -230,7 +230,7 @@ void qSlicerPlusRemoteModuleWidget::onSceneImportedEvent()
 }
 
 //-----------------------------------------------------------------------------
-void qSlicerPlusRemoteModuleWidget::setParameterNode(vtkMRMLNode *node)
+void qSlicerPlusRemoteModuleWidget::setParameterNode(vtkMRMLNode* node)
 {
   Q_D(qSlicerPlusRemoteModuleWidget);
 
@@ -306,7 +306,7 @@ void qSlicerPlusRemoteModuleWidget::updateWidgetFromMRML()
   d->CaptureIDSelector->clear();
   std::vector<std::string> captureDeviceIDs = d->ParameterNode->GetCaptureIDs();
   for (std::vector<std::string>::iterator captureDeviceIDIter = captureDeviceIDs.begin();
-    captureDeviceIDIter != captureDeviceIDs.end(); ++captureDeviceIDIter)
+       captureDeviceIDIter != captureDeviceIDs.end(); ++captureDeviceIDIter)
   {
     d->CaptureIDSelector->addItem(QString::fromStdString(*captureDeviceIDIter));
   }
@@ -319,8 +319,8 @@ void qSlicerPlusRemoteModuleWidget::updateWidgetFromMRML()
   {
     if (d->CaptureIDSelector->itemText(i).toStdString() == captureID)
     {
-    captureIndex = i;
-    break;
+      captureIndex = i;
+      break;
     }
   }
   if (captureIndex == -1 && d->CaptureIDSelector->count() > 0)
@@ -338,7 +338,7 @@ void qSlicerPlusRemoteModuleWidget::updateWidgetFromMRML()
   std::vector<std::string> volumeReconstructorIDs = d->ParameterNode->GetVolumeReconstructorIDs();
   d->VolumeReconstructorIDSelector->clear();
   for (std::vector<std::string>::iterator reconstructIDIter = volumeReconstructorIDs.begin();
-    reconstructIDIter != volumeReconstructorIDs.end(); ++reconstructIDIter)
+       reconstructIDIter != volumeReconstructorIDs.end(); ++reconstructIDIter)
   {
     d->VolumeReconstructorIDSelector->addItem(QString::fromStdString(*reconstructIDIter));
   }
@@ -497,12 +497,13 @@ void qSlicerPlusRemoteModuleWidget::updateWidgetFromMRML()
 
   int liveROIDimensions[3] = { 0, 0, 0 };
   d->ParameterNode->GetLiveReconstructionROIDimensions(liveROIDimensions);
-  QDoubleSpinBox* outputExtentBoxes[3] = {
+  QDoubleSpinBox* outputExtentBoxes[3] =
+  {
     d->LiveReconstructionExtentXSpinBox,
     d->LiveReconstructionExtentYSpinBox,
     d->LiveReconstructionExtentZSpinBox,
   };
-  for (int i = 0; i<3; ++i)
+  for (int i = 0; i < 3; ++i)
   {
     wasBlocked = outputExtentBoxes[i]->blockSignals(true);
     outputExtentBoxes[i]->setValue(liveROIDimensions[i]);
@@ -544,125 +545,125 @@ void qSlicerPlusRemoteModuleWidget::updateButtonsFromStatus()
   d->RecordingStatus->setToolTip(QString::fromStdString(d->ParameterNode->GetRecordingMessage()));
   switch (d->ParameterNode->GetRecordingStatus())
   {
-  case vtkMRMLPlusRemoteNode::PLUS_REMOTE_RECORDING:
-    d->RecordingStartStopButton->setIcon(d->IconStop);
-    d->RecordingStartStopButton->setText("  Stop recording");
-    d->RecordingStartStopButton->setToolTip("If clicked, stop recording");
-    d->RecordingStartStopButton->setEnabled(true);
-    d->RecordingStartStopButton->setChecked(true);
-    d->RecordingStatus->setPixmap(d->InformationPixmap);
-    break;
-  case vtkMRMLPlusRemoteNode::PLUS_REMOTE_FAILED:
-    d->RecordingStartStopButton->setIcon(d->IconRecord);
-    d->RecordingStartStopButton->setText("  Start recording");
-    d->RecordingStartStopButton->setToolTip("If clicked, start recording");
-    d->RecordingStartStopButton->setEnabled(true);
-    d->RecordingStartStopButton->setChecked(false);
-    d->RecordingStatus->setPixmap(d->CriticalPixmap);
-    break;
-  default:
-    d->RecordingStartStopButton->setIcon(d->IconRecord);
-    d->RecordingStartStopButton->setText("  Start recording");
-    d->RecordingStartStopButton->setToolTip("If clicked, start recording");
-    d->RecordingStartStopButton->setEnabled(true);
-    d->RecordingStartStopButton->setChecked(false);
-    d->RecordingStatus->setPixmap(d->InformationPixmap);
-    break;
+    case vtkMRMLPlusRemoteNode::PLUS_REMOTE_RECORDING:
+      d->RecordingStartStopButton->setIcon(d->IconStop);
+      d->RecordingStartStopButton->setText("  Stop recording");
+      d->RecordingStartStopButton->setToolTip("If clicked, stop recording");
+      d->RecordingStartStopButton->setEnabled(true);
+      d->RecordingStartStopButton->setChecked(true);
+      d->RecordingStatus->setPixmap(d->InformationPixmap);
+      break;
+    case vtkMRMLPlusRemoteNode::PLUS_REMOTE_FAILED:
+      d->RecordingStartStopButton->setIcon(d->IconRecord);
+      d->RecordingStartStopButton->setText("  Start recording");
+      d->RecordingStartStopButton->setToolTip("If clicked, start recording");
+      d->RecordingStartStopButton->setEnabled(true);
+      d->RecordingStartStopButton->setChecked(false);
+      d->RecordingStatus->setPixmap(d->CriticalPixmap);
+      break;
+    default:
+      d->RecordingStartStopButton->setIcon(d->IconRecord);
+      d->RecordingStartStopButton->setText("  Start recording");
+      d->RecordingStartStopButton->setToolTip("If clicked, start recording");
+      d->RecordingStartStopButton->setEnabled(true);
+      d->RecordingStartStopButton->setChecked(false);
+      d->RecordingStatus->setPixmap(d->InformationPixmap);
+      break;
   }
 
   // Offline reconstruction
   d->OfflineReconstructionStatus->setToolTip(QString::fromStdString(d->ParameterNode->GetOfflineReconstructionMessage()));
   switch (d->ParameterNode->GetOfflineReconstructionStatus())
   {
-  case vtkMRMLPlusRemoteNode::PLUS_REMOTE_RECONSTRUCTING:
-    d->OfflineReconstructionStartButton->setIcon(QIcon(":/Icons/icon_Wait.png"));
-    d->OfflineReconstructionStartButton->setText("  Offline reconstruction in progress ...");
-    d->OfflineReconstructionStartButton->setToolTip("If clicked, stop recording");
-    d->OfflineReconstructionStartButton->setEnabled(false);
-    d->OfflineReconstructionStartButton->setChecked(true);
-    d->OfflineReconstructionStatus->setPixmap(d->InformationPixmap);
-    break;
-  case vtkMRMLPlusRemoteNode::PLUS_REMOTE_FAILED:
-    d->OfflineReconstructionStartButton->setIcon(d->IconRecord);
-    d->OfflineReconstructionStartButton->setText("  Offline reconstruction");
-    d->OfflineReconstructionStartButton->setEnabled(true);
-    d->OfflineReconstructionStartButton->setChecked(false);
-    d->OfflineReconstructionStatus->setPixmap(d->CriticalPixmap);
-    break;
-  default:
-    d->OfflineReconstructionStartButton->setIcon(d->IconRecord);
-    d->OfflineReconstructionStartButton->setText("  Offline reconstruction");
-    d->OfflineReconstructionStartButton->setEnabled(true);
-    d->OfflineReconstructionStartButton->setChecked(false);
-    d->OfflineReconstructionStatus->setPixmap(d->InformationPixmap);
-    break;
+    case vtkMRMLPlusRemoteNode::PLUS_REMOTE_RECONSTRUCTING:
+      d->OfflineReconstructionStartButton->setIcon(QIcon(":/Icons/icon_Wait.png"));
+      d->OfflineReconstructionStartButton->setText("  Offline reconstruction in progress ...");
+      d->OfflineReconstructionStartButton->setToolTip("If clicked, stop recording");
+      d->OfflineReconstructionStartButton->setEnabled(false);
+      d->OfflineReconstructionStartButton->setChecked(true);
+      d->OfflineReconstructionStatus->setPixmap(d->InformationPixmap);
+      break;
+    case vtkMRMLPlusRemoteNode::PLUS_REMOTE_FAILED:
+      d->OfflineReconstructionStartButton->setIcon(d->IconRecord);
+      d->OfflineReconstructionStartButton->setText("  Offline reconstruction");
+      d->OfflineReconstructionStartButton->setEnabled(true);
+      d->OfflineReconstructionStartButton->setChecked(false);
+      d->OfflineReconstructionStatus->setPixmap(d->CriticalPixmap);
+      break;
+    default:
+      d->OfflineReconstructionStartButton->setIcon(d->IconRecord);
+      d->OfflineReconstructionStartButton->setText("  Offline reconstruction");
+      d->OfflineReconstructionStartButton->setEnabled(true);
+      d->OfflineReconstructionStartButton->setChecked(false);
+      d->OfflineReconstructionStatus->setPixmap(d->InformationPixmap);
+      break;
   }
 
   // Scout scan
   d->ScoutScanStatus->setToolTip(QString::fromStdString(d->ParameterNode->GetScoutScanMessage()));
   switch (d->ParameterNode->GetScoutScanStatus())
   {
-  case vtkMRMLPlusRemoteNode::PLUS_REMOTE_RECORDING:
-    d->ScoutScanStartStopButton->setText("  Stop scout scan and reconstruct volume");
-    d->ScoutScanStartStopButton->setIcon(d->IconStop);
-    d->ScoutScanStartStopButton->setToolTip("If clicked, stop recording and reconstruct recorded volume");
-    d->ScoutScanStartStopButton->setEnabled(true);
-    d->ScoutScanStartStopButton->setChecked(true);
-    d->ScoutScanStatus->setPixmap(d->InformationPixmap);
-    break;
-  case  vtkMRMLPlusRemoteNode::PLUS_REMOTE_RECONSTRUCTING:
-    d->ScoutScanStartStopButton->setIcon(QIcon(":/Icons/icon_Wait.png"));
-    d->ScoutScanStartStopButton->setText("  Scout scan reconstruction in progress...");
-    d->ScoutScanStartStopButton->setEnabled(false);
-    d->ScoutScanStartStopButton->setChecked(true);
-    d->ScoutScanStatus->setPixmap(d->InformationPixmap);
-    break;
-  case vtkMRMLPlusRemoteNode::PLUS_REMOTE_FAILED:
-    d->ScoutScanStartStopButton->setText("  Start scout scan");
-    d->ScoutScanStartStopButton->setIcon(d->IconRecord);
-    d->ScoutScanStartStopButton->setToolTip("If clicked, start recording");
-    d->ScoutScanStartStopButton->setEnabled(true);
-    d->ScoutScanStartStopButton->setChecked(false);
-    d->ScoutScanStatus->setPixmap(d->CriticalPixmap);
-    break;
-  default:
-    d->ScoutScanStartStopButton->setText("  Start scout scan");
-    d->ScoutScanStartStopButton->setIcon(d->IconRecord);
-    d->ScoutScanStartStopButton->setToolTip("If clicked, start recording");
-    d->ScoutScanStartStopButton->setEnabled(true);
-    d->ScoutScanStartStopButton->setChecked(false);
-    d->ScoutScanStatus->setPixmap(d->InformationPixmap);
-    break;
+    case vtkMRMLPlusRemoteNode::PLUS_REMOTE_RECORDING:
+      d->ScoutScanStartStopButton->setText("  Stop scout scan and reconstruct volume");
+      d->ScoutScanStartStopButton->setIcon(d->IconStop);
+      d->ScoutScanStartStopButton->setToolTip("If clicked, stop recording and reconstruct recorded volume");
+      d->ScoutScanStartStopButton->setEnabled(true);
+      d->ScoutScanStartStopButton->setChecked(true);
+      d->ScoutScanStatus->setPixmap(d->InformationPixmap);
+      break;
+    case  vtkMRMLPlusRemoteNode::PLUS_REMOTE_RECONSTRUCTING:
+      d->ScoutScanStartStopButton->setIcon(QIcon(":/Icons/icon_Wait.png"));
+      d->ScoutScanStartStopButton->setText("  Scout scan reconstruction in progress...");
+      d->ScoutScanStartStopButton->setEnabled(false);
+      d->ScoutScanStartStopButton->setChecked(true);
+      d->ScoutScanStatus->setPixmap(d->InformationPixmap);
+      break;
+    case vtkMRMLPlusRemoteNode::PLUS_REMOTE_FAILED:
+      d->ScoutScanStartStopButton->setText("  Start scout scan");
+      d->ScoutScanStartStopButton->setIcon(d->IconRecord);
+      d->ScoutScanStartStopButton->setToolTip("If clicked, start recording");
+      d->ScoutScanStartStopButton->setEnabled(true);
+      d->ScoutScanStartStopButton->setChecked(false);
+      d->ScoutScanStatus->setPixmap(d->CriticalPixmap);
+      break;
+    default:
+      d->ScoutScanStartStopButton->setText("  Start scout scan");
+      d->ScoutScanStartStopButton->setIcon(d->IconRecord);
+      d->ScoutScanStartStopButton->setToolTip("If clicked, start recording");
+      d->ScoutScanStartStopButton->setEnabled(true);
+      d->ScoutScanStartStopButton->setChecked(false);
+      d->ScoutScanStatus->setPixmap(d->InformationPixmap);
+      break;
   }
 
   // Live volume reconstruction
   d->LiveReconstructionStatus->setToolTip(QString::fromStdString(d->ParameterNode->GetLiveReconstructionMessage()));
   switch (d->ParameterNode->GetLiveReconstructionStatus())
   {
-  case vtkMRMLPlusRemoteNode::PLUS_REMOTE_IN_PROGRESS:
-    d->LiveReconstructionStartStopButton->setIcon(d->IconStop);
-    d->LiveReconstructionStartStopButton->setText("  Stop live reconstruction");
-    d->LiveReconstructionStartStopButton->setToolTip("If clicked, stop live reconstruction");
-    d->LiveReconstructionStartStopButton->setEnabled(true);
-    d->LiveReconstructionStartStopButton->setChecked(true);
-    d->LiveReconstructionStatus->setPixmap(d->InformationPixmap);
-    break;
-  case vtkMRMLPlusRemoteNode::PLUS_REMOTE_FAILED:
-    d->LiveReconstructionStartStopButton->setText("  Start live reconstruction");
-    d->LiveReconstructionStartStopButton->setIcon(d->IconRecord);
-    d->LiveReconstructionStartStopButton->setToolTip("If clicked, start live reconstruction");
-    d->LiveReconstructionStartStopButton->setEnabled(true);
-    d->LiveReconstructionStartStopButton->setChecked(false);
-    d->LiveReconstructionStatus->setPixmap(d->CriticalPixmap);
-    break;
-  default:
-    d->LiveReconstructionStartStopButton->setText("  Start live reconstruction");
-    d->LiveReconstructionStartStopButton->setIcon(d->IconRecord);
-    d->LiveReconstructionStartStopButton->setToolTip("If clicked, start live reconstruction");
-    d->LiveReconstructionStartStopButton->setEnabled(true);
-    d->LiveReconstructionStartStopButton->setChecked(false);
-    d->LiveReconstructionStatus->setPixmap(d->InformationPixmap);
-    break;
+    case vtkMRMLPlusRemoteNode::PLUS_REMOTE_IN_PROGRESS:
+      d->LiveReconstructionStartStopButton->setIcon(d->IconStop);
+      d->LiveReconstructionStartStopButton->setText("  Stop live reconstruction");
+      d->LiveReconstructionStartStopButton->setToolTip("If clicked, stop live reconstruction");
+      d->LiveReconstructionStartStopButton->setEnabled(true);
+      d->LiveReconstructionStartStopButton->setChecked(true);
+      d->LiveReconstructionStatus->setPixmap(d->InformationPixmap);
+      break;
+    case vtkMRMLPlusRemoteNode::PLUS_REMOTE_FAILED:
+      d->LiveReconstructionStartStopButton->setText("  Start live reconstruction");
+      d->LiveReconstructionStartStopButton->setIcon(d->IconRecord);
+      d->LiveReconstructionStartStopButton->setToolTip("If clicked, start live reconstruction");
+      d->LiveReconstructionStartStopButton->setEnabled(true);
+      d->LiveReconstructionStartStopButton->setChecked(false);
+      d->LiveReconstructionStatus->setPixmap(d->CriticalPixmap);
+      break;
+    default:
+      d->LiveReconstructionStartStopButton->setText("  Start live reconstruction");
+      d->LiveReconstructionStartStopButton->setIcon(d->IconRecord);
+      d->LiveReconstructionStartStopButton->setToolTip("If clicked, start live reconstruction");
+      d->LiveReconstructionStartStopButton->setEnabled(true);
+      d->LiveReconstructionStartStopButton->setChecked(false);
+      d->LiveReconstructionStatus->setPixmap(d->InformationPixmap);
+      break;
   }
 
 }

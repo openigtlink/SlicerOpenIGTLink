@@ -30,7 +30,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkSlicerOpenIGTLinkCommand : 
 
 public:
 
-  static vtkSlicerOpenIGTLinkCommand *New();
+  static vtkSlicerOpenIGTLinkCommand* New();
   vtkTypeMacro(vtkSlicerOpenIGTLinkCommand, vtkObject);
   void PrintSelf(ostream& os, vtkIndent indent);
 
@@ -42,7 +42,7 @@ private:
   vtkSlicerOpenIGTLinkCommand(const vtkSlicerOpenIGTLinkCommand&); // Not implemented
   void operator=(const vtkSlicerOpenIGTLinkCommand&);               // Not implemented
   //
-//    igtlioCommandStatus::CommandExpired
+  //    igtlioCommandStatus::CommandExpired
 
 public:
   enum
@@ -98,7 +98,7 @@ public:
   void ClearCommand();
 
 protected:
-  static void CommandCallback(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
+  static void CommandCallback(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
 
 protected:
 

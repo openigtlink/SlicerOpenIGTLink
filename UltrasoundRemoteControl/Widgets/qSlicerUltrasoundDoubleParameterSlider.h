@@ -42,7 +42,7 @@ class Q_SLICER_MODULE_ULTRASOUNDREMOTECONTROL_WIDGETS_EXPORT qSlicerUltrasoundDo
 
 public:
   typedef qSlicerAbstractUltrasoundParameterWidget Superclass;
-  explicit qSlicerUltrasoundDoubleParameterSlider(QWidget *parent = 0);
+  explicit qSlicerUltrasoundDoubleParameterSlider(QWidget* parent = 0);
   virtual ~qSlicerUltrasoundDoubleParameterSlider();
 
 public slots:
@@ -60,7 +60,7 @@ public slots:
   virtual void setPageStep(double pageStep);
 
   virtual QString suffix() const;
-  virtual void setSuffix(const QString &suffix);
+  virtual void setSuffix(const QString& suffix);
 
   virtual void onConnected();
   virtual void onDisconnected();

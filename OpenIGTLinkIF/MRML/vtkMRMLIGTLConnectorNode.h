@@ -41,7 +41,7 @@ typedef void* IGTLDevicePointer;
 
 class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : public vtkMRMLNode
 {
- public:
+public:
 
   //----------------------------------------------------------------
   // Standard methods for MRML nodes
@@ -55,7 +55,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
     DeactivatedEvent = 118947,
     NewDeviceEvent = 118949,
     DeviceModifiedEvent = 118950,
-    RemovedDeviceEvent= 118951,
+    RemovedDeviceEvent = 118951,
     CommandReceivedEvent = 119001, // Command received
     CommandResponseReceivedEvent = 119002, // Command response
     CommandCompletedEvent = 119003, // Command completed (could be response received, or expired, or cancelled)
@@ -77,8 +77,8 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
     Type_Last // this line must be last
   };
 
-  static vtkMRMLIGTLConnectorNode *New();
-  vtkTypeMacro(vtkMRMLIGTLConnectorNode,vtkMRMLNode);
+  static vtkMRMLIGTLConnectorNode* New();
+  vtkTypeMacro(vtkMRMLIGTLConnectorNode, vtkMRMLNode);
 
   void PrintSelf(ostream& os, vtkIndent indent) override;
 
@@ -86,7 +86,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
 
   // Description:
   // Set node attributes
-  virtual void ReadXMLAttributes( const char** atts) override;
+  virtual void ReadXMLAttributes(const char** atts) override;
 
   // Description:
   // Write this node's information to a MRML file in XML format.
@@ -94,15 +94,15 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
 
   // Description:
   // Copy the node's attributes to this object
-  virtual void Copy(vtkMRMLNode *node) override;
+  virtual void Copy(vtkMRMLNode* node) override;
 
   // Description:
   // Get node XML tag name (like Volume, Model)
   virtual const char* GetNodeTagName() override
-    {return "IGTLConnector";};
+  {return "IGTLConnector";};
 
   // method to propagate events generated in mrml
-  virtual void ProcessMRMLEvents ( vtkObject *caller, unsigned long event, void *callData ) override;
+  virtual void ProcessMRMLEvents(vtkObject* caller, unsigned long event, void* callData) override;
 
   int SetTypeServer(int port);
 
@@ -132,7 +132,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   // Description:
   // Set and start observing MRML node for outgoing data.
   // If devType == NULL, a converter is chosen based only on MRML Tag.
-  int RegisterOutgoingMRMLNode(vtkMRMLNode* node, const char* devType=NULL);
+  int RegisterOutgoingMRMLNode(vtkMRMLNode* node, const char* devType = NULL);
 
   // Description:
   // Stop observing and remove MRML node for outgoing data.
@@ -140,15 +140,15 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
 
   // Process IO connector incoming events
   // event ID is specified in OpenIGTLinkIO
-  void ProcessIOConnectorEvents( vtkObject *caller, unsigned long event, void *callData );
+  void ProcessIOConnectorEvents(vtkObject* caller, unsigned long event, void* callData);
 
   // Process IO incoming device events
   // event ID is specified in OpenIGTLinkIO
-  void ProcessIODeviceEvents(vtkObject *caller, unsigned long event, void *callData);
+  void ProcessIODeviceEvents(vtkObject* caller, unsigned long event, void* callData);
 
   // Process IO connector incoming command events
   // event ID is specified in OpenIGTLinkIO
-  void ProcessIOCommandEvents(vtkObject *caller, unsigned long event, void *callData);
+  void ProcessIOCommandEvents(vtkObject* caller, unsigned long event, void* callData);
 
   // Description:
   // Add a new Device.
@@ -245,7 +245,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   /// - If using BLOCKING, the call blocks until a response appears or timeout.
   /// - If using ASYNCHRONOUS, wait for the CommandResponseReceivedEvent event.
   /// - Returns command that can be observed, and will contain response
-  igtlioCommandPointer SendCommand(std::string name, std::string content, bool blocking = true, double timeout_s = 5.0, igtl::MessageBase::MetaDataMap* metaData=NULL, int clientId = -1);
+  igtlioCommandPointer SendCommand(std::string name, std::string content, bool blocking = true, double timeout_s = 5.0, igtl::MessageBase::MetaDataMap* metaData = NULL, int clientId = -1);
 
   /// Sends the specified command and attaches an observer
   /// Blocking behavior and device_id are set in the command object
@@ -281,19 +281,19 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
 
   std::vector<std::string> GetDeviceTypeFromMRMLNodeType(const char* NodeTag);
 
-  std::vector<std::string> GetNodeTagFromDeviceType(const char * deviceType);
+  std::vector<std::string> GetNodeTagFromDeviceType(const char* deviceType);
 
 #ifndef __VTK_WRAP__
   //BTX
-  virtual void OnNodeReferenceAdded(vtkMRMLNodeReference *reference) override;
+  virtual void OnNodeReferenceAdded(vtkMRMLNodeReference* reference) override;
 
-  virtual void OnNodeReferenceRemoved(vtkMRMLNodeReference *reference) override;
+  virtual void OnNodeReferenceRemoved(vtkMRMLNodeReference* reference) override;
 
-  virtual void OnNodeReferenceModified(vtkMRMLNodeReference *reference) override;
+  virtual void OnNodeReferenceModified(vtkMRMLNodeReference* reference) override;
   //ETX
 #endif // __VTK_WRAP__
 
- protected:
+protected:
   //----------------------------------------------------------------
   // Constructor and destroctor
   //----------------------------------------------------------------
@@ -322,10 +322,10 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLConnectorNode : pub
   vtkSetStringMacro(OutgoingNodeReferenceMRMLAttributeName);
   vtkGetStringMacro(OutgoingNodeReferenceMRMLAttributeName);
 
-  private:
-    class vtkInternal;
-    vtkInternal * Internal;
-    bool UseStreamingVolume;
+private:
+  class vtkInternal;
+  vtkInternal* Internal;
+  bool UseStreamingVolume;
 };
 
 #endif

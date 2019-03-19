@@ -22,13 +22,13 @@
 #include "qMRMLPlusServerLauncherRemoteWidget.h"
 
 //------------------------------------------------------------------------------
-qMRMLPlusServerLauncherRemoteWidgetPlugin::qMRMLPlusServerLauncherRemoteWidgetPlugin(QObject *_parent)
+qMRMLPlusServerLauncherRemoteWidgetPlugin::qMRMLPlusServerLauncherRemoteWidgetPlugin(QObject* _parent)
   : QObject(_parent)
 {
 }
 
 //------------------------------------------------------------------------------
-QWidget *qMRMLPlusServerLauncherRemoteWidgetPlugin::createWidget(QWidget *_parent)
+QWidget* qMRMLPlusServerLauncherRemoteWidgetPlugin::createWidget(QWidget* _parent)
 {
   qMRMLPlusServerLauncherRemoteWidget* _widget
     = new qMRMLPlusServerLauncherRemoteWidget(_parent);
@@ -40,7 +40,7 @@ QString qMRMLPlusServerLauncherRemoteWidgetPlugin::domXml() const
 {
   return "<widget class=\"qMRMLPlusServerLauncherRemoteWidget\" \
           name=\"PlusServerLauncherRemoteWidget\">\n"
-          "</widget>\n";
+         "</widget>\n";
 }
 
 //------------------------------------------------------------------------------

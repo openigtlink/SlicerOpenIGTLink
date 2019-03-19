@@ -39,7 +39,7 @@ class Q_SLICER_MODULE_OPENIGTLINKIF_WIDGETS_EXPORT qMRMLIGTLConnectorTreeView : 
 
 public:
   typedef qMRMLTreeView Superclass;
-  qMRMLIGTLConnectorTreeView(QWidget *parent=0);
+  qMRMLIGTLConnectorTreeView(QWidget* parent = 0);
   virtual ~qMRMLIGTLConnectorTreeView();
 
   void setLogic(vtkSlicerOpenIGTLinkIFLogic* logic);
@@ -48,14 +48,14 @@ public:
 
 public slots:
   void setMRMLScene(vtkMRMLScene* scene);
-//  void onSelectionChanged(const QItemSelection& index,const QItemSelection& beforeIndex);
+  //  void onSelectionChanged(const QItemSelection& index,const QItemSelection& beforeIndex);
 
 protected:
   QScopedPointer<qMRMLIGTLConnectorTreeViewPrivate> d_ptr;
-  #ifndef QT_NO_CURSOR
-    void mouseMoveEvent(QMouseEvent* e);
-    bool viewportEvent(QEvent* e);
-  #endif
+#ifndef QT_NO_CURSOR
+  void mouseMoveEvent(QMouseEvent* e);
+  bool viewportEvent(QEvent* e);
+#endif
   virtual void mousePressEvent(QMouseEvent* event);
 
 private:

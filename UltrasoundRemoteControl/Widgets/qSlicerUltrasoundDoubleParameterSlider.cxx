@@ -52,14 +52,14 @@ public:
 
 public:
   virtual void init();
-  virtual void setupUi(QWidget *qSlicerUltrasoundDoubleParameterSlider);
+  virtual void setupUi(QWidget* qSlicerUltrasoundDoubleParameterSlider);
 
 protected:
   qSlicerUltrasoundDoubleParameterSlider* const q_ptr;
 
 public:
-  QHBoxLayout *horizontalLayout;
-  ctkSliderWidget *valueSlider;
+  QHBoxLayout* horizontalLayout;
+  ctkSliderWidget* valueSlider;
 };
 
 //-----------------------------------------------------------------------------
@@ -89,7 +89,7 @@ void qSlicerUltrasoundDoubleParameterSliderPrivate::init()
 }
 
 //-----------------------------------------------------------------------------
-void qSlicerUltrasoundDoubleParameterSliderPrivate::setupUi(QWidget *qSlicerUltrasoundDoubleParameterSlider)
+void qSlicerUltrasoundDoubleParameterSliderPrivate::setupUi(QWidget* qSlicerUltrasoundDoubleParameterSlider)
 {
   if (qSlicerUltrasoundDoubleParameterSlider->objectName().isEmpty())
   {
@@ -232,7 +232,7 @@ QString qSlicerUltrasoundDoubleParameterSlider::suffix() const
 }
 
 //-----------------------------------------------------------------------------
-void qSlicerUltrasoundDoubleParameterSlider::setSuffix(const QString &suffix)
+void qSlicerUltrasoundDoubleParameterSlider::setSuffix(const QString& suffix)
 {
   Q_D(qSlicerUltrasoundDoubleParameterSlider);
   d->valueSlider->setSuffix(suffix);

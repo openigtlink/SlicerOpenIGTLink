@@ -81,13 +81,13 @@ void vtkMRMLIGTLQueryNode::ReadXMLAttributes(const char** atts)
 //----------------------------------------------------------------------------
 // Copy the node's attributes to this object.
 // Does NOT copy: ID, FilePrefix, Name, VolumeID
-void vtkMRMLIGTLQueryNode::Copy(vtkMRMLNode *anode)
+void vtkMRMLIGTLQueryNode::Copy(vtkMRMLNode* anode)
 {
 
   Superclass::Copy(anode);
 
   vtkMRMLIGTLQueryNode* node = vtkMRMLIGTLQueryNode::SafeDownCast(anode);
-  if (node==NULL)
+  if (node == NULL)
   {
     vtkErrorMacro("vtkMRMLIGTLQueryNode::Copy failed: unrelated input node type");
     return;
@@ -104,28 +104,28 @@ void vtkMRMLIGTLQueryNode::Copy(vtkMRMLNode *anode)
 //----------------------------------------------------------------------------
 void vtkMRMLIGTLQueryNode::PrintSelf(ostream& os, vtkIndent indent)
 {
-  Superclass::PrintSelf(os,indent);
+  Superclass::PrintSelf(os, indent);
 
   os << indent << "IGTLName: " << this->IGTLName << "\n";
   os << indent << "IGTLDeviceName: " << this->IGTLDeviceName << "\n";
   os << indent << "QueryType: " << vtkMRMLIGTLQueryNode::QueryTypeToString(this->QueryType) << "\n";
   os << indent << "QueryStatus: " << vtkMRMLIGTLQueryNode::QueryStatusToString(this->QueryStatus) << "\n";
-  if (this->TimeOut>0 && this->QueryStatus==STATUS_WAITING)
+  if (this->TimeOut > 0 && this->QueryStatus == STATUS_WAITING)
   {
-    double remainingTime = this->TimeOut - (vtkTimerLog::GetUniversalTime()-this->TimeStamp);
+    double remainingTime = this->TimeOut - (vtkTimerLog::GetUniversalTime() - this->TimeStamp);
     os << indent << indent << "Remaining time: " << remainingTime << "\n";
   }
   os << indent << "TimeStamp: " << this->TimeStamp << "\n";
   os << indent << "TimeOut: " << this->TimeOut << "\n";
-  os << indent << "ConnectorNodeID: " << (this->GetConnectorNodeID()?this->GetConnectorNodeID():"(none)") << "\n";
-  os << indent << "DataNodeID: " << (this->GetResponseDataNodeID()?this->GetResponseDataNodeID():"(none)") << "\n";
+  os << indent << "ConnectorNodeID: " << (this->GetConnectorNodeID() ? this->GetConnectorNodeID() : "(none)") << "\n";
+  os << indent << "DataNodeID: " << (this->GetResponseDataNodeID() ? this->GetResponseDataNodeID() : "(none)") << "\n";
 }
 
 
 //----------------------------------------------------------------------------
 void vtkMRMLIGTLQueryNode::SetIGTLName(const char* name)
 {
-  char buf[IGTL_HEADER_TYPE_SIZE+1];
+  char buf[IGTL_HEADER_TYPE_SIZE + 1];
   buf[IGTL_HEADER_TYPE_SIZE] = '\0';
   strncpy(buf, name, IGTL_HEADER_TYPE_SIZE);
   this->IGTLName = buf;
@@ -134,7 +134,7 @@ void vtkMRMLIGTLQueryNode::SetIGTLName(const char* name)
 //----------------------------------------------------------------------------
 void vtkMRMLIGTLQueryNode::SetIGTLDeviceName(const char* name)
 {
-  char buf[IGTL_HEADER_NAME_SIZE+1];
+  char buf[IGTL_HEADER_NAME_SIZE + 1];
   buf[IGTL_HEADER_NAME_SIZE] = '\0';
   strncpy(buf, name, IGTL_HEADER_NAME_SIZE);
   this->IGTLDeviceName = buf;
@@ -151,11 +151,16 @@ const char* vtkMRMLIGTLQueryNode::QueryStatusToString(int queryStatus)
 {
   switch (queryStatus)
   {
-    case STATUS_NOT_DEFINED: return "NOT_DEFINED";
-    case STATUS_PREPARED: return "PREPARED";
-    case STATUS_WAITING: return "WAITING";
-    case STATUS_SUCCESS: return "SUCCESS";
-    case STATUS_EXPIRED: return "EXPIRED";
+    case STATUS_NOT_DEFINED:
+      return "NOT_DEFINED";
+    case STATUS_PREPARED:
+      return "PREPARED";
+    case STATUS_WAITING:
+      return "WAITING";
+    case STATUS_SUCCESS:
+      return "SUCCESS";
+    case STATUS_EXPIRED:
+      return "EXPIRED";
     default:
       return "INVALID";
   }
@@ -166,10 +171,14 @@ const char* vtkMRMLIGTLQueryNode::QueryTypeToString(int queryType)
 {
   switch (queryType)
   {
-    case TYPE_NOT_DEFINED: return "NOT_DEFINED";
-    case TYPE_GET: return "GET";
-    case TYPE_START: return "START";
-    case TYPE_STOP: return "STOP";
+    case TYPE_NOT_DEFINED:
+      return "NOT_DEFINED";
+    case TYPE_GET:
+      return "GET";
+    case TYPE_START:
+      return "START";
+    case TYPE_STOP:
+      return "STOP";
     default:
       return "INVALID";
   }

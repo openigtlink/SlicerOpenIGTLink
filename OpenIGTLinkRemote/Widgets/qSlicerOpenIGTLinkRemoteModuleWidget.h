@@ -25,14 +25,14 @@ public:
   void setIFLogic(vtkSlicerOpenIGTLinkIFLogic* ifLogic);
 
   typedef qSlicerAbstractModuleWidget Superclass;
-  qSlicerOpenIGTLinkRemoteModuleWidget(QWidget *parent=0);
+  qSlicerOpenIGTLinkRemoteModuleWidget(QWidget* parent = 0);
   virtual ~qSlicerOpenIGTLinkRemoteModuleWidget();
 
 protected slots:
 
 protected:
   QScopedPointer<qSlicerOpenIGTLinkRemoteModuleWidgetPrivate> d_ptr;
-  
+
   virtual void setup();
 
 private:

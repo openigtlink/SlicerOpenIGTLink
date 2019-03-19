@@ -36,11 +36,11 @@ class Q_SLICER_QTMODULES_OPENIGTLINKREMOTE_WIDGETS_EXPORT qSlicerOpenIGTLinkRemo
 
 public:
   typedef qSlicerWidget Superclass;
-  qSlicerOpenIGTLinkRemoteQueryWidget(QWidget *parent=0);
+  qSlicerOpenIGTLinkRemoteQueryWidget(QWidget* parent = 0);
   virtual ~qSlicerOpenIGTLinkRemoteQueryWidget();
 
-  void setMRMLScene(vtkMRMLScene *scene);
-  void setIFLogic(vtkSlicerOpenIGTLinkIFLogic *ifLogic);
+  void setMRMLScene(vtkMRMLScene* scene);
+  void setIFLogic(vtkSlicerOpenIGTLinkIFLogic* ifLogic);
 
 public slots:
   void setConnectorNode(vtkMRMLNode* node);

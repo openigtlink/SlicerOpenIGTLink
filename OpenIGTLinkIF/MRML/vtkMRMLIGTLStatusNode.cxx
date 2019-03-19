@@ -54,21 +54,21 @@ void vtkMRMLIGTLStatusNode::ReadXMLAttributes(const char** atts)
 //----------------------------------------------------------------------------
 void vtkMRMLIGTLStatusNode::PrintSelf(ostream& os, vtkIndent indent)
 {
-  Superclass::PrintSelf(os,indent);
+  Superclass::PrintSelf(os, indent);
 }
 
 //----------------------------------------------------------------------------
 int vtkMRMLIGTLStatusNode::SetCode(vtkTypeUInt16 code)
 {
   if (code < STATUS_NUM_TYPES)
-    {
+  {
     this->Code = code;
     return 1;
-    }
+  }
   else
-    {
+  {
     return 0;
-    }
+  }
 }
 
 //----------------------------------------------------------------------------
@@ -95,15 +95,15 @@ vtkTypeInt64 vtkMRMLIGTLStatusNode::GetSubCode()
 int vtkMRMLIGTLStatusNode::SetErrorName(const char* name)
 {
   if (strlen(name) <= 20)
-    {
+  {
     this->ErrorName = name;
     this->InvokeEvent(StatusModifiedEvent, NULL);
     return 1;
-    }
+  }
   else
-    {
+  {
     return 0;
-    }
+  }
 }
 
 //----------------------------------------------------------------------------
@@ -133,17 +133,17 @@ int vtkMRMLIGTLStatusNode::SetStatus(vtkTypeUInt16 code, vtkTypeUInt16 subcode, 
 {
   if (code < STATUS_NUM_TYPES &&
       strlen(errorName) <= 20)
-    {
+  {
     this->Code = code;
     this->SubCode = subcode;
     this->ErrorName = errorName;
     this->StatusString = statusString;
     this->InvokeEvent(StatusModifiedEvent, NULL);
     return 1;
-    }
+  }
   else
-    {
+  {
     return 0;
-    }
+  }
 
 }

@@ -42,7 +42,7 @@ Care Ontario.
 class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkIGTLVP9VolumeCodec : public vtkStreamingVolumeCodec
 {
 public:
-  static vtkIGTLVP9VolumeCodec *New();
+  static vtkIGTLVP9VolumeCodec* New();
   virtual vtkStreamingVolumeCodec* CreateCodecInstance();
   vtkTypeMacro(vtkIGTLVP9VolumeCodec, vtkStreamingVolumeCodec);
 
@@ -61,7 +61,7 @@ public:
   virtual std::string GetParameterDescription(std::string parameterName);
 
   virtual std::string GetFourCC() { return "VP90"; };
-  
+
 
 protected:
 

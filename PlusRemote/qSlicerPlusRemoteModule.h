@@ -45,7 +45,7 @@ class Q_SLICER_QTMODULES_PLUSREMOTE_EXPORT qSlicerPlusRemoteModule
 public:
 
   typedef qSlicerLoadableModule Superclass;
-  explicit qSlicerPlusRemoteModule(QObject *parent = 0);
+  explicit qSlicerPlusRemoteModule(QObject* parent = 0);
   virtual ~qSlicerPlusRemoteModule();
 
   virtual QString title()const;
@@ -64,12 +64,12 @@ protected:
   virtual void setup();
 
   /// Create and return the widget representation associated to this module
-  virtual qSlicerAbstractModuleRepresentation * createWidgetRepresentation();
+  virtual qSlicerAbstractModuleRepresentation* createWidgetRepresentation();
 
   /// Create and return the logic associated to this module
   virtual vtkMRMLAbstractLogic* createLogic();
 
-  public slots:
+public slots:
   virtual void setMRMLScene(vtkMRMLScene*);
   void onNodeAddedEvent(vtkObject*, vtkObject*);
   void onNodeRemovedEvent(vtkObject*, vtkObject*);

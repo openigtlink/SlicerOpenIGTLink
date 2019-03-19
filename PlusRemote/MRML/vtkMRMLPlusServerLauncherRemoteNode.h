@@ -49,7 +49,7 @@ public:
     ServerStopping,
   };
 
-  static vtkMRMLPlusServerLauncherRemoteNode *New();
+  static vtkMRMLPlusServerLauncherRemoteNode* New();
   vtkTypeMacro(vtkMRMLPlusServerLauncherRemoteNode, vtkMRMLNode);
   void PrintSelf(ostream& os, vtkIndent indent) override;
 
@@ -57,7 +57,7 @@ public:
   virtual vtkMRMLNode* CreateNodeInstance() override;
   virtual void ReadXMLAttributes(const char** atts) override;
   virtual void WriteXML(ostream& of, int indent) override;
-  virtual void Copy(vtkMRMLNode *node) override;
+  virtual void Copy(vtkMRMLNode* node) override;
   virtual const char* GetNodeTagName() override { return "PlusRemoteLauncher"; }
 
 protected:

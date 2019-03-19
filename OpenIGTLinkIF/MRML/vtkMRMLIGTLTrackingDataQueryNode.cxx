@@ -76,7 +76,7 @@ void vtkMRMLIGTLTrackingDataQueryNode::ReadXMLAttributes(const char** atts)
 //----------------------------------------------------------------------------
 // Copy the node's attributes to this object.
 // Does NOT copy: ID, FilePrefix, Name, VolumeID
-void vtkMRMLIGTLTrackingDataQueryNode::Copy(vtkMRMLNode *anode)
+void vtkMRMLIGTLTrackingDataQueryNode::Copy(vtkMRMLNode* anode)
 {
 
   Superclass::Copy(anode);
@@ -85,7 +85,7 @@ void vtkMRMLIGTLTrackingDataQueryNode::Copy(vtkMRMLNode *anode)
 }
 
 //----------------------------------------------------------------------------
-void vtkMRMLIGTLTrackingDataQueryNode::ProcessMRMLEvents( vtkObject *caller, unsigned long event, void *callData )
+void vtkMRMLIGTLTrackingDataQueryNode::ProcessMRMLEvents(vtkObject* caller, unsigned long event, void* callData)
 {
 
   Superclass::ProcessMRMLEvents(caller, event, callData);
@@ -95,13 +95,13 @@ void vtkMRMLIGTLTrackingDataQueryNode::ProcessMRMLEvents( vtkObject *caller, uns
 //----------------------------------------------------------------------------
 void vtkMRMLIGTLTrackingDataQueryNode::PrintSelf(ostream& os, vtkIndent indent)
 {
-  vtkMRMLNode::PrintSelf(os,indent);
+  vtkMRMLNode::PrintSelf(os, indent);
 }
 
 //----------------------------------------------------------------------------
 void vtkMRMLIGTLTrackingDataQueryNode::SetIGTLName(const char* name)
 {
-  char buf[IGTL_HEADER_DEVSIZE+1];
+  char buf[IGTL_HEADER_DEVSIZE + 1];
   buf[IGTL_HEADER_DEVSIZE] = '\0';
   strncpy(buf, name, IGTL_HEADER_DEVSIZE);
   this->IGTLName = buf;

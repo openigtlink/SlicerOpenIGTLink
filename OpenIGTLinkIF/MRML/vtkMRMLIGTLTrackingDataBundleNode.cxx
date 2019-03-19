@@ -102,8 +102,8 @@ void vtkMRMLIGTLTrackingDataBundleNode::vtkInternal::UpdateTransformNode(const c
   }
 
   vtkNew<vtkMatrix4x4> mat;
-  double *vtkmat = &mat->Element[0][0];
-  float *igtlmat = &matrix[0][0];
+  double* vtkmat = &mat->Element[0][0];
+  float* igtlmat = &matrix[0][0];
   for (int i = 0; i < 16; i++)
   {
     vtkmat[i] = igtlmat[i];
@@ -149,7 +149,7 @@ void vtkMRMLIGTLTrackingDataBundleNode::ReadXMLAttributes(const char** atts)
 //----------------------------------------------------------------------------
 // Copy the node's attributes to this object.
 // Does NOT copy: ID, FilePrefix, Name, VolumeID
-void vtkMRMLIGTLTrackingDataBundleNode::Copy(vtkMRMLNode *anode)
+void vtkMRMLIGTLTrackingDataBundleNode::Copy(vtkMRMLNode* anode)
 {
 
   Superclass::Copy(anode);
@@ -159,7 +159,7 @@ void vtkMRMLIGTLTrackingDataBundleNode::Copy(vtkMRMLNode *anode)
 
 
 //----------------------------------------------------------------------------
-void vtkMRMLIGTLTrackingDataBundleNode::ProcessMRMLEvents( vtkObject *caller, unsigned long event, void *callData )
+void vtkMRMLIGTLTrackingDataBundleNode::ProcessMRMLEvents(vtkObject* caller, unsigned long event, void* callData)
 {
   Superclass::ProcessMRMLEvents(caller, event, callData);
 
@@ -169,7 +169,7 @@ void vtkMRMLIGTLTrackingDataBundleNode::ProcessMRMLEvents( vtkObject *caller, un
 //----------------------------------------------------------------------------
 void vtkMRMLIGTLTrackingDataBundleNode::PrintSelf(ostream& os, vtkIndent indent)
 {
-  vtkMRMLNode::PrintSelf(os,indent);
+  vtkMRMLNode::PrintSelf(os, indent);
 }
 
 
@@ -182,14 +182,14 @@ void vtkMRMLIGTLTrackingDataBundleNode::UpdateTransformNode(const char* name, vt
 
   // If the tracking node does not exist in the scene
   if (iter == this->TrackingDataList.end())
-    {
+  {
     node = vtkMRMLLinearTransformNode::New();
     node->SetName(name);
     node->SetDescription("Received by OpenIGTLink");
     if (this->GetScene())
-      {
+    {
       this->GetScene()->AddNode(node);
-      }
+    }
     TrackingDataInfo info;
     info.type = type;
     info.node = node;
@@ -197,11 +197,11 @@ void vtkMRMLIGTLTrackingDataBundleNode::UpdateTransformNode(const char* name, vt
 
     // TODO: register to MRML observer
 
-    }
+  }
   else
-    {
+  {
     node = iter->second.node;
-    }
+  }
 
   node->ApplyTransformMatrix(matrix);
   node->Delete();
@@ -217,22 +217,22 @@ int vtkMRMLIGTLTrackingDataBundleNode::GetNumberOfTransformNodes()
 vtkMRMLLinearTransformNode* vtkMRMLIGTLTrackingDataBundleNode::GetTransformNode(unsigned int id)
 {
   if (id > this->TrackingDataList.size())
-    {
+  {
     return NULL;
-    }
+  }
 
   TrackingDataInfoMap::iterator iter;
   iter = this->TrackingDataList.begin();
   for (unsigned int i = 0; i < id; i ++)
-    {
+  {
     iter ++;
-    }
+  }
   if (iter != this->TrackingDataList.end())
-    {
+  {
     return iter->second.node;
-    }
+  }
   else
-    {
+  {
     return NULL;
-    }
+  }
 }

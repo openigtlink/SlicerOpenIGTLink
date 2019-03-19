@@ -29,16 +29,17 @@
 class VideoObserver: public vtkObject
 {
 public:
-  static VideoObserver *New(){
-  VTK_STANDARD_NEW_BODY(VideoObserver);
+  static VideoObserver* New()
+  {
+    VTK_STANDARD_NEW_BODY(VideoObserver);
   };
   vtkTypeMacro(VideoObserver, vtkObject);
-  ~VideoObserver(){};
+  ~VideoObserver() {};
   void PrintSelf(ostream& os, vtkIndent indent) override
   {
     vtkObject::PrintSelf(os, indent);
   };
-  void onVideoReceivedEventFunc(vtkObject* caller, unsigned long eid,  void *calldata)
+  void onVideoReceivedEventFunc(vtkObject* caller, unsigned long eid,  void* calldata)
   {
     vtkSmartPointer<igtlioDevice> device = (igtlioDevice*)calldata;
     if (device->GetDeviceType() == "VIDEO")
@@ -58,22 +59,22 @@ public:
     int scalarSize = image->GetScalarSize();
     unsigned char* ptr = reinterpret_cast<unsigned char*>(image->GetScalarPointer());
     unsigned char color = 0;
-    std::fill(ptr, ptr+scalarSize, color++);
+    std::fill(ptr, ptr + scalarSize, color++);
 
     return image;
   };
 protected:
   VideoObserver()
   {
-  testSuccessful = 0;
+    testSuccessful = 0;
   };
 };
 
-int vtkMRMLConnectorVideoSendAndReceiveTest(int argc, char * argv [] )
+int vtkMRMLConnectorVideoSendAndReceiveTest(int argc, char* argv [])
 {
   vtkSmartPointer<vtkMRMLScene> scene = vtkMRMLScene::New();
   // Setup the Server and client, as well as the event observers.
-  vtkMRMLIGTLConnectorNode * serverConnectorNode = vtkMRMLIGTLConnectorNode::New();
+  vtkMRMLIGTLConnectorNode* serverConnectorNode = vtkMRMLIGTLConnectorNode::New();
   // The connector type, server port, and etc,  are set by the qSlicerIGTLConnectorPropertyWidget
   // To make the test simple, just set the port directly.
   serverConnectorNode->SetTypeServer(18946);
@@ -118,24 +119,24 @@ int vtkMRMLConnectorVideoSendAndReceiveTest(int argc, char * argv [] )
   volumeNode->SetAndObserveImageData(testImage);
   scene->AddNode(volumeNode);
   igtlioDevicePointer videoDevice = reinterpret_cast<igtlioDevice*>(serverConnectorNode->CreateDeviceForOutgoingMRMLNode(volumeNode));
-  if (strcmp(videoDevice->GetDeviceType().c_str(), "VIDEO")!=0)
-    {
+  if (strcmp(videoDevice->GetDeviceType().c_str(), "VIDEO") != 0)
+  {
     clientConnectorNode->Stop();
     serverConnectorNode->Stop();
     clientConnectorNode->Delete();
     serverConnectorNode->Delete();
     scene->Delete();
     return EXIT_FAILURE;
-    }
+  }
   serverConnectorNode->PushNode(volumeNode);
 
   // Make sure the Client receive the response message.
   starttime = vtkTimerLog::GetUniversalTime();
   while (vtkTimerLog::GetUniversalTime() - starttime < timeout)
-    {
+  {
     clientConnectorNode->PeriodicProcess();
     vtksys::SystemTools::Delay(5);
-    }
+  }
   vtksys::SystemTools::Delay(5000);
   clientConnectorNode->Stop();
   serverConnectorNode->Stop();

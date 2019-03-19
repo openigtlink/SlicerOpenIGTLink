@@ -17,25 +17,25 @@ vtkMRMLOpenIGTLinkRemoteNode::~vtkMRMLOpenIGTLinkRemoteNode()
 }
 
 // ----------------------------------------------------------------------------
-void vtkMRMLOpenIGTLinkRemoteNode::WriteXML( ostream& of, int nIndent )
+void vtkMRMLOpenIGTLinkRemoteNode::WriteXML(ostream& of, int nIndent)
 {
   Superclass::WriteXML(of, nIndent); // This will take care of referenced nodes
 }
 
 // ----------------------------------------------------------------------------
-void vtkMRMLOpenIGTLinkRemoteNode::ReadXMLAttributes( const char** atts )
+void vtkMRMLOpenIGTLinkRemoteNode::ReadXMLAttributes(const char** atts)
 {
   Superclass::ReadXMLAttributes(atts); // This will take care of referenced nodes
 }
 
 // ----------------------------------------------------------------------------
-void vtkMRMLOpenIGTLinkRemoteNode::Copy( vtkMRMLNode *anode )
-{  
-  Superclass::Copy( anode ); // This will take care of referenced nodes
+void vtkMRMLOpenIGTLinkRemoteNode::Copy(vtkMRMLNode* anode)
+{
+  Superclass::Copy(anode);   // This will take care of referenced nodes
 }
 
 // ----------------------------------------------------------------------------
-void vtkMRMLOpenIGTLinkRemoteNode::PrintSelf( ostream& os, vtkIndent indent )
+void vtkMRMLOpenIGTLinkRemoteNode::PrintSelf(ostream& os, vtkIndent indent)
 {
-  vtkMRMLNode::PrintSelf(os,indent);
+  vtkMRMLNode::PrintSelf(os, indent);
 }

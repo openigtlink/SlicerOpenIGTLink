@@ -89,45 +89,45 @@ void vtkMRMLPlusServerLauncherRemoteNode::ReadXMLAttributes(const char** atts)
   const char* attValue = NULL;
 
   while (*atts != NULL)
-    {
+  {
     attName = *(atts++);
     attValue = *(atts++);
 
     if (!strcmp(attName, "hostname"))
-      {
+    {
       this->SetServerLauncherHostname(attValue);
-      }
+    }
     else if (!strcmp(attName, "serverLauncherPort"))
-      {
+    {
       vtkVariant portVariant = attValue;
       portVariant.ToInt();
       bool valid = true;
       int portValue = portVariant.ToInt(&valid);
       if (!valid)
-        {
-        portValue = vtkMRMLPlusServerLauncherRemoteNode::DefaultPort;
-        }
-      this->SetServerLauncherPort(portValue);
-      }
-    else if (!strcmp(attName, "serverState"))
       {
+        portValue = vtkMRMLPlusServerLauncherRemoteNode::DefaultPort;
+      }
+      this->SetServerLauncherPort(portValue);
+    }
+    else if (!strcmp(attName, "serverState"))
+    {
       vtkVariant stateVariant = attValue;
       bool valid = true;
       stateVariant.ToInt();
       int stateValue = stateVariant.ToInt(&valid);
       if (!valid)
-        {
-          stateValue = vtkMRMLPlusServerLauncherRemoteNode::ServerOff;
-        }
-      this->SetServerState(stateValue);
+      {
+        stateValue = vtkMRMLPlusServerLauncherRemoteNode::ServerOff;
       }
+      this->SetServerState(stateValue);
     }
+  }
 
   this->EndModify(disabledModify);
 }
 
 //----------------------------------------------------------------------------
-void vtkMRMLPlusServerLauncherRemoteNode::Copy(vtkMRMLNode *anode)
+void vtkMRMLPlusServerLauncherRemoteNode::Copy(vtkMRMLNode* anode)
 {
   Superclass::Copy(anode);
   this->DisableModifiedEventOn();
@@ -141,7 +141,7 @@ void vtkMRMLPlusServerLauncherRemoteNode::Copy(vtkMRMLNode *anode)
 //----------------------------------------------------------------------------
 void vtkMRMLPlusServerLauncherRemoteNode::PrintSelf(ostream& os, vtkIndent indent)
 {
-  Superclass::PrintSelf(os,indent);
+  Superclass::PrintSelf(os, indent);
 }
 
 //----------------------------------------------------------------------------

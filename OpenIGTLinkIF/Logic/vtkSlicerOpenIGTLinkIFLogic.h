@@ -43,14 +43,16 @@ class vtkMRMLIGTLConnectorNode;
 /// \ingroup Slicer_QtModules_OpenIGTLinkIF
 class VTK_SLICER_OPENIGTLINKIF_MODULE_LOGIC_EXPORT vtkSlicerOpenIGTLinkIFLogic : public vtkSlicerModuleLogic
 {
- public:
+public:
 
-  enum {  // Events
+  enum    // Events
+  {
     StatusUpdateEvent       = 50001,
     //SliceUpdateEvent        = 50002,
   };
 
-  typedef struct {
+  typedef struct
+  {
     std::string name;
     std::string type;
     int io;
@@ -61,16 +63,16 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_LOGIC_EXPORT vtkSlicerOpenIGTLinkIFLogic :
 
   // Work phase keywords used in NaviTrack (defined in BRPTPRInterface.h)
 
- public:
+public:
 
-  static vtkSlicerOpenIGTLinkIFLogic *New();
+  static vtkSlicerOpenIGTLinkIFLogic* New();
   vtkTypeMacro(vtkSlicerOpenIGTLinkIFLogic, vtkSlicerModuleLogic);
   void PrintSelf(ostream&, vtkIndent) override;
 
   /// The selected transform node is observed for TransformModified events and the transform
   /// data is copied to the slice nodes depending on the current mode
 
-  virtual void SetMRMLSceneInternal(vtkMRMLScene * newScene) override;
+  virtual void SetMRMLSceneInternal(vtkMRMLScene* newScene) override;
 
   virtual void RegisterNodes() override;
 
@@ -84,7 +86,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_LOGIC_EXPORT vtkSlicerOpenIGTLinkIFLogic :
 
   virtual void OnMRMLSceneNodeRemoved(vtkMRMLNode* /*node*/) override;
 
-  virtual void OnMRMLNodeModified(vtkMRMLNode* /*node*/) override{}
+  virtual void OnMRMLNodeModified(vtkMRMLNode* /*node*/) override {}
 
   //----------------------------------------------------------------
   // Connector and device Management
@@ -111,19 +113,19 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_LOGIC_EXPORT vtkSlicerOpenIGTLinkIFLogic :
   // MRML Management
   //----------------------------------------------------------------
 
-  virtual void ProcessMRMLNodesEvents(vtkObject* caller, unsigned long event, void * callData) override;
+  virtual void ProcessMRMLNodesEvents(vtkObject* caller, unsigned long event, void* callData) override;
   //virtual void ProcessLogicEvents(vtkObject * caller, unsigned long event, void * callData);
 
   void ProcCommand(const char* nodeName, int size, unsigned char* data);
 
-  void GetDeviceNamesFromMrml(IGTLMrmlNodeListType &list);
-  void GetDeviceNamesFromMrml(IGTLMrmlNodeListType &list, const char* mrmlTagName);
+  void GetDeviceNamesFromMrml(IGTLMrmlNodeListType& list);
+  void GetDeviceNamesFromMrml(IGTLMrmlNodeListType& list, const char* mrmlTagName);
   //void GetDeviceTypes(std::vector<char*> &list);
 
   // Transform locator model node reference role
   vtkGetStringMacro(LocatorModelReferenceRole);
 
- protected:
+protected:
 
   //----------------------------------------------------------------
   // Constructor, destructor etc.
@@ -132,18 +134,18 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_LOGIC_EXPORT vtkSlicerOpenIGTLinkIFLogic :
   vtkSlicerOpenIGTLinkIFLogic();
   virtual ~vtkSlicerOpenIGTLinkIFLogic();
 
-  static void DataCallback(vtkObject*, unsigned long, void *, void *);
+  static void DataCallback(vtkObject*, unsigned long, void*, void*);
 
-  void AddMRMLConnectorNodeObserver(vtkMRMLIGTLConnectorNode * connectorNode);
-  void RemoveMRMLConnectorNodeObserver(vtkMRMLIGTLConnectorNode * connectorNode);
+  void AddMRMLConnectorNodeObserver(vtkMRMLIGTLConnectorNode* connectorNode);
+  void RemoveMRMLConnectorNodeObserver(vtkMRMLIGTLConnectorNode* connectorNode);
 
-  void RegisterMessageDevices(vtkMRMLIGTLConnectorNode * connectorNode);
+  void RegisterMessageDevices(vtkMRMLIGTLConnectorNode* connectorNode);
 
   void UpdateAll();
   void UpdateSliceDisplay();
-  vtkCallbackCommand *DataCallbackCommand;
+  vtkCallbackCommand* DataCallbackCommand;
 
- private:
+private:
 
   int Initialized;
 
@@ -156,7 +158,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_LOGIC_EXPORT vtkSlicerOpenIGTLinkIFLogic :
   //int LastConnectorID;
   int RestrictDeviceName;
 
-  
+
   char* LocatorModelReferenceRole;
 
   // Transform locator model node reference role
@@ -164,7 +166,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_LOGIC_EXPORT vtkSlicerOpenIGTLinkIFLogic :
 
 private:
   class vtkInternal;
-  vtkInternal * Internal;
+  vtkInternal* Internal;
 
   vtkSlicerOpenIGTLinkIFLogic(const vtkSlicerOpenIGTLinkIFLogic&); // Not implemented
   void operator=(const vtkSlicerOpenIGTLinkIFLogic&);               // Not implemented

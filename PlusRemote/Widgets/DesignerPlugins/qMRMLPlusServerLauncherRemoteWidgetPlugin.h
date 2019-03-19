@@ -35,9 +35,9 @@ class Q_SLICER_MODULE_PLUSREMOTE_WIDGETS_PLUGINS_EXPORT qMRMLPlusServerLauncherR
   Q_OBJECT
 
 public:
-  qMRMLPlusServerLauncherRemoteWidgetPlugin(QObject *_parent = 0);
+  qMRMLPlusServerLauncherRemoteWidgetPlugin(QObject* _parent = 0);
 
-  QWidget *createWidget(QWidget *_parent);
+  QWidget* createWidget(QWidget* _parent);
   QString domXml() const;
   QString includeFile() const;
   bool isContainer() const;

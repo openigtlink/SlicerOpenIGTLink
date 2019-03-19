@@ -39,12 +39,13 @@ class Q_SLICER_MODULE_OPENIGTLINKIF_WIDGETS_EXPORT qMRMLSceneIGTLConnectorModel 
   Q_OBJECT
 
 public:
-  qMRMLSceneIGTLConnectorModel(QObject *parent=0);
+  qMRMLSceneIGTLConnectorModel(QObject* parent = 0);
   virtual ~qMRMLSceneIGTLConnectorModel();
 
   void setLogic(vtkSlicerOpenIGTLinkIFLogic* logic);
 
-  enum Columns{
+  enum Columns
+  {
     NameColumn = 0,
     TypeColumn,
     StatusColumn,

@@ -30,11 +30,11 @@ public:
   Q_DECLARE_PUBLIC(qSlicerAbstractUltrasoundParameterWidget);
 
 public:
-  qSlicerAbstractUltrasoundParameterWidgetPrivate(qSlicerAbstractUltrasoundParameterWidget *q);
+  qSlicerAbstractUltrasoundParameterWidgetPrivate(qSlicerAbstractUltrasoundParameterWidget* q);
   virtual void init();
 
 protected:
-    qSlicerAbstractUltrasoundParameterWidget* const q_ptr;
+  qSlicerAbstractUltrasoundParameterWidget* const q_ptr;
 
 public:
   vtkSmartPointer<vtkMRMLIGTLConnectorNode> ConnectorNode;

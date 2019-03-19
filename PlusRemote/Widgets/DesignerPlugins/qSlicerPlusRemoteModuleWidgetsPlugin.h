@@ -25,9 +25,9 @@
 
 // Qt includes
 #ifdef Slicer_HAVE_QT5
-#include <QtUiPlugin/QDesignerCustomWidgetCollectionInterface>
+  #include <QtUiPlugin/QDesignerCustomWidgetCollectionInterface>
 #else
-#include <QDesignerCustomWidgetCollectionInterface>
+  #include <QDesignerCustomWidgetCollectionInterface>
 #endif
 
 // PlusRemote includes
@@ -47,11 +47,11 @@ class Q_SLICER_MODULE_PLUSREMOTE_WIDGETS_PLUGINS_EXPORT qSlicerPlusRemoteModuleW
 
 public:
   QList<QDesignerCustomWidgetInterface*> customWidgets() const
-    {
-    QList<QDesignerCustomWidgetInterface *> plugins;
+  {
+    QList<QDesignerCustomWidgetInterface*> plugins;
     plugins << new qMRMLPlusServerLauncherRemoteWidgetPlugin;
     return plugins;
-    }
+  }
 };
 
 #endif

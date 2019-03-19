@@ -47,7 +47,7 @@ class vtkMRMLLinearTransformNode;
 class VTK_SLICER_PLUSREMOTE_MODULE_MRML_EXPORT vtkMRMLPlusRemoteNode : public vtkMRMLNode
 {
 public:
-  static vtkMRMLPlusRemoteNode *New();
+  static vtkMRMLPlusRemoteNode* New();
   vtkTypeMacro(vtkMRMLPlusRemoteNode, vtkMRMLNode);
   void PrintSelf(ostream& os, vtkIndent indent) override;
 
@@ -61,10 +61,10 @@ public:
   virtual void WriteXML(ostream& of, int indent) override;
 
   /// Copy the node's attributes to this object
-  virtual void Copy(vtkMRMLNode *node) override;
+  virtual void Copy(vtkMRMLNode* node) override;
 
   /// Get unique node XML tag name (like Volume, Model)
-  virtual const char* GetNodeTagName() override{ return "PlusRemote"; };
+  virtual const char* GetNodeTagName() override { return "PlusRemote"; };
 
   static const char* CONNECTOR_REFERENCE_ROLE;
   static const char* ROI_REFERENCE_ROLE;
@@ -325,7 +325,7 @@ public:
 
   void SetAndObserveUpdatedTransformNode(vtkMRMLLinearTransformNode* transformNode);
   vtkMRMLLinearTransformNode* GetUpdatedTransformNode();
-  
+
 
   void SetAndObserveLiveReconstructionROINode(vtkMRMLAnnotationROINode* annotationNode);
   vtkMRMLAnnotationROINode* GetLiveReconstructionROINode();
@@ -336,7 +336,7 @@ public:
 protected:
   // Invoked if the roi node is modified
   // Adjusts the dimensions of the live reconstruction to match
-  static void OnROINodeModified(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void *vtkNotUsed(calldata));
+  static void OnROINodeModified(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void* vtkNotUsed(calldata));
 
 private:
   vtkMRMLPlusRemoteNode(const vtkMRMLPlusRemoteNode&);

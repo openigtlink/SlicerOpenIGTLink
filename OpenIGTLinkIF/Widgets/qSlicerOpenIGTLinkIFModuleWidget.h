@@ -18,7 +18,7 @@ class Q_SLICER_MODULE_OPENIGTLINKIF_WIDGETS_EXPORT qSlicerOpenIGTLinkIFModuleWid
 public:
 
   typedef qSlicerAbstractModuleWidget Superclass;
-  qSlicerOpenIGTLinkIFModuleWidget(QWidget *parent=0);
+  qSlicerOpenIGTLinkIFModuleWidget(QWidget* parent = 0);
   virtual ~qSlicerOpenIGTLinkIFModuleWidget();
 
 public slots:

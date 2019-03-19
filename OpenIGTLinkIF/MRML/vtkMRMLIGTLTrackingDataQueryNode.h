@@ -33,18 +33,20 @@
 
 class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLTrackingDataQueryNode : public vtkMRMLNode
 {
- public:
+public:
 
   //----------------------------------------------------------------
   // Constants Definitions
   //----------------------------------------------------------------
 
   // Events
-  enum {
+  enum
+  {
     ResponseEvent        = 128940,
   };
 
-  enum {
+  enum
+  {
     TYPE_NOT_DEFINED,
     TYPE_GET,
     TYPE_START,
@@ -52,7 +54,8 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLTrackingDataQueryNo
     NUM_TYPE,
   };
 
-  enum {
+  enum
+  {
     STATUS_NOT_DEFINED,
     STATUS_PREPARED,     // Ready to query
     STATUS_WAITING,      // Waiting for response from server
@@ -61,22 +64,22 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLTrackingDataQueryNo
     NUM_STATUS,
   };
 
- public:
+public:
 
   //----------------------------------------------------------------
   // Access functions
   //----------------------------------------------------------------
-  vtkGetMacro( QueryStatus, int );
-  vtkSetMacro( QueryStatus, int );
-  vtkGetMacro( QueryType, int );
-  vtkSetMacro( QueryType, int );
+  vtkGetMacro(QueryStatus, int);
+  vtkSetMacro(QueryStatus, int);
+  vtkGetMacro(QueryType, int);
+  vtkSetMacro(QueryType, int);
 
   //----------------------------------------------------------------
   // Standard methods for MRML nodes
   //----------------------------------------------------------------
 
-  static vtkMRMLIGTLTrackingDataQueryNode *New();
-  vtkTypeMacro(vtkMRMLIGTLTrackingDataQueryNode,vtkMRMLNode);
+  static vtkMRMLIGTLTrackingDataQueryNode* New();
+  vtkTypeMacro(vtkMRMLIGTLTrackingDataQueryNode, vtkMRMLNode);
 
   void PrintSelf(ostream& os, vtkIndent indent) override;
 
@@ -84,7 +87,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLTrackingDataQueryNo
 
   // Description:
   // Set node attributes
-  virtual void ReadXMLAttributes( const char** atts) override;
+  virtual void ReadXMLAttributes(const char** atts) override;
 
   // Description:
   // Write this node's information to a MRML file in XML format.
@@ -92,7 +95,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLTrackingDataQueryNo
 
   // Description:
   // Copy the node's attributes to this object
-  virtual void Copy(vtkMRMLNode *node) override;
+  virtual void Copy(vtkMRMLNode* node) override;
 
   // Description:
   // Get node XML tag name (like Volume, Model)
@@ -100,7 +103,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLTrackingDataQueryNo
   { return "IGTLQuery"; };
 
   // method to propagate events generated in mrml
-  virtual void ProcessMRMLEvents ( vtkObject *caller, unsigned long event, void *callData ) override;
+  virtual void ProcessMRMLEvents(vtkObject* caller, unsigned long event, void* callData) override;
 
   // Description:
   // Get OpenIGTLink device name. If the query node is for IMAGE, "IMAGE" is returned.
@@ -116,7 +119,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLTrackingDataQueryNo
   virtual void SetResponseDataNodeID(const char* id) { this->DataNodeID = id; };
   virtual const char* GetResponseDataNodeID()        { return this->DataNodeID.c_str(); };
 
- protected:
+protected:
   //----------------------------------------------------------------
   // Constructor and destroctor
   //----------------------------------------------------------------
@@ -126,13 +129,13 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLIGTLTrackingDataQueryNo
   vtkMRMLIGTLTrackingDataQueryNode(const vtkMRMLIGTLTrackingDataQueryNode&);
   void operator=(const vtkMRMLIGTLTrackingDataQueryNode&);
 
- public:
+public:
   //----------------------------------------------------------------
   // Connector configuration
   //----------------------------------------------------------------
 
 
- private:
+private:
   //----------------------------------------------------------------
   // Data
   //----------------------------------------------------------------

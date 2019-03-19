@@ -21,18 +21,18 @@ public:
     ENCODING_US_ASCII = 3,
     ENCODING_ISO_8859_1 = 4,
     ENCODING_LATIN1 = ENCODING_ISO_8859_1 // alias
-    // see other codes at http://www.iana.org/assignments/character-sets/character-sets.xhtml
+                      // see other codes at http://www.iana.org/assignments/character-sets/character-sets.xhtml
   };
 
-  static vtkMRMLTextNode *New();
-  vtkTypeMacro(vtkMRMLTextNode,vtkMRMLNode);
+  static vtkMRMLTextNode* New();
+  vtkTypeMacro(vtkMRMLTextNode, vtkMRMLNode);
   void PrintSelf(ostream& os, vtkIndent indent) override;
 
   virtual vtkMRMLNode* CreateNodeInstance() override;
-  
+
   ///
   /// Set node attributes
-  virtual void ReadXMLAttributes( const char** atts) override;
+  virtual void ReadXMLAttributes(const char** atts) override;
 
   ///
   /// Write this node's information to a MRML file in XML format.
@@ -40,7 +40,7 @@ public:
 
   ///
   /// Copy the node's attributes to this object
-  virtual void Copy(vtkMRMLNode *node) override;
+  virtual void Copy(vtkMRMLNode* node) override;
 
   ///
   /// Get node XML tag name (like Volume, Model)
@@ -56,8 +56,8 @@ public:
   /// For character encoding, please refer IANA Character Sets
   /// (http://www.iana.org/assignments/character-sets/character-sets.xhtml)
   /// Default is US-ASCII (ANSI-X3.4-1968; MIBenum = 3).
-  vtkSetMacro (Encoding, int);
-  vtkGetMacro (Encoding, int);
+  vtkSetMacro(Encoding, int);
+  vtkGetMacro(Encoding, int);
 
   enum
   {

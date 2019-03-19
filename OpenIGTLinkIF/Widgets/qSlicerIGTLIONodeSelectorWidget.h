@@ -44,10 +44,11 @@ class Q_SLICER_MODULE_OPENIGTLINKIF_WIDGETS_EXPORT qSlicerIGTLIONodeSelectorWidg
   QVTK_OBJECT
 public:
   typedef QWidget Superclass;
-  qSlicerIGTLIONodeSelectorWidget(QWidget *parent = 0);
+  qSlicerIGTLIONodeSelectorWidget(QWidget* parent = 0);
   virtual ~qSlicerIGTLIONodeSelectorWidget();
 
-  enum {
+  enum
+  {
     UNDEFINED,
     INCOMING,
     OUTGOING
@@ -63,13 +64,13 @@ public slots:
 
   /// Set the MRML node of interest
   void updateEnabledStatus(int type, vtkMRMLIGTLConnectorNode* cnode, int dir, vtkMRMLNode* dnode);
-  
+
 
 
 protected slots:
   /// Add node to the I/O tree
   void onAddNodeButtonClicked();
-  
+
   /// Remove node from the I/O tree
   void onRemoveNodeButtonClicked();
 

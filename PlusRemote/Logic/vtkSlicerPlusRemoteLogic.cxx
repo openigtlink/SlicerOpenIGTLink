@@ -59,7 +59,7 @@
 class vtkPlusRemoteLogicCallbackCommand : public vtkCallbackCommand
 {
 public:
-  static vtkPlusRemoteLogicCallbackCommand *New()
+  static vtkPlusRemoteLogicCallbackCommand* New()
   {
     return new vtkPlusRemoteLogicCallbackCommand;
   }
@@ -207,7 +207,7 @@ void vtkSlicerPlusRemoteLogic::RegisterNodes()
 }
 
 //---------------------------------------------------------------------------
-void vtkSlicerPlusRemoteLogic::SetMRMLSceneInternal(vtkMRMLScene * newScene)
+void vtkSlicerPlusRemoteLogic::SetMRMLSceneInternal(vtkMRMLScene* newScene)
 {
   vtkNew<vtkIntArray> events;
   events->InsertNextValue(vtkMRMLScene::NodeAddedEvent);
@@ -759,7 +759,7 @@ void vtkSlicerPlusRemoteLogic::ShowVolumeInSliceViewers(vtkMRMLVolumeNode* volum
   std::string newVolumeNodeID = volumeNode->GetID();
 
   for (std::vector<std::string>::iterator sliceNameIt = sliceWidgetNames.begin();
-    sliceNameIt != sliceWidgetNames.end(); ++sliceNameIt)
+       sliceNameIt != sliceWidgetNames.end(); ++sliceNameIt)
   {
     std::string sliceName = *sliceNameIt;
     vtkMRMLSliceLogic* sliceLogic = this->GetApplicationLogic()->GetSliceLogicByLayoutName(sliceName.c_str());
@@ -772,7 +772,7 @@ void vtkSlicerPlusRemoteLogic::ShowVolumeInSliceViewers(vtkMRMLVolumeNode* volum
       // A volume is shown already, so we just need to make foreground semi-transparent to make sure the new volume will be visible
       sliceLogic->GetSliceCompositeNode()->SetForegroundOpacity(0.5);
       if ((foregroundVolumeNodeID && strcmp(foregroundVolumeNodeID, newVolumeNodeID.c_str()) == 0) ||
-        (backgroundVolumeNodeID && strcmp(backgroundVolumeNodeID, newVolumeNodeID.c_str()) == 0))
+          (backgroundVolumeNodeID && strcmp(backgroundVolumeNodeID, newVolumeNodeID.c_str()) == 0))
       {
         continue;
       }
@@ -799,7 +799,7 @@ void vtkSlicerPlusRemoteLogic::ShowVolumeRendering(vtkMRMLVolumeNode* volumeNode
   vtkSmartPointer<vtkMRMLVolumeRenderingDisplayNode> volumeRenderingDisplayNode = NULL;
 
   // Find existing VR display node
-  for (int i = 0; i<volumeNode->GetNumberOfDisplayNodes(); ++i)
+  for (int i = 0; i < volumeNode->GetNumberOfDisplayNodes(); ++i)
   {
     vtkSmartPointer<vtkMRMLDisplayNode> displayNode = volumeNode->GetNthDisplayNode(i);
     if (displayNode->IsA("vtkMRMLVolumeRenderingDisplayNode"))
@@ -842,7 +842,7 @@ std::string vtkSlicerPlusRemoteLogic::GetTimestampString(std::string format/*="%
   int bytes = 50;
   char date[100];
   std::time_t currentTime;
-  struct tm *ts;
+  struct tm* ts;
   currentTime = std::time(NULL);
   ts = localtime(&currentTime);
   std::strftime(date, bytes, format.c_str(), ts);
@@ -937,7 +937,7 @@ void vtkSlicerPlusRemoteLogic::InitializeROIFromVolume(vtkMRMLAnnotationROINode*
 }
 
 //---------------------------------------------------------------------------
-void vtkSlicerPlusRemoteLogic::onRequestCaptureDeviceIDsCompleted(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void *vtkNotUsed(calldata))
+void vtkSlicerPlusRemoteLogic::onRequestCaptureDeviceIDsCompleted(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void* vtkNotUsed(calldata))
 {
   igtlioCommandPointer command = igtlioCommand::SafeDownCast(caller);
   if (!command)
@@ -981,7 +981,7 @@ void vtkSlicerPlusRemoteLogic::onRequestCaptureDeviceIDsCompleted(vtkObject* cal
 }
 
 //---------------------------------------------------------------------------
-void vtkSlicerPlusRemoteLogic::onRequestVolumeReconstructorDeviceIDsCompleted(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void *vtkNotUsed(calldata))
+void vtkSlicerPlusRemoteLogic::onRequestVolumeReconstructorDeviceIDsCompleted(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void* vtkNotUsed(calldata))
 {
   igtlioCommandPointer command = igtlioCommand::SafeDownCast(caller);
   if (!command)
@@ -1025,7 +1025,7 @@ void vtkSlicerPlusRemoteLogic::onRequestVolumeReconstructorDeviceIDsCompleted(vt
 }
 
 //---------------------------------------------------------------------------
-void vtkSlicerPlusRemoteLogic::onRequestDeviceIDsCompleted(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void *vtkNotUsed(calldata))
+void vtkSlicerPlusRemoteLogic::onRequestDeviceIDsCompleted(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void* vtkNotUsed(calldata))
 {
   igtlioCommandPointer command = igtlioCommand::SafeDownCast(caller);
   if (!command || !command->GetSuccessful())
@@ -1070,7 +1070,7 @@ void vtkSlicerPlusRemoteLogic::onRequestDeviceIDsCompleted(vtkObject* caller, un
 
 
 //---------------------------------------------------------------------------
-void vtkSlicerPlusRemoteLogic::onRecordingStarted(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void *vtkNotUsed(calldata))
+void vtkSlicerPlusRemoteLogic::onRecordingStarted(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void* vtkNotUsed(calldata))
 {
   igtlioCommandPointer command = igtlioCommand::SafeDownCast(caller);
   if (!command)
@@ -1095,11 +1095,11 @@ void vtkSlicerPlusRemoteLogic::onRecordingStarted(vtkObject* caller, unsigned lo
     parameterNode->SetRecordingMessage(command->GetErrorMessage());
     parameterNode->SetRecordingStatus(vtkMRMLPlusRemoteNode::PLUS_REMOTE_FAILED);
     parameterNode->InvokeEvent(vtkMRMLPlusRemoteNode::RecordingCompletedEvent);
-  }  
+  }
 }
 
 //---------------------------------------------------------------------------
-void vtkSlicerPlusRemoteLogic::onRecordingCompleted(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void *vtkNotUsed(calldata))
+void vtkSlicerPlusRemoteLogic::onRecordingCompleted(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void* vtkNotUsed(calldata))
 {
   igtlioCommandPointer command = igtlioCommand::SafeDownCast(caller);
   if (!command)
@@ -1143,7 +1143,7 @@ void vtkSlicerPlusRemoteLogic::onRecordingCompleted(vtkObject* caller, unsigned 
 }
 
 //---------------------------------------------------------------------------
-void vtkSlicerPlusRemoteLogic::onOfflineVolumeReconstructionCompleted(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void *vtkNotUsed(calldata))
+void vtkSlicerPlusRemoteLogic::onOfflineVolumeReconstructionCompleted(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void* vtkNotUsed(calldata))
 {
   igtlioCommandPointer command = igtlioCommand::SafeDownCast(caller);
   if (!command)
@@ -1240,7 +1240,7 @@ void vtkSlicerPlusRemoteLogic::onOfflineVolumeReconstructedFinalize(vtkObject* c
 }
 
 //---------------------------------------------------------------------------
-void vtkSlicerPlusRemoteLogic::onScoutScanStarted(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void *vtkNotUsed(calldata))
+void vtkSlicerPlusRemoteLogic::onScoutScanStarted(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void* vtkNotUsed(calldata))
 {
   igtlioCommandPointer command = igtlioCommand::SafeDownCast(caller);
   if (!command)
@@ -1260,7 +1260,7 @@ void vtkSlicerPlusRemoteLogic::onScoutScanStarted(vtkObject* caller, unsigned lo
 }
 
 //---------------------------------------------------------------------------
-void vtkSlicerPlusRemoteLogic::onScoutScanRecorded(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void *vtkNotUsed(calldata))
+void vtkSlicerPlusRemoteLogic::onScoutScanRecorded(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void* vtkNotUsed(calldata))
 {
   igtlioCommandPointer command = igtlioCommand::SafeDownCast(caller);
   if (!command)
@@ -1327,7 +1327,7 @@ void vtkSlicerPlusRemoteLogic::onScoutScanRecorded(vtkObject* caller, unsigned l
 }
 
 //---------------------------------------------------------------------------
-void vtkSlicerPlusRemoteLogic::onScoutScanCompleted(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void *vtkNotUsed(calldata))
+void vtkSlicerPlusRemoteLogic::onScoutScanCompleted(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void* vtkNotUsed(calldata))
 {
   igtlioCommandPointer command = igtlioCommand::SafeDownCast(caller);
   if (!command)
@@ -1421,7 +1421,7 @@ void vtkSlicerPlusRemoteLogic::onScoutVolumeReconstructedFinalize(vtkObject* cal
 }
 
 //---------------------------------------------------------------------------
-void vtkSlicerPlusRemoteLogic::onLiveVolumeReconstructionStarted(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void *vtkNotUsed(calldata))
+void vtkSlicerPlusRemoteLogic::onLiveVolumeReconstructionStarted(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void* vtkNotUsed(calldata))
 {
   igtlioCommandPointer command = igtlioCommand::SafeDownCast(caller);
   if (!command)
@@ -1442,7 +1442,7 @@ void vtkSlicerPlusRemoteLogic::onLiveVolumeReconstructionStarted(vtkObject* call
 }
 
 //---------------------------------------------------------------------------
-void vtkSlicerPlusRemoteLogic::onLiveVolumeSnapshotAquired(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void *vtkNotUsed(calldata))
+void vtkSlicerPlusRemoteLogic::onLiveVolumeSnapshotAquired(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void* vtkNotUsed(calldata))
 {
   igtlioCommandPointer command = igtlioCommand::SafeDownCast(caller);
   if (!command)
@@ -1511,7 +1511,7 @@ void vtkSlicerPlusRemoteLogic::onSnapshotAquiredFinalize(vtkObject* caller, unsi
 }
 
 //---------------------------------------------------------------------------
-void vtkSlicerPlusRemoteLogic::onLiveVolumeReconstructionCompleted(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void *vtkNotUsed(calldata))
+void vtkSlicerPlusRemoteLogic::onLiveVolumeReconstructionCompleted(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void* vtkNotUsed(calldata))
 {
   igtlioCommandPointer command = igtlioCommand::SafeDownCast(caller);
   if (!command)
@@ -1563,7 +1563,7 @@ void vtkSlicerPlusRemoteLogic::onLiveVolumeReconstructionCompleted(vtkObject* ca
 }
 
 //---------------------------------------------------------------------------
-void vtkSlicerPlusRemoteLogic::onLiveVolumeReconstructedFinalized(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void *calldata)
+void vtkSlicerPlusRemoteLogic::onLiveVolumeReconstructedFinalized(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void* calldata)
 {
   vtkPlusRemoteLogicCallbackCommand* callback = static_cast<vtkPlusRemoteLogicCallbackCommand*>(clientdata);
   vtkSlicerPlusRemoteLogic* self = callback->Logic;
@@ -1600,7 +1600,7 @@ void vtkSlicerPlusRemoteLogic::onLiveVolumeReconstructedFinalized(vtkObject* cal
 }
 
 //---------------------------------------------------------------------------
-void vtkSlicerPlusRemoteLogic::onPrintCommandResponseRequested(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void *calldata)
+void vtkSlicerPlusRemoteLogic::onPrintCommandResponseRequested(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void* calldata)
 {
   igtlioCommandPointer command = igtlioCommand::SafeDownCast(caller);
   if (!command)

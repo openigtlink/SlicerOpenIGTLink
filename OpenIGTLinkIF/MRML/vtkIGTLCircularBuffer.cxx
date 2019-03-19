@@ -38,13 +38,13 @@ vtkIGTLCircularBuffer::vtkIGTLCircularBuffer()
   this->InUse = -1;
   this->Last  = -1;
   for (int i = 0; i < IGTLCB_CIRC_BUFFER_SIZE; i ++)
-    {
+  {
     this->DeviceType[i] = "";
     this->Size[i]       = 0;
     this->Data[i]       = NULL;
     this->Messages[i] = igtl::MessageBase::New();
     this->Messages[i]->InitPack();
-    }
+  }
 
   this->UpdateFlag = 0;
   this->Mutex->Unlock();
@@ -60,12 +60,12 @@ vtkIGTLCircularBuffer::~vtkIGTLCircularBuffer()
   this->Mutex->Unlock();
 
   for (int i = 0; i < IGTLCB_CIRC_BUFFER_SIZE; i ++)
-    {
+  {
     if (this->Data[i] != NULL)
-      {
+    {
       delete this->Data[i];
-      }
     }
+  }
   this->Mutex->Delete();
 }
 
@@ -93,9 +93,9 @@ int vtkIGTLCircularBuffer::StartPush()
   this->Mutex->Lock();
   this->InPush = (this->Last + 1) % IGTLCB_CIRC_BUFFER_SIZE;
   if (this->InPush == this->InUse)
-    {
+  {
     this->InPush = (this->Last + 1) % IGTLCB_CIRC_BUFFER_SIZE;
-    }
+  }
   this->Mutex->Unlock();
 
   return this->InPush;

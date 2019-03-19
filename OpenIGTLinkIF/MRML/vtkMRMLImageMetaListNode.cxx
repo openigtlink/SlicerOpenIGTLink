@@ -62,7 +62,7 @@ void vtkMRMLImageMetaListNode::ReadXMLAttributes(const char** atts)
 //----------------------------------------------------------------------------
 // Copy the node's attributes to this object.
 // Does NOT copy: ID, FilePrefix, Name, VolumeID
-void vtkMRMLImageMetaListNode::Copy(vtkMRMLNode *anode)
+void vtkMRMLImageMetaListNode::Copy(vtkMRMLNode* anode)
 {
 
   Superclass::Copy(anode);
@@ -73,7 +73,7 @@ void vtkMRMLImageMetaListNode::Copy(vtkMRMLNode *anode)
 }
 
 //----------------------------------------------------------------------------
-void vtkMRMLImageMetaListNode::ProcessMRMLEvents( vtkObject *caller, unsigned long event, void *callData )
+void vtkMRMLImageMetaListNode::ProcessMRMLEvents(vtkObject* caller, unsigned long event, void* callData)
 {
   Superclass::ProcessMRMLEvents(caller, event, callData);
 
@@ -82,7 +82,7 @@ void vtkMRMLImageMetaListNode::ProcessMRMLEvents( vtkObject *caller, unsigned lo
 //----------------------------------------------------------------------------
 void vtkMRMLImageMetaListNode::PrintSelf(ostream& os, vtkIndent indent)
 {
-  vtkMRMLNode::PrintSelf(os,indent);
+  vtkMRMLNode::PrintSelf(os, indent);
 }
 
 
@@ -102,13 +102,13 @@ void vtkMRMLImageMetaListNode::AddImageMetaElement(ImageMetaElement element)
 void vtkMRMLImageMetaListNode::GetImageMetaElement(int index, ImageMetaElement* element)
 {
   if (index >= 0 && index < (int) this->ImageMetaList.size())
-    {
+  {
     *element = this->ImageMetaList[index];
-    }
+  }
   else
-    {
+  {
     element->DeviceName = "";
-    }
+  }
 }
 
 //----------------------------------------------------------------------------

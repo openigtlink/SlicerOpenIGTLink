@@ -57,7 +57,7 @@ class VTK_SLICER_PLUSREMOTE_MODULE_LOGIC_EXPORT vtkSlicerPlusRemoteLogic :
   public vtkSlicerModuleLogic
 {
 public:
-  static vtkSlicerPlusRemoteLogic *New();
+  static vtkSlicerPlusRemoteLogic* New();
   vtkTypeMacro(vtkSlicerPlusRemoteLogic, vtkSlicerModuleLogic);
   void PrintSelf(ostream& os, vtkIndent indent);
 
@@ -69,7 +69,7 @@ protected:
   virtual void RegisterNodes();
 
   /// Initialize listening to MRML events
-  virtual void SetMRMLSceneInternal(vtkMRMLScene * newScene);
+  virtual void SetMRMLSceneInternal(vtkMRMLScene* newScene);
   virtual void OnMRMLSceneNodeAdded(vtkMRMLNode* node);
 
 public:
@@ -134,25 +134,25 @@ protected:
 
   ///////////////////////
   // Callback functions for when commands are received
-  static void onRequestCaptureDeviceIDsCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
-  static void onRequestVolumeReconstructorDeviceIDsCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
-  static void onRequestDeviceIDsCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
+  static void onRequestCaptureDeviceIDsCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
+  static void onRequestVolumeReconstructorDeviceIDsCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
+  static void onRequestDeviceIDsCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
 
-  static void onRecordingStarted(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
-  static void onRecordingCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
+  static void onRecordingStarted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
+  static void onRecordingCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
 
   //static void onOfflineVolumeReconstructionStarted(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
-  static void onOfflineVolumeReconstructionCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
+  static void onOfflineVolumeReconstructionCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
 
-  static void onScoutScanStarted(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
-  static void onScoutScanRecorded(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
-  static void onScoutScanCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
+  static void onScoutScanStarted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
+  static void onScoutScanRecorded(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
+  static void onScoutScanCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
 
-  static void onLiveVolumeReconstructionStarted(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
-  static void onLiveVolumeSnapshotAquired(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
-  static void onLiveVolumeReconstructionCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
+  static void onLiveVolumeReconstructionStarted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
+  static void onLiveVolumeSnapshotAquired(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
+  static void onLiveVolumeReconstructionCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
 
-  static void onPrintCommandResponseRequested(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
+  static void onPrintCommandResponseRequested(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
 
   ///////////////////////
   // Delayed callbacks called when the required volumes in the scene are updated, invoked when the corresponding devices are modified
