@@ -46,7 +46,7 @@ public:
   virtual vtkStreamingVolumeCodec* CreateCodecInstance();
   vtkTypeMacro(vtkIGTLVP9VolumeCodec, vtkStreamingVolumeCodec);
 
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   enum VideoFrameType
   {

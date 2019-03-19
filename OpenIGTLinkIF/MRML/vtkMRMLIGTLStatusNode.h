@@ -23,21 +23,21 @@ public:
 
   vtkTypeMacro(vtkMRMLIGTLStatusNode,vtkMRMLNode);
 
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
-  virtual vtkMRMLNode* CreateNodeInstance() VTK_OVERRIDE;
+  virtual vtkMRMLNode* CreateNodeInstance() override;
 
   /// 
   /// Read node attributes from XML file
-  virtual void ReadXMLAttributes( const char** atts) VTK_OVERRIDE;
+  virtual void ReadXMLAttributes( const char** atts) override;
 
   /// 
   /// Write this node's information to a MRML file in XML format.
-  virtual void WriteXML(ostream& of, int indent) VTK_OVERRIDE;
+  virtual void WriteXML(ostream& of, int indent) override;
 
   /// 
   /// Get node XML tag name (like Volume, Model)
-  virtual const char* GetNodeTagName() VTK_OVERRIDE {return "IGTLStatus";};
+  virtual const char* GetNodeTagName() override {return "IGTLStatus";};
 
   /// Set a status code. Return 0 if the code is invalid.
   int SetCode(vtkTypeUInt16 code);

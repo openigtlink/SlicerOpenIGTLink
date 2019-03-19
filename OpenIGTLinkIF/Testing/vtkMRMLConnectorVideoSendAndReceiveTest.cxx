@@ -34,7 +34,7 @@ public:
   };
   vtkTypeMacro(VideoObserver, vtkObject);
   ~VideoObserver(){};
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE
+  void PrintSelf(ostream& os, vtkIndent indent) override
   {
     vtkObject::PrintSelf(os, indent);
   };

@@ -51,14 +51,14 @@ public:
 
   static vtkMRMLPlusServerLauncherRemoteNode *New();
   vtkTypeMacro(vtkMRMLPlusServerLauncherRemoteNode, vtkMRMLNode);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   // Standard MRML node methods
-  virtual vtkMRMLNode* CreateNodeInstance() VTK_OVERRIDE;
-  virtual void ReadXMLAttributes(const char** atts) VTK_OVERRIDE;
-  virtual void WriteXML(ostream& of, int indent) VTK_OVERRIDE;
-  virtual void Copy(vtkMRMLNode *node) VTK_OVERRIDE;
-  virtual const char* GetNodeTagName() VTK_OVERRIDE { return "PlusRemoteLauncher"; }
+  virtual vtkMRMLNode* CreateNodeInstance() override;
+  virtual void ReadXMLAttributes(const char** atts) override;
+  virtual void WriteXML(ostream& of, int indent) override;
+  virtual void Copy(vtkMRMLNode *node) override;
+  virtual const char* GetNodeTagName() override { return "PlusRemoteLauncher"; }
 
 protected:
   vtkMRMLPlusServerLauncherRemoteNode();

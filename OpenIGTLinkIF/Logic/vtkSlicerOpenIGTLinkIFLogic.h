@@ -65,26 +65,26 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_LOGIC_EXPORT vtkSlicerOpenIGTLinkIFLogic :
 
   static vtkSlicerOpenIGTLinkIFLogic *New();
   vtkTypeMacro(vtkSlicerOpenIGTLinkIFLogic, vtkSlicerModuleLogic);
-  void PrintSelf(ostream&, vtkIndent) VTK_OVERRIDE;
+  void PrintSelf(ostream&, vtkIndent) override;
 
   /// The selected transform node is observed for TransformModified events and the transform
   /// data is copied to the slice nodes depending on the current mode
 
-  virtual void SetMRMLSceneInternal(vtkMRMLScene * newScene) VTK_OVERRIDE;
+  virtual void SetMRMLSceneInternal(vtkMRMLScene * newScene) override;
 
-  virtual void RegisterNodes() VTK_OVERRIDE;
+  virtual void RegisterNodes() override;
 
   //----------------------------------------------------------------
   // Events
   //----------------------------------------------------------------
 
-  virtual void OnMRMLSceneEndImport() VTK_OVERRIDE;
+  virtual void OnMRMLSceneEndImport() override;
 
-  virtual void OnMRMLSceneNodeAdded(vtkMRMLNode* /*node*/) VTK_OVERRIDE;
+  virtual void OnMRMLSceneNodeAdded(vtkMRMLNode* /*node*/) override;
 
-  virtual void OnMRMLSceneNodeRemoved(vtkMRMLNode* /*node*/) VTK_OVERRIDE;
+  virtual void OnMRMLSceneNodeRemoved(vtkMRMLNode* /*node*/) override;
 
-  virtual void OnMRMLNodeModified(vtkMRMLNode* /*node*/) VTK_OVERRIDE{}
+  virtual void OnMRMLNodeModified(vtkMRMLNode* /*node*/) override{}
 
   //----------------------------------------------------------------
   // Connector and device Management
@@ -111,7 +111,7 @@ class VTK_SLICER_OPENIGTLINKIF_MODULE_LOGIC_EXPORT vtkSlicerOpenIGTLinkIFLogic :
   // MRML Management
   //----------------------------------------------------------------
 
-  virtual void ProcessMRMLNodesEvents(vtkObject* caller, unsigned long event, void * callData) VTK_OVERRIDE;
+  virtual void ProcessMRMLNodesEvents(vtkObject* caller, unsigned long event, void * callData) override;
   //virtual void ProcessLogicEvents(vtkObject * caller, unsigned long event, void * callData);
 
   void ProcCommand(const char* nodeName, int size, unsigned char* data);

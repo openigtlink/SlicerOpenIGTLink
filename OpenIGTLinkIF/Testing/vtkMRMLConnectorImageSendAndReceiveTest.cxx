@@ -31,7 +31,7 @@ public:
   };
   vtkTypeMacro(ImageObserver, vtkObject);
   ~ImageObserver(){};
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE
+  void PrintSelf(ostream& os, vtkIndent indent) override
   {
     vtkObject::PrintSelf(os, indent);
   };
