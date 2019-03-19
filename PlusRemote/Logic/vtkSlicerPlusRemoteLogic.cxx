@@ -533,6 +533,12 @@ void vtkSlicerPlusRemoteLogic::StartLiveVolumeReconstruction(vtkMRMLPlusRemoteNo
     return;
   }
 
+  std::string filename = parameterNode->GetLiveReconstructionFilename();
+  if (parameterNode->GetLiveReconstructionFilenameCompletion())
+  {
+    filename = vtkSlicerPlusRemoteLogic::AddTimestampToFilename(filename);
+  }
+
   vtkMRMLAnnotationROINode* roiNode = parameterNode->GetLiveReconstructionROINode();
 
   double roiCenter[3] = { 0.0, 0.0, 0.0 };
@@ -571,7 +577,7 @@ void vtkSlicerPlusRemoteLogic::StartLiveVolumeReconstruction(vtkMRMLPlusRemoteNo
   commandElement->SetAttribute("OutputSpacing", spacingString.c_str());
   commandElement->SetAttribute("OutputOrigin", originString.c_str());
   commandElement->SetAttribute("OutputExtent", extentString.c_str());
-  commandElement->SetAttribute("OutputVolFilename", parameterNode->GetLiveReconstructionFilename().c_str());
+  commandElement->SetAttribute("OutputVolFilename", filename.c_str());
   commandElement->SetAttribute("OutputVolDeviceName", parameterNode->GetLiveReconstructionDevice().c_str());
   std::stringstream ss;
   vtkXMLUtilities::FlattenElement(commandElement, ss);
