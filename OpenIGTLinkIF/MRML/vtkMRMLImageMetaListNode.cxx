@@ -93,13 +93,13 @@ int  vtkMRMLImageMetaListNode::GetNumberOfImageMetaElement()
 }
 
 //----------------------------------------------------------------------------
-void vtkMRMLImageMetaListNode::AddImageMetaElement(ImageMetaElement element)
+void vtkMRMLImageMetaListNode::AddImageMetaElement(vtkMRMLImageMetaElement element)
 {
   this->ImageMetaList.push_back(element);
 }
 
 //----------------------------------------------------------------------------
-void vtkMRMLImageMetaListNode::GetImageMetaElement(int index, ImageMetaElement* element)
+void vtkMRMLImageMetaListNode::GetImageMetaElement(int index, vtkMRMLImageMetaElement* element)
 {
   if (index >= 0 && index < (int) this->ImageMetaList.size())
   {
