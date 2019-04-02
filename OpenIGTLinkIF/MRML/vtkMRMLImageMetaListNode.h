@@ -16,6 +16,7 @@
 
 // OpenIGTLinkIF MRML includes
 #include "vtkSlicerOpenIGTLinkIFModuleMRMLExport.h"
+#include "vtkMRMLImageMetaElement.h"
 
 // MRML includes
 #include <vtkMRML.h>
@@ -45,18 +46,6 @@ public:
     NewDeviceEvent        = 118949,
   };
 
-
-  typedef struct
-  {
-    std::string   Name;        /* name / description (< 64 bytes)*/
-    std::string   DeviceName;  /* device name to query the IMAGE and COLORT */
-    std::string   Modality;    /* modality name (< 32 bytes) */
-    std::string   PatientName; /* patient name (< 64 bytes) */
-    std::string   PatientID;   /* patient ID (MRN etc.) (< 64 bytes) */
-    double        TimeStamp;   /* scan time */
-    int           Size[3];     /* entire image volume size */
-    unsigned char ScalarType;  /* scalar type. see scalar_type in IMAGE message */
-  } ImageMetaElement;
 
 public:
 
@@ -97,12 +86,12 @@ public:
 
   // Description:
   // Add image meta element
-  void AddImageMetaElement(ImageMetaElement element);
+  void AddImageMetaElement(vtkMRMLImageMetaElement element);
 
   // Description:
   // Get image meta element. If the element does not eists,
   // DeviceName is set to "".
-  void GetImageMetaElement(int index, ImageMetaElement* element);
+  void GetImageMetaElement(int index, vtkMRMLImageMetaElement* element);
 
   // Description:
   // Clear image meta element list
@@ -129,7 +118,7 @@ private:
   // Data
   //----------------------------------------------------------------
 
-  std::vector<ImageMetaElement> ImageMetaList;
+  std::vector<vtkMRMLImageMetaElement> ImageMetaList;
 
 };
 

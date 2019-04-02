@@ -425,7 +425,7 @@ void qSlicerOpenIGTLinkRemoteQueryWidget::onMetadataQueryResponseReceived()
     d->remoteDataListTable->setRowCount(numImages);
     for (int i = 0; i < numImages; i++)
     {
-      vtkMRMLImageMetaListNode::ImageMetaElement element;
+      vtkMRMLImageMetaElement element;
 
       imgQueryNode->GetImageMetaElement(i, &element);
 
