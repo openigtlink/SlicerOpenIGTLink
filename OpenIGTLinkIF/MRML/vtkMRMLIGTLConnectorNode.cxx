@@ -117,6 +117,9 @@ public:
   };
   std::deque<NodeModification> PendingNodeModifications;
 
+  typedef std::map<std::string, int> IncomingNodeClientIDMapType;
+  IncomingNodeClientIDMapType IncomingNodeClientIDMap;
+
   NodeInfoMapType IncomingMRMLNodeInfoMap;
   MessageDeviceMapType  OutgoingMRMLIDToDeviceMap;
   MessageDeviceMapType  IncomingMRMLIDToDeviceMap;
@@ -138,7 +141,7 @@ vtkMRMLIGTLConnectorNode::vtkInternal::vtkInternal(vtkMRMLIGTLConnectorNode* ext
 //---------------------------------------------------------------------------
 vtkMRMLIGTLConnectorNode::vtkInternal::~vtkInternal()
 {
-  IOConnector->Delete();
+  this->IOConnector->Delete();
 }
 
 //----------------------------------------------------------------------------
@@ -243,6 +246,8 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
     // Could not find or add node.
     return;
   }
+
+  int wasModifyingNode = modifiedNode->StartModify();
 
   const std::string deviceType = modifiedDevice->GetDeviceType();
   const std::string deviceName = modifiedDevice->GetDeviceName();
@@ -353,6 +358,9 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
       // Process the modified event from command device.
     }
   }
+
+  this->IncomingNodeClientIDMap[modifiedNode->GetName()] = modifiedDevice->GetClientID();
+  modifiedNode->EndModify(wasModifyingNode);
 }
 
 //----------------------------------------------------------------------------
@@ -380,15 +388,6 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::DeviceAboutToReceiveEvent(igtlioDevi
 //----------------------------------------------------------------------------
 vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioDevice* device)
 {
-  if (device)
-  {
-    if (device->GetMessageDirection() != igtlioDevice::MESSAGE_DIRECTION_IN)
-    {
-      // we are only interested in incomming devices
-      return NULL;
-    }
-  }
-
   if (!this->External->GetScene())
   {
     // No scene to add nodes to.
@@ -872,6 +871,7 @@ void vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents(vtkObject* caller, unsig
     // we are only interested in proxy node modified events
     return;
   }
+
   int mrmlEvent = -1;
   switch (event)
   {
@@ -926,14 +926,8 @@ void vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents(vtkObject* caller, unsig
     {
       // no action perform at this stage, wait until the message content in the device is unpacked,
       // As we need the message content data to create mrmlnode.
-      // Also the newly added device could also be a outgoing message from IF module
-      //this->ProcessNewDeviceEvent(caller, event, callData );
-      //modifiedDevice->AddObserver(modifiedDevice->GetDeviceContentModifiedEvent(),  this, &vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents);
-      if (modifiedDevice->MessageDirectionIsIn())
-      {
-        modifiedDevice->AddObserver(modifiedDevice->GetDeviceContentModifiedEvent(), this, &vtkMRMLIGTLConnectorNode::ProcessIODeviceEvents);
-        modifiedDevice->AddObserver(igtlioDevice::AboutToReceiveEvent, this, &vtkMRMLIGTLConnectorNode::ProcessIODeviceEvents);
-      }
+      modifiedDevice->AddObserver(modifiedDevice->GetDeviceContentModifiedEvent(), this, &vtkMRMLIGTLConnectorNode::ProcessIODeviceEvents);
+      modifiedDevice->AddObserver(igtlioDevice::AboutToReceiveEvent, this, &vtkMRMLIGTLConnectorNode::ProcessIODeviceEvents);
     }
   }
 
@@ -977,10 +971,6 @@ void vtkMRMLIGTLConnectorNode::ProcessIODeviceEvents(vtkObject* caller, unsigned
     if (modifiedDevice->MessageDirectionIsIn())
     {
       this->Internal->ProcessIncomingDeviceModifiedEvent(caller, event, modifiedDevice);
-    }
-    else if (modifiedDevice->MessageDirectionIsOut())
-    {
-      this->Internal->ProcessOutgoingDeviceModifiedEvent(caller, event, modifiedDevice);
     }
   }
 
@@ -1658,7 +1648,9 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::GetIncomingMRMLNode(unsigned int i)
   {
     vtkMRMLScene* scene = this->GetScene();
     if (!scene)
-    { return NULL; }
+    {
+      return NULL;
+    }
     vtkMRMLNode* node = scene->GetNodeByID(this->GetNthNodeReferenceID(this->GetIncomingNodeReferenceRole(), i));
     return node;
   }
@@ -1681,7 +1673,6 @@ int vtkMRMLIGTLConnectorNode::PushNode(vtkMRMLNode* node)
   {
     return 0;
   }
-
 
   vtkInternal::MessageDeviceMapType::iterator iter = this->Internal->OutgoingMRMLIDToDeviceMap.find(node->GetID());
   if (iter == this->Internal->OutgoingMRMLIDToDeviceMap.end())
@@ -1728,16 +1719,38 @@ int vtkMRMLIGTLConnectorNode::PushNode(vtkMRMLNode* node)
 
   device->RemoveObservers(device->GetDeviceContentModifiedEvent());
   this->Internal->AssignOutGoingNodeToDevice(node, device); // update the device content
-  device->AddObserver(device->GetDeviceContentModifiedEvent(),  this, &vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents);
+  device->AddObserver(device->GetDeviceContentModifiedEvent(), this, &vtkMRMLIGTLConnectorNode::ProcessIODeviceEvents);
 
-  if ((strcmp(node->GetClassName(), "vtkMRMLIGTLQueryNode") != 0))
+
+  int incomingClientID = -1;
+  vtkInternal::IncomingNodeClientIDMapType::iterator incomingClientIDIt = this->Internal->IncomingNodeClientIDMap.find(node->GetName());
+  if (incomingClientIDIt != this->Internal->IncomingNodeClientIDMap.end())
   {
-    this->Internal->IOConnector->SendMessage(key); //
+    incomingClientID = incomingClientIDIt->second;
   }
-  else if (strcmp(node->GetClassName(), "vtkMRMLIGTLQueryNode") == 0)
+
+  // Send the node to all connected clients
+  std::vector<int> clientIDs = this->Internal->IOConnector->GetClientIds();
+  for (std::vector<int>::iterator clientIDIt = clientIDs.begin(); clientIDIt != clientIDs.end(); ++clientIDIt)
   {
-    this->Internal->IOConnector->SendMessage(key, device->MESSAGE_PREFIX_RTS);
+    int clientID = *clientIDIt;
+    if (clientID == incomingClientID)
+    {
+      // The message was originally received from this client.
+      // We don't need to send it back.
+      continue;
+    }
+
+    if ((strcmp(node->GetClassName(), "vtkMRMLIGTLQueryNode") != 0))
+    {
+      this->Internal->IOConnector->SendMessage(key, igtlioDevice::MESSAGE_PREFIX_NOT_DEFINED, clientID);
+    }
+    else if (strcmp(node->GetClassName(), "vtkMRMLIGTLQueryNode") == 0)
+    {
+      this->Internal->IOConnector->SendMessage(key, device->MESSAGE_PREFIX_RTS, clientID);
+    }
   }
+
   return 0;
 }
 
@@ -1969,7 +1982,15 @@ void vtkMRMLIGTLConnectorNode::PeriodicProcess()
   while (!this->Internal->PendingNodeModifications.empty())
   {
     vtkInternal::NodeModification wasModifying = this->Internal->PendingNodeModifications.back();
+    if (wasModifying.Node->GetName())
+    {
+      //this->Internal->IncomingNodeClientIDMap[wasModifying.Node->GetName()] = wasModifying.Node->;
+    }
     wasModifying.Node->EndModify(wasModifying.Modifying);
+    if (wasModifying.Node->GetName())
+    {
+      this->Internal->IncomingNodeClientIDMap[wasModifying.Node->GetName()] = -1;
+    }
     this->Internal->PendingNodeModifications.pop_back();
   }
 
@@ -1997,7 +2018,6 @@ void vtkMRMLIGTLConnectorNode::SetRestrictDeviceName(int restrictDeviceName)
   this->Internal->IOConnector->SetRestrictDeviceName(restrictDeviceName);
 }
 
-
 //---------------------------------------------------------------------------
 IGTLDevicePointer vtkMRMLIGTLConnectorNode::GetDeviceFromOutgoingMRMLNode(const char* outgoingNodeID)
 {
@@ -2019,15 +2039,6 @@ IGTLDevicePointer vtkMRMLIGTLConnectorNode::GetDeviceFromIncomingMRMLNode(const 
   }
   return citer->second;
 }
-
-/*
-//---------------------------------------------------------------------------
-IGTLDevicePointer vtkMRMLIGTLConnectorNode::GetDevice(const std::string& deviceType, const std::string& deviceName)
-{
-  igtlioDeviceKeyType key(deviceType, deviceName);
-  this->Internal->IOConnector->GetDevice(key);
-}
-*/
 
 //---------------------------------------------------------------------------
 IGTLDevicePointer vtkMRMLIGTLConnectorNode::CreateDeviceForOutgoingMRMLNode(vtkMRMLNode* dnode)
