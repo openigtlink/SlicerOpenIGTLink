@@ -51,8 +51,10 @@ public:
   {
     std::string   Name;        /* name / description (< 64 bytes)*/
     std::string   DeviceName;  /* device name to query the LABEL and COLORT */
-    std::string   Owner;       /* owner of the label (name of image node) */
+    unsigned char Label;       /* label of the structure (0 if unused) */
+    int           RGBA[3];     /* color in RGBA (0 0 0 0 if no color is defined) */
     int           Size[3];     /* entire label volume size */
+    std::string   Owner;       /* owner of the label (name of image node) */
   } LabelMetaElement;
 
 public:
