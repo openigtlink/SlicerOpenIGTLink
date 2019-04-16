@@ -11,24 +11,31 @@ Date:      $Date: 2006/03/17 15:10:10 $
 Version:   $Revision: 1.2 $
 
 =========================================================================auto=*/
-// OpenIGTLinkIO include
-#include "igtlioConnector.h"
-#include "igtlioDeviceFactory.h"
-#include "igtlioImageDevice.h"
-#include "igtlioStatusDevice.h"
-#include "igtlioTransformDevice.h"
-#include "igtlioPolyDataDevice.h"
-#include "igtlioStringDevice.h"
-#include "igtlOSUtil.h"
-#include "igtlioCommand.h"
 
+// OpenIGTLink includes
+#include "igtlOSUtil.h"
+
+// OpenIGTLinkIO include
+#include <igtlioCommand.h>
+#include <igtlioConnector.h>
+#include <igtlioDeviceFactory.h>
+#include <igtlioImageDevice.h>
+#include <igtlioImageMetaDevice.h>
+#include <igtlioLabelMetaDevice.h>
+#include <igtlioPolyDataDevice.h>
+#include <igtlioPointDevice.h>
+#include <igtlioStatusDevice.h>
+#include <igtlioStringDevice.h>
+#include <igtlioTransformDevice.h>
 #if defined(OpenIGTLink_ENABLE_VIDEOSTREAMING)
-  #include "igtlioVideoDevice.h"
+#include <igtlioVideoDevice.h>
 #endif
 
 // OpenIGTLinkIF MRML includes
 #include "vtkMRMLIGTLConnectorNode.h"
 #include "vtkMRMLIGTLStatusNode.h"
+#include <vtkMRMLImageMetaListNode.h>
+#include "vtkMRMLLabelMetaListNode.h"
 #include "vtkMRMLTextNode.h"
 
 // MRML includes
@@ -41,7 +48,7 @@ Version:   $Revision: 1.2 $
 #include <vtkMRMLStreamingVolumeNode.h>
 #include <vtkMRMLVectorVolumeDisplayNode.h>
 #include <vtkMRMLVectorVolumeNode.h>
-#include "vtkMRMLVolumeNode.h"
+#include <vtkMRMLVolumeNode.h>
 
 // VTK includes
 #include <vtkCollection.h>
@@ -50,6 +57,7 @@ Version:   $Revision: 1.2 $
 #include <vtkMutexLock.h>
 #include <vtkPolyData.h>
 #include <vtkTimerLog.h>
+#include <vtkWeakPointer.h>
 
 // vtksys includes
 #include <vtksys/SystemTools.hxx>
@@ -99,6 +107,14 @@ public:
 
   vtkMRMLNode* GetMRMLNodeforDevice(igtlioDevice* device);
 
+  /// Find the first relevant query node for a given device in the list of pending queries
+  vtkMRMLIGTLQueryNode* GetPendingQueryNodeForDevice(igtlioDevice* device);
+  /// Remove the query node from the list of pending queries
+  bool RemovePendingQueryNode(vtkMRMLIGTLQueryNode* queryNode);
+  /// Remove queries that have timed out from the list of pending queries
+  void RemoveExpiredQueries();
+
+public:
   vtkMRMLIGTLConnectorNode* External;
   igtlioConnector* IOConnector;
 
@@ -174,7 +190,7 @@ unsigned int vtkMRMLIGTLConnectorNode::vtkInternal::AssignOutGoingNodeToDevice(v
     vtkSmartPointer<vtkMatrix4x4> mat = vtkSmartPointer<vtkMatrix4x4>::New();
     vtkMRMLLinearTransformNode* transformNode = vtkMRMLLinearTransformNode::SafeDownCast(node);
     transformNode->GetMatrixTransformToParent(mat);
-    igtlioTransformConverter::ContentData content = { mat, transformNode->GetName(), "", ""};
+    igtlioTransformConverter::ContentData content = { mat, transformNode->GetName(), "", "" };
     transformDevice->SetContent(content);
     modifiedEvent = vtkMRMLLinearTransformNode::TransformModifiedEvent;
   }
@@ -283,8 +299,8 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
         frame->SetFrameType(videoDevice->GetContent().frameType == igtl::FrameTypeKey ? vtkStreamingVolumeFrame::IFrame : vtkStreamingVolumeFrame::PFrame);
         videoDevice->GetContent().videoMessage->Unpack(false);
         frame->SetDimensions(videoDevice->GetContent().videoMessage->GetWidth(),
-                             videoDevice->GetContent().videoMessage->GetHeight(),
-                             videoDevice->GetContent().videoMessage->GetAdditionalZDimension());
+          videoDevice->GetContent().videoMessage->GetHeight(),
+          videoDevice->GetContent().videoMessage->GetAdditionalZDimension());
         frame->SetNumberOfComponents(videoDevice->GetContent().grayscale ? 1 : 3);
         frame->SetCodecFourCC(codecName);
         if (!frame->IsKeyFrame() && this->PreviousIncomingFramesMap.find(videoDevice->GetDeviceName()) != this->PreviousIncomingFramesMap.end())
@@ -353,10 +369,68 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
         textNode->Modified();
       }
     }
-    else if (strcmp(deviceType.c_str(), "COMMAND") == 0)
+    else if (strcmp(deviceType.c_str(), "IMGMETA") == 0)
     {
-      // Process the modified event from command device.
+      igtlioImageMetaDevice* imageMetaDevice = reinterpret_cast<igtlioImageMetaDevice*>(modifiedDevice);
+      if (strcmp(modifiedNode->GetName(), deviceName.c_str()) == 0)
+      {
+        vtkMRMLImageMetaListNode* imageMetaNode = vtkMRMLImageMetaListNode::SafeDownCast(modifiedNode);
+        imageMetaNode->ClearImageMetaElement();
+        igtlioImageMetaConverter::ImageMetaDataList imageMetaList = imageMetaDevice->GetContent().ImageMetaDataElements;
+        for (igtlioImageMetaConverter::ImageMetaDataList::iterator imageMetaIt = imageMetaList.begin(); imageMetaIt != imageMetaList.end(); ++imageMetaIt)
+        {
+          vtkMRMLImageMetaElement imageMetaElement;
+          imageMetaElement.DeviceName = imageMetaIt->DeviceName;
+          imageMetaElement.Modality = imageMetaIt->Modality;
+          imageMetaElement.Name = imageMetaIt->Name;
+          imageMetaElement.PatientID = imageMetaIt->PatientID;
+          imageMetaElement.PatientName = imageMetaIt->PatientName;
+          imageMetaElement.ScalarType = imageMetaIt->ScalarType;
+          for (int i = 0; i < 3; ++i)
+          {
+            imageMetaElement.Size[i] = imageMetaIt->Size[i];
+          }
+          imageMetaElement.TimeStamp = imageMetaIt->Timestamp;
+          imageMetaNode->AddImageMetaElement(imageMetaElement);
+        }
+      }
     }
+    else if (strcmp(deviceType.c_str(), "LBMETA") == 0)
+    {
+      igtlioLabelMetaDevice* labelMetaDevice = reinterpret_cast<igtlioLabelMetaDevice*>(modifiedDevice);
+      if (strcmp(modifiedNode->GetName(), deviceName.c_str()) == 0)
+      {
+        vtkMRMLLabelMetaListNode* labelMetaNode = vtkMRMLLabelMetaListNode::SafeDownCast(modifiedNode);
+        labelMetaNode->ClearLabelMetaElement();
+        igtlioLabelMetaConverter::LabelMetaDataList labelMetaList = labelMetaDevice->GetContent().LabelMetaDataElements;
+        for (igtlioLabelMetaConverter::LabelMetaDataList::iterator labelMetaIt = labelMetaList.begin(); labelMetaIt != labelMetaList.end(); ++labelMetaIt)
+        {
+          vtkMRMLLabelMetaListNode::LabelMetaElement labelMetaElement;
+          labelMetaElement.DeviceName = labelMetaIt->DeviceName;
+          labelMetaElement.Label = labelMetaIt->Label;
+          labelMetaElement.Name = labelMetaIt->Name;
+          labelMetaElement.Owner = labelMetaIt->Owner;
+          for (int i = 0; i < 4; ++i)
+          {
+            labelMetaElement.RGBA[i] = labelMetaIt->RGBA[i];
+          }
+          for (int i = 0; i < 3; ++i)
+          {
+            labelMetaElement.Size[i] = labelMetaIt->Size[i];
+          }
+          labelMetaNode->AddLabelMetaElement(labelMetaElement);
+        }
+      }
+    }
+  }
+
+  vtkMRMLIGTLQueryNode* queryNode = this->GetPendingQueryNodeForDevice(modifiedDevice);
+  if (queryNode && modifiedNode)
+  {
+    this->RemovePendingQueryNode(queryNode);
+    queryNode->SetResponseDataNodeID(modifiedNode->GetID());
+    queryNode->SetQueryStatus(vtkMRMLIGTLQueryNode::STATUS_SUCCESS);
+    queryNode->InvokeEvent(vtkMRMLIGTLQueryNode::ResponseEvent);
   }
 
   this->IncomingNodeClientIDMap[modifiedNode->GetName()] = modifiedDevice->GetClientID();
@@ -394,17 +468,18 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
     return NULL;
   }
 
+  const std::string deviceType = device->GetDeviceType();
+  const std::string deviceName = device->GetDeviceName();
+
   // Found the node and return the node;
   NodeInfoMapType::iterator inIter;
   for (inIter = this->IncomingMRMLNodeInfoMap.begin();
-       inIter != this->IncomingMRMLNodeInfoMap.end();
-       inIter++)
+    inIter != this->IncomingMRMLNodeInfoMap.end();
+    inIter++)
   {
     vtkMRMLNode* node = this->External->GetScene()->GetNodeByID((inIter->first));
     if (node)
     {
-      const std::string deviceType = device->GetDeviceType();
-      const std::string deviceName = device->GetDeviceName();
       bool typeMatched = false;
       for (unsigned int i = 0; i < this->External->GetNodeTagFromDeviceType(deviceType.c_str()).size(); i++)
       {
@@ -442,7 +517,6 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
     vtkSmartPointer<vtkMRMLVolumeNode> volumeNode;
     int numberOfComponents = 1;
     vtkSmartPointer<vtkImageData> image;
-    std::string deviceName = "";
     igtlioImageDevice* imageDevice = reinterpret_cast<igtlioImageDevice*>(device);
     igtlioImageConverter::ContentData content = imageDevice->GetContent();
     if (!content.image)
@@ -452,7 +526,6 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
     }
     numberOfComponents = content.image->GetNumberOfScalarComponents(); //to improve the io module to be able to cope with video data
     image = content.image;
-    deviceName = imageDevice->GetDeviceName().c_str();
 #if defined(OpenIGTLink_ENABLE_VIDEOSTREAMING)
     if (this->External->UseStreamingVolume)
     {
@@ -556,8 +629,6 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
     }
     int numberOfComponents = content.grayscale ? 1 : 3;
 
-    std::string deviceName = videoDevice->GetDeviceName().c_str();
-
     vtkSmartPointer<vtkMRMLStreamingVolumeNode> streamingVolumeNode =
       vtkMRMLStreamingVolumeNode::SafeDownCast(this->External->GetScene()->GetFirstNode(deviceName.c_str(), "vtkMRMLStreamingVolumeNode"));
     if (streamingVolumeNode)
@@ -598,8 +669,6 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
 #endif
   else if (strcmp(device->GetDeviceType().c_str(), "STATUS") == 0)
   {
-    std::string deviceName = device->GetDeviceName();
-
     vtkSmartPointer<vtkMRMLIGTLStatusNode> statusNode =
       vtkMRMLIGTLStatusNode::SafeDownCast(this->External->GetScene()->GetFirstNode(deviceName.c_str(), "vtkMRMLIGTLStatusNode"));
     if (statusNode)
@@ -617,9 +686,6 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
   }
   else if (strcmp(device->GetDeviceType().c_str(), "TRANSFORM") == 0)
   {
-
-    std::string deviceName = device->GetDeviceName();
-
     vtkSmartPointer<vtkMRMLLinearTransformNode> transformNode =
       vtkMRMLLinearTransformNode::SafeDownCast(this->External->GetScene()->GetFirstNode(deviceName.c_str(), "vtkMRMLLinearTransformNode"));
     if (transformNode)
@@ -642,9 +708,6 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
   }
   else if (strcmp(device->GetDeviceType().c_str(), "POLYDATA") == 0)
   {
-
-    std::string deviceName = device->GetDeviceName();
-
     vtkSmartPointer<vtkMRMLModelNode> modelNode =
       vtkMRMLModelNode::SafeDownCast(this->External->GetScene()->GetFirstNode(deviceName.c_str(), "vtkMRMLModelNode"));
     if (modelNode)
@@ -684,8 +747,6 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
   }
   else if (strcmp(device->GetDeviceType().c_str(), "STRING") == 0)
   {
-    std::string deviceName = device->GetDeviceName();
-
     vtkSmartPointer<vtkMRMLTextNode> textNode =
       vtkMRMLTextNode::SafeDownCast(this->External->GetScene()->GetFirstNode(deviceName.c_str(), "vtkMRMLTextNode"));
     if (textNode)
@@ -703,6 +764,77 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
     this->External->GetScene()->AddNode(textNode);
     this->External->RegisterIncomingMRMLNode(textNode, device);
     return textNode;
+  }
+  else if (strcmp(device->GetDeviceType().c_str(), "IMGMETA") == 0)
+  {
+    vtkSmartPointer<vtkMRMLImageMetaListNode> imageMetaNode =
+      vtkMRMLImageMetaListNode::SafeDownCast(this->External->GetScene()->GetFirstNode(deviceName.c_str(), "vtkMRMLImageMetaListNode"));
+    if (imageMetaNode)
+    {
+      this->External->RegisterIncomingMRMLNode(imageMetaNode, device);
+      return imageMetaNode;
+    }
+
+    igtlioImageMetaDevice* imageMetaDevice = reinterpret_cast<igtlioImageMetaDevice*>(device);
+    imageMetaNode = vtkSmartPointer<vtkMRMLImageMetaListNode>::New();
+    imageMetaNode->SetName(deviceName.c_str());
+    imageMetaNode->SetDescription("Received by OpenIGTLink");
+    igtlioImageMetaConverter::ImageMetaDataList imageMetaList = imageMetaDevice->GetContent().ImageMetaDataElements;
+    for (igtlioImageMetaConverter::ImageMetaDataList::iterator imageMetaIt = imageMetaList.begin(); imageMetaIt != imageMetaList.end(); ++imageMetaIt)
+    {
+      vtkMRMLImageMetaElement imageMetaElement;
+      imageMetaElement.DeviceName = imageMetaIt->DeviceName;
+      imageMetaElement.Modality = imageMetaIt->Modality;
+      imageMetaElement.Name = imageMetaIt->Name;
+      imageMetaElement.PatientID = imageMetaIt->PatientID;
+      imageMetaElement.PatientName = imageMetaIt->PatientName;
+      imageMetaElement.ScalarType = imageMetaIt->ScalarType;
+      for (int i = 0; i < 3; ++i)
+      {
+        imageMetaElement.Size[i] = imageMetaIt->Size[i];
+      }
+      imageMetaElement.TimeStamp = imageMetaIt->Timestamp;
+      imageMetaNode->AddImageMetaElement(imageMetaElement);
+    }
+    this->External->GetScene()->AddNode(imageMetaNode);
+    this->External->RegisterIncomingMRMLNode(imageMetaNode, device);
+    return imageMetaNode;
+  }
+  else if (strcmp(device->GetDeviceType().c_str(), "LBMETA") == 0)
+  {
+    vtkSmartPointer<vtkMRMLLabelMetaListNode> labelMetaNode =
+      vtkMRMLLabelMetaListNode::SafeDownCast(this->External->GetScene()->GetFirstNode(deviceName.c_str(), "vtkMRMLImageMetaListNode"));
+    if (labelMetaNode)
+    {
+      this->External->RegisterIncomingMRMLNode(labelMetaNode, device);
+      return labelMetaNode;
+    }
+
+    igtlioLabelMetaDevice* labelMetaDevice = reinterpret_cast<igtlioLabelMetaDevice*>(device);
+    labelMetaNode = vtkSmartPointer<vtkMRMLLabelMetaListNode>::New();
+    labelMetaNode->SetName(deviceName.c_str());
+    labelMetaNode->SetDescription("Received by OpenIGTLink");
+    igtlioLabelMetaConverter::LabelMetaDataList labelMetaList = labelMetaDevice->GetContent().LabelMetaDataElements;
+    for (igtlioLabelMetaConverter::LabelMetaDataList::iterator labelMetaIt = labelMetaList.begin(); labelMetaIt != labelMetaList.end(); ++labelMetaIt)
+    {
+      vtkMRMLLabelMetaListNode::LabelMetaElement labelMetaElement;
+      labelMetaElement.DeviceName = labelMetaIt->DeviceName;
+      labelMetaElement.Label = labelMetaIt->Label;
+      labelMetaElement.Name = labelMetaIt->Name;
+      labelMetaElement.Owner = labelMetaIt->Owner;
+      for (int i = 0; i < 4; ++i)
+      {
+        labelMetaElement.RGBA[i] = labelMetaIt->RGBA[i];
+      }
+      for (int i = 0; i < 3; ++i)
+      {
+        labelMetaElement.Size[i] = labelMetaIt->Size[i];
+      }
+      labelMetaNode->AddLabelMetaElement(labelMetaElement);
+    }
+    this->External->GetScene()->AddNode(labelMetaNode);
+    this->External->RegisterIncomingMRMLNode(labelMetaNode, device);
+    return labelMetaNode;
   }
   return NULL;
 }
@@ -728,6 +860,86 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ReceiveCommandResponse(igtlioCommand
 }
 
 //----------------------------------------------------------------------------
+vtkMRMLIGTLQueryNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetPendingQueryNodeForDevice(igtlioDevice* device)
+{
+  vtkMRMLIGTLQueryNode* queryNode = nullptr;
+  this->External->QueryQueueMutex->Lock();
+  for (QueryListType::iterator igtlQueryIt = this->External->QueryWaitingQueue.begin();
+    igtlQueryIt != this->External->QueryWaitingQueue.end(); ++igtlQueryIt)
+  {
+    vtkMRMLIGTLQueryNode* currentQueryNode = *igtlQueryIt;
+    if (currentQueryNode && currentQueryNode->GetIGTLName() == device->GetDeviceType() &&
+      (!currentQueryNode->GetIGTLDeviceName() || !currentQueryNode->GetIGTLDeviceName()[0] || currentQueryNode->GetIGTLDeviceName() == device->GetDeviceName()))
+    {
+      queryNode = currentQueryNode;
+      break;
+    }
+  }
+  this->External->QueryQueueMutex->Unlock();
+
+  return queryNode;
+}
+
+//----------------------------------------------------------------------------
+bool vtkMRMLIGTLConnectorNode::vtkInternal::RemovePendingQueryNode(vtkMRMLIGTLQueryNode* queryNode)
+{
+  this->External->QueryQueueMutex->Lock();
+  QueryListType::iterator queryIt = std::find(this->External->QueryWaitingQueue.begin(), this->External->QueryWaitingQueue.end(), queryNode);
+  if (queryIt == this->External->QueryWaitingQueue.end())
+  {
+    // Could not find query to remove
+    return false;
+  }
+  this->External->QueryWaitingQueue.erase(queryIt);
+  this->External->QueryQueueMutex->Unlock();
+  return true;
+}
+
+//----------------------------------------------------------------------------
+void vtkMRMLIGTLConnectorNode::vtkInternal::RemoveExpiredQueries()
+{
+  QueryListType expiredQueries;
+  this->External->QueryQueueMutex->Lock();
+  expiredQueries.remove(nullptr); // Weak pointers could be set to nullptr if references are removed
+  for (QueryListType::iterator queryIt = this->External->QueryWaitingQueue.begin(); queryIt != this->External->QueryWaitingQueue.end(); ++queryIt)
+  {
+    vtkMRMLIGTLQueryNode* queryNode = *queryIt;
+    if (!queryNode)
+    {
+      continue;
+    }
+
+    if (queryNode->GetQueryStatus() != vtkMRMLIGTLQueryNode::STATUS_WAITING)
+    {
+      // Query is not pending
+      expiredQueries.push_back(queryNode);
+      continue;
+    }
+
+    double timeout = queryNode->GetTimeOut();
+    if (timeout <= 0.0)
+    {
+      // Query has no timeout
+      continue;
+    }
+
+    double timeElapsed = vtkTimerLog::GetUniversalTime() - queryNode->GetTimeStamp();
+    if (timeElapsed > timeout)
+    {
+      // Query is expired
+      queryNode->SetQueryStatus(vtkMRMLIGTLQueryNode::STATUS_EXPIRED);
+      expiredQueries.push_back(queryNode);
+    }
+  }
+  this->External->QueryQueueMutex->Unlock();
+
+  for (QueryListType::iterator queryIt = expiredQueries.begin(); queryIt != expiredQueries.end(); ++queryIt)
+  {
+    this->RemovePendingQueryNode(*queryIt);
+  }
+}
+
+//----------------------------------------------------------------------------
 // vtkMRMLIGTLConnectorNode method
 
 //----------------------------------------------------------------------------
@@ -747,22 +959,24 @@ vtkMRMLIGTLConnectorNode::vtkMRMLIGTLConnectorNode()
   this->SetIncomingNodeReferenceRole("incoming");
   this->SetIncomingNodeReferenceMRMLAttributeName("incomingNodeRef");
   this->AddNodeReferenceRole(this->GetIncomingNodeReferenceRole(),
-                             this->GetIncomingNodeReferenceMRMLAttributeName());
+    this->GetIncomingNodeReferenceMRMLAttributeName());
 
   this->SetOutgoingNodeReferenceRole("outgoing");
   this->SetOutgoingNodeReferenceMRMLAttributeName("outgoingNodeRef");
   this->AddNodeReferenceRole(this->GetOutgoingNodeReferenceRole(),
-                             this->GetOutgoingNodeReferenceMRMLAttributeName());
+    this->GetOutgoingNodeReferenceMRMLAttributeName());
 
   this->Internal->DeviceTypeToNodeTagMap.clear();
-  std::string volumeTags[] = {"Volume", "VectorVolume", "StreamingVolume"};
+  std::string volumeTags[] = { "Volume", "VectorVolume", "StreamingVolume" };
   this->Internal->DeviceTypeToNodeTagMap["IMAGE"] = std::vector<std::string>(volumeTags, volumeTags + 3);
   this->Internal->DeviceTypeToNodeTagMap["VIDEO"] = std::vector<std::string>(1, "StreamingVolume");
   this->Internal->DeviceTypeToNodeTagMap["STATUS"] = std::vector<std::string>(1, "IGTLStatus");
   this->Internal->DeviceTypeToNodeTagMap["TRANSFORM"] = std::vector<std::string>(1, "LinearTransform");
-  std::string modelTags[] = {"Model", "FiberBundle"};
+  std::string modelTags[] = { "Model", "FiberBundle" };
   this->Internal->DeviceTypeToNodeTagMap["POLYDATA"] = std::vector<std::string>(modelTags, modelTags + 2);
   this->Internal->DeviceTypeToNodeTagMap["STRING"] = std::vector<std::string>(1, "Text");
+  this->Internal->DeviceTypeToNodeTagMap["IMGMETA"] = std::vector<std::string>(1, "ImageMetaList");
+  this->Internal->DeviceTypeToNodeTagMap["LBMETA"] = std::vector<std::string>(1, "LabelMetaList");
 
 }
 
@@ -782,11 +996,11 @@ vtkMRMLIGTLConnectorNode::~vtkMRMLIGTLConnectorNode()
 void vtkMRMLIGTLConnectorNode::ConnectEvents()
 {
   this->Internal->IOConnector->AddObserver(this->Internal->IOConnector->ConnectedEvent, this, &vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents);
-  this->Internal->IOConnector->AddObserver(this->Internal->IOConnector->DisconnectedEvent,  this, &vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents);
-  this->Internal->IOConnector->AddObserver(this->Internal->IOConnector->ActivatedEvent,  this, &vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents);
-  this->Internal->IOConnector->AddObserver(this->Internal->IOConnector->DeactivatedEvent,  this, &vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents);
-  this->Internal->IOConnector->AddObserver(this->Internal->IOConnector->NewDeviceEvent, this,  &vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents);
-  this->Internal->IOConnector->AddObserver(this->Internal->IOConnector->RemovedDeviceEvent,  this, &vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents);
+  this->Internal->IOConnector->AddObserver(this->Internal->IOConnector->DisconnectedEvent, this, &vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents);
+  this->Internal->IOConnector->AddObserver(this->Internal->IOConnector->ActivatedEvent, this, &vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents);
+  this->Internal->IOConnector->AddObserver(this->Internal->IOConnector->DeactivatedEvent, this, &vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents);
+  this->Internal->IOConnector->AddObserver(this->Internal->IOConnector->NewDeviceEvent, this, &vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents);
+  this->Internal->IOConnector->AddObserver(this->Internal->IOConnector->RemovedDeviceEvent, this, &vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents);
 
   this->Internal->IOConnector->AddObserver(igtlioCommand::CommandReceivedEvent, this, &vtkMRMLIGTLConnectorNode::ProcessIOCommandEvents);
   this->Internal->IOConnector->AddObserver(igtlioCommand::CommandResponseEvent, this, &vtkMRMLIGTLConnectorNode::ProcessIOCommandEvents);
@@ -852,7 +1066,7 @@ void vtkMRMLIGTLConnectorNode::ProcessMRMLEvents(vtkObject* caller, unsigned lon
   }
 
   int n = this->GetNumberOfNodeReferences(this->GetOutgoingNodeReferenceRole());
-  for (int i = 0; i < n; i ++)
+  for (int i = 0; i < n; i++)
   {
     const char* id = this->GetNthNodeReferenceID(this->GetOutgoingNodeReferenceRole(), i);
     if (strcmp(node->GetID(), id) == 0)
@@ -875,24 +1089,24 @@ void vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents(vtkObject* caller, unsig
   int mrmlEvent = -1;
   switch (event)
   {
-    case igtlioConnector::ConnectedEvent:
-      mrmlEvent = ConnectedEvent;
-      break;
-    case igtlioConnector::DisconnectedEvent:
-      mrmlEvent = DisconnectedEvent;
-      break;
-    case igtlioConnector::ActivatedEvent:
-      mrmlEvent = ActivatedEvent;
-      break;
-    case igtlioConnector::DeactivatedEvent:
-      mrmlEvent = DeactivatedEvent;
-      break;
-    case igtlioConnector::NewDeviceEvent:
-      mrmlEvent = NewDeviceEvent;
-      break;
-    case igtlioConnector::RemovedDeviceEvent:
-      mrmlEvent = DeviceModifiedEvent;
-      break;
+  case igtlioConnector::ConnectedEvent:
+    mrmlEvent = ConnectedEvent;
+    break;
+  case igtlioConnector::DisconnectedEvent:
+    mrmlEvent = DisconnectedEvent;
+    break;
+  case igtlioConnector::ActivatedEvent:
+    mrmlEvent = ActivatedEvent;
+    break;
+  case igtlioConnector::DeactivatedEvent:
+    mrmlEvent = DeactivatedEvent;
+    break;
+  case igtlioConnector::NewDeviceEvent:
+    mrmlEvent = NewDeviceEvent;
+    break;
+  case igtlioConnector::RemovedDeviceEvent:
+    mrmlEvent = DeviceModifiedEvent;
+    break;
   }
 
   if (mrmlEvent == ConnectedEvent)
@@ -993,15 +1207,15 @@ void vtkMRMLIGTLConnectorNode::ProcessIOCommandEvents(vtkObject* caller, unsigne
   int mrmlEvent = -1;
   switch (event)
   {
-    case igtlioCommand::CommandReceivedEvent:
-      mrmlEvent = CommandReceivedEvent;
-      break;  // COMMAND received
-    case igtlioCommand::CommandResponseEvent:
-      mrmlEvent = CommandResponseReceivedEvent;
-      break;  // RTS_COMMAND received
-    case igtlioCommand::CommandCompletedEvent:
-      mrmlEvent = CommandCompletedEvent;
-      break;  // Sent COMMAND did not receive a response before timeout
+  case igtlioCommand::CommandReceivedEvent:
+    mrmlEvent = CommandReceivedEvent;
+    break;  // COMMAND received
+  case igtlioCommand::CommandResponseEvent:
+    mrmlEvent = CommandResponseReceivedEvent;
+    break;  // RTS_COMMAND received
+  case igtlioCommand::CommandCompletedEvent:
+    mrmlEvent = CommandCompletedEvent;
+    break;  // Sent COMMAND did not receive a response before timeout
   }
 
   igtlioCommand* command = static_cast<igtlioCommand*>(callData);
@@ -1020,16 +1234,16 @@ void vtkMRMLIGTLConnectorNode::WriteXML(ostream& of, int nIndent)
 
   switch (this->Internal->IOConnector->GetType())
   {
-    case igtlioConnector::TYPE_SERVER:
-      of << " connectorType=\"" << "SERVER" << "\" ";
-      break;
-    case igtlioConnector::TYPE_CLIENT:
-      of << " connectorType=\"" << "CLIENT" << "\" ";
-      of << " serverHostname=\"" << this->Internal->IOConnector->GetServerHostname() << "\" ";
-      break;
-    default:
-      of << " connectorType=\"" << "NOT_DEFINED" << "\" ";
-      break;
+  case igtlioConnector::TYPE_SERVER:
+    of << " connectorType=\"" << "SERVER" << "\" ";
+    break;
+  case igtlioConnector::TYPE_CLIENT:
+    of << " connectorType=\"" << "CLIENT" << "\" ";
+    of << " serverHostname=\"" << this->Internal->IOConnector->GetServerHostname() << "\" ";
+    break;
+  default:
+    of << " connectorType=\"" << "NOT_DEFINED" << "\" ";
+    break;
   }
 
   of << " serverPort=\"" << this->Internal->IOConnector->GetServerPort() << "\" ";
@@ -1115,17 +1329,17 @@ void vtkMRMLIGTLConnectorNode::ReadXMLAttributes(const char** atts)
 
     switch (type)
     {
-      case igtlioConnector::TYPE_SERVER:
-        this->Internal->IOConnector->SetTypeServer(port);
-        this->Internal->IOConnector->SetRestrictDeviceName(restrictDeviceName);
-        break;
-      case igtlioConnector::TYPE_CLIENT:
-        this->Internal->IOConnector->SetTypeClient(serverHostname, port);
-        this->Internal->IOConnector->SetRestrictDeviceName(restrictDeviceName);
-        break;
-      default: // not defined
-        // do nothing
-        break;
+    case igtlioConnector::TYPE_SERVER:
+      this->Internal->IOConnector->SetTypeServer(port);
+      this->Internal->IOConnector->SetRestrictDeviceName(restrictDeviceName);
+      break;
+    case igtlioConnector::TYPE_CLIENT:
+      this->Internal->IOConnector->SetTypeClient(serverHostname, port);
+      this->Internal->IOConnector->SetRestrictDeviceName(restrictDeviceName);
+      break;
+    default: // not defined
+      // do nothing
+      break;
     }
 
     if (persistent == igtlioConnector::PERSISTENT_ON)
@@ -1150,26 +1364,26 @@ void vtkMRMLIGTLConnectorNode::ReadXMLAttributes(const char** atts)
 void vtkMRMLIGTLConnectorNode::Copy(vtkMRMLNode* anode)
 {
   Superclass::Copy(anode);
-  vtkMRMLIGTLConnectorNode* node = (vtkMRMLIGTLConnectorNode*) anode;
+  vtkMRMLIGTLConnectorNode* node = (vtkMRMLIGTLConnectorNode*)anode;
 
   int type = node->Internal->IOConnector->GetType();
 
   switch (type)
   {
-    case igtlioConnector::TYPE_SERVER:
-      this->Internal->IOConnector->SetType(igtlioConnector::TYPE_SERVER);
-      this->Internal->IOConnector->SetTypeServer(node->Internal->IOConnector->GetServerPort());
-      this->Internal->IOConnector->SetRestrictDeviceName(node->Internal->IOConnector->GetRestrictDeviceName());
-      break;
-    case igtlioConnector::TYPE_CLIENT:
-      this->Internal->IOConnector->SetType(igtlioConnector::TYPE_CLIENT);
-      this->Internal->IOConnector->SetTypeClient(node->Internal->IOConnector->GetServerHostname(), node->Internal->IOConnector->GetServerPort());
-      this->Internal->IOConnector->SetRestrictDeviceName(node->Internal->IOConnector->GetRestrictDeviceName());
-      break;
-    default: // not defined
-      // do nothing
-      this->Internal->IOConnector->SetType(igtlioConnector::TYPE_NOT_DEFINED);
-      break;
+  case igtlioConnector::TYPE_SERVER:
+    this->Internal->IOConnector->SetType(igtlioConnector::TYPE_SERVER);
+    this->Internal->IOConnector->SetTypeServer(node->Internal->IOConnector->GetServerPort());
+    this->Internal->IOConnector->SetRestrictDeviceName(node->Internal->IOConnector->GetRestrictDeviceName());
+    break;
+  case igtlioConnector::TYPE_CLIENT:
+    this->Internal->IOConnector->SetType(igtlioConnector::TYPE_CLIENT);
+    this->Internal->IOConnector->SetTypeClient(node->Internal->IOConnector->GetServerHostname(), node->Internal->IOConnector->GetServerPort());
+    this->Internal->IOConnector->SetRestrictDeviceName(node->Internal->IOConnector->GetRestrictDeviceName());
+    break;
+  default: // not defined
+    // do nothing
+    this->Internal->IOConnector->SetType(igtlioConnector::TYPE_NOT_DEFINED);
+    break;
   }
   this->Internal->IOConnector->SetState(node->Internal->IOConnector->GetState());
   this->Internal->IOConnector->SetPersistent(node->Internal->IOConnector->GetPersistent());
@@ -1196,15 +1410,15 @@ void vtkMRMLIGTLConnectorNode::PrintSelf(ostream& os, vtkIndent indent)
 
   switch (this->Internal->IOConnector->GetState())
   {
-    case igtlioConnector::STATE_OFF:
-      os << indent << "State: OFF\n";
-      break;
-    case igtlioConnector::STATE_WAIT_CONNECTION:
-      os << indent << "State: WAIT FOR CONNECTION\n";
-      break;
-    case igtlioConnector::STATE_CONNECTED:
-      os << indent << "State: CONNECTED\n";
-      break;
+  case igtlioConnector::STATE_OFF:
+    os << indent << "State: OFF\n";
+    break;
+  case igtlioConnector::STATE_WAIT_CONNECTION:
+    os << indent << "State: WAIT FOR CONNECTION\n";
+    break;
+  case igtlioConnector::STATE_CONNECTED:
+    os << indent << "State: CONNECTED\n";
+    break;
   }
   os << indent << "Persistent: " << this->Internal->IOConnector->GetPersistent() << "\n";
   os << indent << "Restrict Device Name: " << this->Internal->IOConnector->GetRestrictDeviceName() << "\n";
@@ -1291,7 +1505,7 @@ void vtkMRMLIGTLConnectorNode::OnNodeReferenceAdded(vtkMRMLNodeReference* refere
     // Without doing this, outgoing transforms are not updated if connectors are set up from
     // a saved scene.
     int n = this->GetNumberOfNodeReferences(this->GetOutgoingNodeReferenceRole());
-    for (int i = 0; i < n; i ++)
+    for (int i = 0; i < n; i++)
     {
       const char* id = this->GetNthNodeReferenceID(this->GetOutgoingNodeReferenceRole(), i);
       if (strcmp(node->GetID(), id) == 0)
@@ -1299,7 +1513,7 @@ void vtkMRMLIGTLConnectorNode::OnNodeReferenceAdded(vtkMRMLNodeReference* refere
         vtkSmartPointer<vtkIntArray> nodeEvents = vtkSmartPointer<vtkIntArray>::New();
         nodeEvents->InsertNextValue(nodeModifiedEvent);
         this->SetAndObserveNthNodeReferenceID(this->GetOutgoingNodeReferenceRole(), i,
-                                              node->GetID(), nodeEvents);
+          node->GetID(), nodeEvents);
         break;
       }
     }
@@ -1428,7 +1642,7 @@ bool vtkMRMLIGTLConnectorNode::RegisterIncomingMRMLNode(vtkMRMLNode* node, IGTLD
     return false;
   }
 
-  igtlioDevice* igtlDevice = static_cast< igtlioDevice* >(device);
+  igtlioDevice* igtlDevice = static_cast<igtlioDevice*>(device);
 
   // Check if the node has already been registered.
   if (this->HasNodeReferenceID(this->GetIncomingNodeReferenceRole(), node->GetID()))
@@ -1465,7 +1679,7 @@ void vtkMRMLIGTLConnectorNode::UnregisterIncomingMRMLNode(vtkMRMLNode* node)
 
   // Check if the node is on the reference list for outgoing nodes
   int n = this->GetNumberOfNodeReferences(this->GetIncomingNodeReferenceRole());
-  for (int i = 0; i < n; i ++)
+  for (int i = 0; i < n; i++)
   {
     const char* id = this->GetNthNodeReferenceID(this->GetIncomingNodeReferenceRole(), i);
     if (strcmp(node->GetID(), id) == 0)
@@ -1509,7 +1723,9 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::GetOutgoingMRMLNode(unsigned int i)
   {
     vtkMRMLScene* scene = this->GetScene();
     if (!scene)
-    { return NULL; }
+    {
+      return NULL;
+    }
     vtkMRMLNode* node = scene->GetNodeByID(this->GetNthNodeReferenceID(this->GetOutgoingNodeReferenceRole(), i));
     return node;
   }
@@ -1548,7 +1764,7 @@ int vtkMRMLIGTLConnectorNode::RegisterOutgoingMRMLNode(vtkMRMLNode* node, const 
 
   // Check if the node is on the reference list for outgoing nodes
   int n = this->GetNumberOfNodeReferences(this->GetOutgoingNodeReferenceRole());
-  for (int i = 0; i < n; i ++)
+  for (int i = 0; i < n; i++)
   {
     const char* id = this->GetNthNodeReferenceID(this->GetOutgoingNodeReferenceRole(), i);
     if (strcmp(node->GetID(), id) == 0)
@@ -1593,7 +1809,7 @@ int vtkMRMLIGTLConnectorNode::RegisterOutgoingMRMLNode(vtkMRMLNode* node, const 
   else // If the reference node wasn't associated with any device, delete the reference
   {
     int n = this->GetNumberOfNodeReferences(this->GetOutgoingNodeReferenceRole());
-    for (int i = 0; i < n; i ++)
+    for (int i = 0; i < n; i++)
     {
       const char* id = this->GetNthNodeReferenceID(this->GetOutgoingNodeReferenceRole(), i);
       if (strcmp(node->GetID(), id) == 0)
@@ -1619,7 +1835,7 @@ void vtkMRMLIGTLConnectorNode::UnregisterOutgoingMRMLNode(vtkMRMLNode* node)
 
   // Check if the node is on the reference list for outgoing nodes
   int n = this->GetNumberOfNodeReferences(this->GetOutgoingNodeReferenceRole());
-  for (int i = 0; i < n; i ++)
+  for (int i = 0; i < n; i++)
   {
     const char* id = this->GetNthNodeReferenceID(this->GetOutgoingNodeReferenceRole(), i);
     if (strcmp(node->GetID(), id) == 0)
@@ -1660,7 +1876,6 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::GetIncomingMRMLNode(unsigned int i)
   }
 }
 
-
 //---------------------------------------------------------------------------
 int vtkMRMLIGTLConnectorNode::PushNode(vtkMRMLNode* node)
 {
@@ -1672,6 +1887,11 @@ int vtkMRMLIGTLConnectorNode::PushNode(vtkMRMLNode* node)
   if (!(node->GetID()))
   {
     return 0;
+  }
+
+  if (node->IsA("vtkMRMLIGTLQueryNode"))
+  {
+    return this->PushQuery(vtkMRMLIGTLQueryNode::SafeDownCast(node));
   }
 
   vtkInternal::MessageDeviceMapType::iterator iter = this->Internal->OutgoingMRMLIDToDeviceMap.find(node->GetID());
@@ -1754,15 +1974,15 @@ int vtkMRMLIGTLConnectorNode::PushNode(vtkMRMLNode* node)
   return 0;
 }
 
-
 //---------------------------------------------------------------------------
-void vtkMRMLIGTLConnectorNode::PushQuery(vtkMRMLIGTLQueryNode* node)
+int vtkMRMLIGTLConnectorNode::PushQuery(vtkMRMLIGTLQueryNode* node)
 {
   if (node == NULL)
   {
     vtkErrorMacro("vtkMRMLIGTLConnectorNode::PushQuery failed: invalid input node");
-    return;
+    return 1;
   }
+
   igtlioDeviceKeyType key;
   key.name = node->GetIGTLDeviceName();
   key.type = node->GetIGTLName();
@@ -1777,16 +1997,33 @@ void vtkMRMLIGTLConnectorNode::PushQuery(vtkMRMLIGTLQueryNode* node)
     else
     {
       vtkErrorMacro("vtkMRMLIGTLConnectorNode::PushQuery failed: Device type not supported");
-      return;
+      return 1;
     }
   }
-  this->Internal->IOConnector->SendMessage(key, igtlioDevice::MESSAGE_PREFIX_RTS);
+
+  igtlioDevice::MESSAGE_PREFIX prefix = igtlioDevice::MESSAGE_PREFIX_NOT_DEFINED;
+  int nodeQueryType = node->GetQueryType();
+  if (nodeQueryType == vtkMRMLIGTLQueryNode::TYPE_GET)
+  {
+    prefix = igtlioDevice::MESSAGE_PREFIX_GET;
+  }
+  else if (nodeQueryType == vtkMRMLIGTLQueryNode::TYPE_START)
+  {
+    prefix = igtlioDevice::MESSAGE_PREFIX_START;
+  }
+  else if (nodeQueryType == vtkMRMLIGTLQueryNode::TYPE_STOP)
+  {
+    prefix = igtlioDevice::MESSAGE_PREFIX_STOP;
+  }
+
+  this->Internal->IOConnector->SendMessage(key, prefix);
   this->QueryQueueMutex->Lock();
   node->SetTimeStamp(vtkTimerLog::GetUniversalTime());
   node->SetQueryStatus(vtkMRMLIGTLQueryNode::STATUS_WAITING);
   node->SetConnectorNodeID(this->GetID());
   this->QueryWaitingQueue.push_back(node);
   this->QueryQueueMutex->Unlock();
+  return 0;
 }
 
 //---------------------------------------------------------------------------
@@ -1876,14 +2113,14 @@ int vtkMRMLIGTLConnectorNode::GetState()
 
   switch (this->Internal->IOConnector->GetState())
   {
-    case igtlioConnector::STATE_OFF:
-      return StateOff;
-    case igtlioConnector::STATE_WAIT_CONNECTION:
-      return StateWaitConnection;
-    case igtlioConnector::STATE_CONNECTED:
-      return StateConnected;
-    default:
-      return StateOff;
+  case igtlioConnector::STATE_OFF:
+    return StateOff;
+  case igtlioConnector::STATE_WAIT_CONNECTION:
+    return StateWaitConnection;
+  case igtlioConnector::STATE_CONNECTED:
+    return StateConnected;
+  default:
+    return StateOff;
   }
 }
 
@@ -1910,7 +2147,7 @@ void vtkMRMLIGTLConnectorNode::SendCommand(igtlioCommandPointer command)
 
   if (command->IsInProgress())
   {
-    vtkErrorMacro("vtkMRMLIGTLConnectorNode::SendCommand failed: Command is already in progress!")
+    vtkErrorMacro("vtkMRMLIGTLConnectorNode::SendCommand failed: Command is already in progress!");
     return;
   }
 
@@ -1919,7 +2156,7 @@ void vtkMRMLIGTLConnectorNode::SendCommand(igtlioCommandPointer command)
 
 //---------------------------------------------------------------------------
 igtlioCommandPointer vtkMRMLIGTLConnectorNode::SendCommand(std::string name, std::string content,
-    bool blocking/*=true*/, double timeout_s/*=5*/, igtl::MessageBase::MetaDataMap* metaData/*=NULL*/, int clientId/*=-1*/)
+  bool blocking/*=true*/, double timeout_s/*=5*/, igtl::MessageBase::MetaDataMap* metaData/*=NULL*/, int clientId/*=-1*/)
 {
   igtlioCommandPointer command = igtlioCommandPointer::New();
   command->SetClientId(clientId);
@@ -1993,6 +2230,8 @@ void vtkMRMLIGTLConnectorNode::PeriodicProcess()
     }
     this->Internal->PendingNodeModifications.pop_back();
   }
+
+  this->Internal->RemoveExpiredQueries();
 
   if (application)
   {
@@ -2084,14 +2323,14 @@ void vtkMRMLIGTLConnectorNode::SetType(int type)
 {
   switch (type)
   {
-    case TypeServer:
-      this->Internal->IOConnector->SetType(igtlioConnector::TYPE_SERVER);
-      break;
-    case TypeClient:
-      this->Internal->IOConnector->SetType(igtlioConnector::TYPE_CLIENT);
-      break;
-    default:
-      this->Internal->IOConnector->SetType(igtlioConnector::TYPE_NOT_DEFINED);
+  case TypeServer:
+    this->Internal->IOConnector->SetType(igtlioConnector::TYPE_SERVER);
+    break;
+  case TypeClient:
+    this->Internal->IOConnector->SetType(igtlioConnector::TYPE_CLIENT);
+    break;
+  default:
+    this->Internal->IOConnector->SetType(igtlioConnector::TYPE_NOT_DEFINED);
   }
 }
 
@@ -2100,12 +2339,12 @@ int vtkMRMLIGTLConnectorNode::GetType()
 {
   switch (this->Internal->IOConnector->GetType())
   {
-    case igtlioConnector::TYPE_SERVER:
-      return TypeServer;
-    case igtlioConnector::TYPE_CLIENT:
-      return TypeClient;
-    default:
-      return TypeNotDefined;
+  case igtlioConnector::TYPE_SERVER:
+    return TypeServer;
+  case igtlioConnector::TYPE_CLIENT:
+    return TypeClient;
+  default:
+    return TypeNotDefined;
   }
 }
 

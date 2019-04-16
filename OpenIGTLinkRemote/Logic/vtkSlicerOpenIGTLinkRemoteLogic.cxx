@@ -83,7 +83,7 @@ vtkSlicerOpenIGTLinkRemoteLogic::vtkSlicerOpenIGTLinkRemoteLogic()
 vtkSlicerOpenIGTLinkRemoteLogic::~vtkSlicerOpenIGTLinkRemoteLogic()
 {
   for (std::vector<vtkSlicerOpenIGTLinkRemoteLogic::vtkInternal::CommandInfo>::iterator it = this->Internal->Commands.begin();
-       it != this->Internal->Commands.end(); ++it)
+    it != this->Internal->Commands.end(); ++it)
   {
     this->DeleteCommandQueryNode(it->CommandQueryNode);
   }
@@ -167,7 +167,7 @@ vtkMRMLIGTLQueryNode* vtkSlicerOpenIGTLinkRemoteLogic::GetCommandQueryNode(vtkSl
     vtkErrorMacro("vtkSlicerOpenIGTLinkRemoteLogic::CancelCommand failed: invalid input command");
     return NULL;
   }
-  this->GetCommandQueryNode(command->GetCommand());
+  return this->GetCommandQueryNode(command->GetCommand());
 }
 
 //----------------------------------------------------------------------------
@@ -181,13 +181,13 @@ vtkMRMLIGTLQueryNode* vtkSlicerOpenIGTLinkRemoteLogic::GetCommandQueryNode(igtli
 
   // If we find an unassigned command query node then use that
   for (std::vector<vtkSlicerOpenIGTLinkRemoteLogic::vtkInternal::CommandInfo>::iterator it = this->Internal->Commands.begin();
-       it != this->Internal->Commands.end(); ++it)
+    it != this->Internal->Commands.end(); ++it)
   {
     if (it->Command.GetPointer() == NULL)
     {
       // found a command that may be usable
       if (it->CommandQueryNode->GetID() == NULL ||
-          this->GetMRMLScene()->GetNodeByID(it->CommandQueryNode->GetID()) != it->CommandQueryNode.GetPointer())
+        this->GetMRMLScene()->GetNodeByID(it->CommandQueryNode->GetID()) != it->CommandQueryNode.GetPointer())
       {
         // invalid query node, cannot use it (probably the query node has been removed from the scene)
         continue;
@@ -209,7 +209,7 @@ vtkMRMLIGTLQueryNode* vtkSlicerOpenIGTLinkRemoteLogic::GetCommandQueryNode(igtli
 void vtkSlicerOpenIGTLinkRemoteLogic::ReleaseCommandQueryNode(vtkMRMLIGTLQueryNode* commandQueryNode)
 {
   for (std::vector<vtkSlicerOpenIGTLinkRemoteLogic::vtkInternal::CommandInfo>::iterator it = this->Internal->Commands.begin();
-       it != this->Internal->Commands.end(); ++it)
+    it != this->Internal->Commands.end(); ++it)
   {
     if (it->CommandQueryNode.GetPointer() == commandQueryNode)
     {
@@ -227,6 +227,7 @@ bool vtkSlicerOpenIGTLinkRemoteLogic::SendCommand(vtkSlicerOpenIGTLinkCommand* c
     return false;
   }
   this->SendCommand(command->GetCommand(), connectorNodeId);
+  return true;
 }
 
 //----------------------------------------------------------------------------
@@ -254,50 +255,8 @@ bool vtkSlicerOpenIGTLinkRemoteLogic::SendCommand(igtlioCommand* command, const 
     return false;
   }
 
-  //if (command->GetCommandVersion() == IGTL_HEADER_VERSION_1)
-  //{
-  //  // Create a unique Id for this command message.
-  //  // The logic may only be used from the main thread, so there is no need
-  //  // for making the counter increment thread-safe.
-  //  (this->CommandCounter)++;
-  //  std::stringstream commandIdStream;
-  //  commandIdStream << this->CommandCounter;
-  //  std::string commandId = commandIdStream.str();
-
-  //  command->SetResponseContent(""); // sets status to FAIL
-  //  command->SetStatus(igtlioCommandStatus::CommandWaiting);
-  //  //command->SetCommandId(commandId.c_str());
-
-  //  vtkMRMLIGTLQueryNode* commandQueryNode = GetCommandQueryNode(command);
-  //  std::string commandDeviceName = "CMD_" + commandId;
-  //  std::string responseDeviceName = "ACK_" + commandId;
-  //  commandQueryNode->SetIGTLName("STRING");
-  //  commandQueryNode->SetIGTLDeviceName(responseDeviceName.c_str());
-  //  commandQueryNode->SetQueryStatus(vtkMRMLIGTLQueryNode::STATUS_PREPARED);
-  //  commandQueryNode->SetQueryType(vtkMRMLIGTLQueryNode::TYPE_NOT_DEFINED);
-  //  commandQueryNode->SetAttribute("CommandDeviceName", commandDeviceName.c_str());
-  //  commandQueryNode->SetAttribute("CommandString", command->GetCommandContent().c_str());
-  //  commandQueryNode->SetTimeOut(command->GetTimeoutSec());
-
-  //  // Also update the corresponding response data node ID's name to avoid creation of a new response node
-  //  // (the existing response node will be updated).
-  //  vtkMRMLTextNode* responseDataNode = vtkMRMLTextNode::SafeDownCast(commandQueryNode->GetResponseDataNode());
-  //  if (responseDataNode != NULL)
-  //  {
-  //    responseDataNode->SetName(responseDeviceName.c_str());
-  //    responseDataNode->SetText(NULL);
-  //  }
-
-  //  // Sends the command string and register the query node
-  //  connectorNode->PushQuery(commandQueryNode);
-
-  //  return true;
-  //}
-  //else if (command->GetCommandVersion() == IGTL_HEADER_VERSION_2)
-  {
-    connectorNode->SendCommand(command);
-    return true;
-  }
+  connectorNode->SendCommand(command);
+  return true;
 
   return false;
 }
@@ -311,6 +270,7 @@ bool vtkSlicerOpenIGTLinkRemoteLogic::CancelCommand(vtkSlicerOpenIGTLinkCommand*
     return false;
   }
   this->CancelCommand(command->GetCommand());
+  return true;
 }
 
 //----------------------------------------------------------------------------
@@ -322,7 +282,7 @@ bool vtkSlicerOpenIGTLinkRemoteLogic::CancelCommand(igtlioCommand* command)
     return false;
   }
   for (std::vector<vtkSlicerOpenIGTLinkRemoteLogic::vtkInternal::CommandInfo>::iterator it = this->Internal->Commands.begin();
-       it != this->Internal->Commands.end(); ++it)
+    it != this->Internal->Commands.end(); ++it)
   {
     if (it->Command.GetPointer() == command)
     {
@@ -375,10 +335,10 @@ void vtkSlicerOpenIGTLinkRemoteLogic::UpdateFromMRMLScene()
   // Cancel and remove those commands for that the corresponding query node is deleted from the scene
   std::vector< vtkSlicerOpenIGTLinkRemoteLogic::vtkInternal::CommandInfo* > commandInfoToBeDeleted;
   for (std::vector<vtkSlicerOpenIGTLinkRemoteLogic::vtkInternal::CommandInfo>::iterator it = this->Internal->Commands.begin();
-       it != this->Internal->Commands.end(); ++it)
+    it != this->Internal->Commands.end(); ++it)
   {
     if (it->CommandQueryNode->GetID() != NULL
-        && this->GetMRMLScene()->GetNodeByID(it->CommandQueryNode->GetID()) == it->CommandQueryNode.GetPointer())
+      && this->GetMRMLScene()->GetNodeByID(it->CommandQueryNode->GetID()) == it->CommandQueryNode.GetPointer())
     {
       // command query node is still in the scene
       continue;
@@ -391,11 +351,11 @@ void vtkSlicerOpenIGTLinkRemoteLogic::UpdateFromMRMLScene()
   // Delete all cancelled items
   // Do it in a separate loop from the checking, as cancelling a command might have the side effect of adding/removing commands
   for (std::vector< vtkSlicerOpenIGTLinkRemoteLogic::vtkInternal::CommandInfo* >::iterator itemToDeleteIt = commandInfoToBeDeleted.begin();
-       itemToDeleteIt != commandInfoToBeDeleted.end(); ++itemToDeleteIt)
+    itemToDeleteIt != commandInfoToBeDeleted.end(); ++itemToDeleteIt)
   {
     // find and delete command item
     for (std::vector<vtkSlicerOpenIGTLinkRemoteLogic::vtkInternal::CommandInfo>::iterator it = this->Internal->Commands.begin();
-         it != this->Internal->Commands.end(); ++it)
+      it != this->Internal->Commands.end(); ++it)
     {
       if ((*itemToDeleteIt) == &(*it))
       {
@@ -437,7 +397,7 @@ void vtkSlicerOpenIGTLinkRemoteLogic::ProcessMRMLNodesEvents(vtkObject* caller, 
     vtkSmartPointer<vtkMRMLIGTLQueryNode> commandQueryNode;
     vtkSmartPointer<igtlioCommand> command;
     for (std::vector<vtkSlicerOpenIGTLinkRemoteLogic::vtkInternal::CommandInfo>::iterator it = this->Internal->Commands.begin();
-         it != this->Internal->Commands.end(); ++it)
+      it != this->Internal->Commands.end(); ++it)
     {
       if (it->CommandQueryNode.GetPointer() == caller)
       {

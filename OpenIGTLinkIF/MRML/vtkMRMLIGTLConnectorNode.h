@@ -219,11 +219,12 @@ public:
   // Calls PushNode() for all nodes with the "OpenIGTLinkIF.pushOnConnect" attribute set to "true"
   void PushOnConnect();
 
+  typedef std::list< vtkWeakPointer<vtkMRMLIGTLQueryNode> > QueryListType;
   // Query queueing mechanism is needed to send all queries from the connector thread.
   // Queries can be pushed to the end of the QueryQueue by calling RequestInvoke from any thread,
   // and they will be Invoked in the main thread.
   // Use a weak pointer to make sure we don't try to access the query node after it is deleted from the scene.
-  std::list< vtkWeakPointer<vtkMRMLIGTLQueryNode> > QueryWaitingQueue;
+  QueryListType QueryWaitingQueue;
   vtkMutexLock* QueryQueueMutex;
 
   //----------------------------------------------------------------
@@ -231,7 +232,7 @@ public:
   //----------------------------------------------------------------
   // Description:
   // Push query into the query list.
-  void PushQuery(vtkMRMLIGTLQueryNode* query);
+  int PushQuery(vtkMRMLIGTLQueryNode* query);
 
   // Description:
   // Removes query from the query list.
