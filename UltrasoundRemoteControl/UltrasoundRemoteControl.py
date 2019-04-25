@@ -89,6 +89,15 @@ class UltrasoundRemoteControlWidget(ScriptedLoadableModuleWidget):
     self.dynamicRangeSlider.setPageStep(10.0)
     ultrasoundParametersLayout.addRow("Dynamic Range:", self.dynamicRangeSlider)
 
+    self.powerSlider = slicer.qSlicerUltrasoundDoubleParameterSlider()
+    self.powerSlider.setParameterName("PowerDb")
+    self.powerSlider.setSuffix("Db")
+    self.powerSlider.setMinimum(-20.0)
+    self.powerSlider.setMaximum(0.0)
+    self.powerSlider.setSingleStep(1.0)
+    self.powerSlider.setPageStep(5.0)
+    ultrasoundParametersLayout.addRow("Power:", self.powerSlider)
+
     self.layout.addStretch(1)
 
     self.parameterWidgets = [
@@ -96,6 +105,7 @@ class UltrasoundRemoteControlWidget(ScriptedLoadableModuleWidget):
     self.gainSlider,
     self.frequencySlider,
     self.dynamicRangeSlider,
+    self.powerSlider
     ]
 
     self.connectorNodeSelector.connect("nodeActivated(vtkMRMLNode*)", self.onConnectorNodeSelected)
