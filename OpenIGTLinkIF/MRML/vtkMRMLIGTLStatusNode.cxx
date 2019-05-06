@@ -20,6 +20,9 @@
 #include "vtkMRMLScene.h"
 #include "vtkMRMLIGTLStatusNode.h"
 
+// OpenIGTLink includes
+#include <igtl_header.h>
+
 //------------------------------------------------------------------------------
 vtkMRMLNodeNewMacro(vtkMRMLIGTLStatusNode);
 
@@ -94,7 +97,7 @@ vtkTypeInt64 vtkMRMLIGTLStatusNode::GetSubCode()
 //----------------------------------------------------------------------------
 int vtkMRMLIGTLStatusNode::SetErrorName(const char* name)
 {
-  if (strlen(name) <= 20)
+  if (strlen(name) <= IGTL_HEADER_NAME_SIZE)
   {
     this->ErrorName = name;
     this->InvokeEvent(StatusModifiedEvent, NULL);
@@ -132,7 +135,7 @@ const char* vtkMRMLIGTLStatusNode::GetStatusString()
 int vtkMRMLIGTLStatusNode::SetStatus(vtkTypeUInt16 code, vtkTypeUInt16 subcode, const char* errorName, const char* statusString)
 {
   if (code < STATUS_NUM_TYPES &&
-      strlen(errorName) <= 20)
+      strlen(errorName) <= IGTL_HEADER_NAME_SIZE)
   {
     this->Code = code;
     this->SubCode = subcode;
