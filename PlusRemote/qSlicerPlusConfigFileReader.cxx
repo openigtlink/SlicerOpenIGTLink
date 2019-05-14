@@ -38,7 +38,7 @@
 
 // VTK includes
 #include <vtkSmartPointer.h>
-#include <vtksys\SystemTools.hxx>
+#include <vtksys/SystemTools.hxx>
 
 // std includes
 #include <cctype>
