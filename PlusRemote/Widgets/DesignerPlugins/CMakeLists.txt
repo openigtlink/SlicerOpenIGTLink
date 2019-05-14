@@ -9,11 +9,14 @@ set(${KIT}_SRCS
   qSlicerPlusRemoteModuleWidgetsPlugin.h
   qMRMLPlusServerLauncherRemoteWidgetPlugin.cxx
   qMRMLPlusServerLauncherRemoteWidgetPlugin.h
+  qMRMLPlusServerLauncherTableViewPlugin.cxx
+  qMRMLPlusServerLauncherTableViewPlugin.h
   )
 
 set(${KIT}_MOC_SRCS
   qMRMLPlusServerLauncherRemoteWidgetPlugin.h
   qSlicerPlusRemoteModuleWidgetsPlugin.h
+  qMRMLPlusServerLauncherTableViewPlugin.h
   )
 
 set(${KIT}_TARGET_LIBRARIES

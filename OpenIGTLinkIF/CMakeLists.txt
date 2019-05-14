@@ -53,10 +53,13 @@ set(MODULE_INCLUDE_DIRECTORIES
 set(MODULE_SRCS
   qSlicerOpenIGTLinkIFModule.cxx
   qSlicerOpenIGTLinkIFModule.h
+  qSlicerTextFileReader.cxx
+  qSlicerTextFileReader.h
   )
 
 set(MODULE_MOC_SRCS
   qSlicerOpenIGTLinkIFModule.h
+  qSlicerTextFileReader.h
   )
 
 set(MODULE_UI_SRCS

@@ -15,17 +15,23 @@
 // Qt includes
 #include <QTimer>
 
+// Slicer base includes
+#include <qSlicerCoreApplication.h>
+#include <qSlicerCoreIOManager.h>
+#include <qSlicerNodeWriter.h>
 
-//-----------------------------------------------------------------------------
-#include "qSlicerCoreApplication.h"
+// OpenIGTLink includes
+#include <igtlObjectFactoryBase.h>
 
-// OpenIGTLinkIF MRML includes
+// OpenIGTLinkIF includes
 #include "qSlicerOpenIGTLinkIFModule.h"
 #include "qSlicerOpenIGTLinkIFModuleWidget.h"
+#include "qSlicerTextFileReader.h"
 
 // OpenIGTLinkIF Logic includes
-#include <vtkSlicerOpenIGTLinkIFLogic.h>
+#include "vtkSlicerOpenIGTLinkIFLogic.h"
 
+// OpenIGTLinkIF MRML includes
 #include "vtkMRMLIGTLConnectorNode.h"
 
 
@@ -117,6 +123,16 @@ QStringList qSlicerOpenIGTLinkIFModule::categories() const
 void qSlicerOpenIGTLinkIFModule::setup()
 {
   this->Superclass::setup();
+
+  qSlicerCoreApplication* app = qSlicerCoreApplication::application();
+  qSlicerTextFileReader* textFileReader = new qSlicerTextFileReader(this);
+  app->coreIOManager()->registerIO(textFileReader);
+  app->coreIOManager()->registerIO(new qSlicerNodeWriter("TextFileImporter", textFileReader->fileType(), QStringList() << "vtkMRMLTextNode", false, this));
+
+  // If the object factory is initialized simultaneously on multiple threads,
+  // there can be a conflict between factory initializations.
+  // This calls the ensures that the initialization is called on a single thread
+  igtl::ObjectFactoryBase::CreateInstance("");
 }
 
 //-----------------------------------------------------------------------------

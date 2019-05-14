@@ -25,19 +25,25 @@
 #include <QTimer>
 #include <QtPlugin>
 
-// Slicer includes
-#include "qSlicerCoreApplication.h"
-#include "qSlicerApplication.h"
-#include <vtkSlicerVersionConfigure.h> // For Slicer_VERSION_MAJOR, Slicer_VERSION_MINOR
-
-#include <qSlicerPlusRemoteModuleWidget.h>
-#include <qSlicerPlusRemoteModule.h>
-#include <vtkSlicerPlusRemoteLogic.h>
-
+// MRML includes
 #include <vtkMRMLScene.h>
 
-// Plus remote includes
+// Slicer includes
+#include <qSlicerCoreApplication.h>
+#include <qSlicerApplication.h>
+#include <qSlicerCoreIOManager.h>
+
+// PlusRemote includes
+#include "qSlicerPlusConfigFileReader.h"
+#include "qSlicerPlusRemoteModule.h"
+#include "qSlicerPlusRemoteModuleWidget.h"
+
+// PlusRemote logic includes
+#include "vtkSlicerPlusRemoteLogic.h"
+
+// PlusRemote mrml includes
 #include <vtkMRMLPlusRemoteNode.h>
+#include <vtkMRMLPlusServerLauncherNode.h>
 
 static const double UPDATE_PLUS_REMOTE_NODES_PERIOD_SEC = 0.2;
 
@@ -151,6 +157,9 @@ void qSlicerPlusRemoteModule::setup()
 {
   Q_D(qSlicerPlusRemoteModule);
   this->Superclass::setup();
+
+  qSlicerCoreApplication* app = qSlicerCoreApplication::application();
+  app->coreIOManager()->registerIO(new qSlicerPlusConfigFileReader(this));
 }
 
 //-----------------------------------------------------------------------------
@@ -178,13 +187,13 @@ void qSlicerPlusRemoteModule::onNodeAddedEvent(vtkObject*, vtkObject* node)
 {
   Q_D(qSlicerPlusRemoteModule);
 
-  vtkMRMLPlusRemoteNode* plusRemoteNode = vtkMRMLPlusRemoteNode::SafeDownCast(node);
-  if (plusRemoteNode)
+  vtkMRMLPlusServerLauncherNode* plusServerLauncherNode = vtkMRMLPlusServerLauncherNode::SafeDownCast(node);
+  if (plusServerLauncherNode)
   {
     // If the timer is not active
     if (!d->UpdateAllPlusRemoteNodesTimer.isActive())
     {
-      d->UpdateAllPlusRemoteNodesTimer.start(UPDATE_PLUS_REMOTE_NODES_PERIOD_SEC * 1000.0);
+      d->UpdateAllPlusRemoteNodesTimer.start(1.0 * 1000.0);
     }
   }
 }
@@ -226,4 +235,6 @@ void qSlicerPlusRemoteModule::updateAllPlusRemoteNodes()
     return;
   }
   plusRemoteLogic->UpdateAllPlusRemoteNodes();
+  plusRemoteLogic->UpdateAllLaunchers();
+  plusRemoteLogic->UpdateAllServers();
 }

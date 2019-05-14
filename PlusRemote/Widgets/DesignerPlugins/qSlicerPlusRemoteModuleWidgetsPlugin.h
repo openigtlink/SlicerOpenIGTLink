@@ -33,6 +33,7 @@
 // PlusRemote includes
 #include "qSlicerPlusRemoteModuleWidgetsPluginsExport.h"
 #include "qMRMLPlusServerLauncherRemoteWidgetPlugin.h"
+#include "qMRMLPlusServerLauncherTableViewPlugin.h"
 
 // \class Group the plugins in one library
 class Q_SLICER_MODULE_PLUSREMOTE_WIDGETS_PLUGINS_EXPORT qSlicerPlusRemoteModuleWidgetsPlugin
@@ -50,6 +51,7 @@ public:
   {
     QList<QDesignerCustomWidgetInterface*> plugins;
     plugins << new qMRMLPlusServerLauncherRemoteWidgetPlugin;
+    plugins << new qMRMLPlusServerLauncherTableViewPlugin;
     return plugins;
   }
 };

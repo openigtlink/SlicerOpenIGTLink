@@ -42,13 +42,19 @@
 #include "igtlioCommand.h"
 
 // For referencing own MRML node
+class vtkCollection;
 class vtkMRMLAnnotationROINode;
 class vtkMRMLDisplayableNode;
 class vtkMRMLIGTLConnectorNode;
 class vtkMRMLPlusRemoteNode;
 class vtkMRMLLinearTransformNode;
 class vtkMRMLVolumeNode;
+class vtkMRMLPlusServerLauncherNode;
+class vtkMRMLPlusServerNode;
+
 struct ParameterNodeCommands;
+struct LauncherCommands;
+struct ServerCommands;
 
 #include "vtkSlicerPlusRemoteModuleLogicExport.h"
 
@@ -68,9 +74,13 @@ protected:
   /// Register MRML Node classes to Scene. Gets called automatically when the MRMLScene is attached to this logic class.
   virtual void RegisterNodes();
 
+
+  void ProcessMRMLSceneEvents(vtkObject *caller, unsigned long event, void *callData) override;
+
   /// Initialize listening to MRML events
-  virtual void SetMRMLSceneInternal(vtkMRMLScene* newScene);
-  virtual void OnMRMLSceneNodeAdded(vtkMRMLNode* node);
+  virtual void SetMRMLSceneInternal(vtkMRMLScene* newScene) override;
+  virtual void OnMRMLSceneNodeAdded(vtkMRMLNode* node) override;
+  virtual void OnMRMLSceneNodeAboutToBeRemoved(vtkMRMLNode* node);
 
 public:
   void CreateDefaultParameterSet();
@@ -115,6 +125,60 @@ public:
   /// snapshot timer > 0
   void UpdateAllPlusRemoteNodes();
 
+  /// Calls UpdateLauncher on all vtkMRMLPlusServerLauncherNode in the Scene
+  /// \sa UpdateLauncher()
+  void UpdateAllLaunchers();
+
+  /// Update a vtkMRMLPlusServerLauncherNode
+  /// Calls UpdateLauncherConnectorNode, SendGetRunningServersCommand and if the launcher is not connected, sets status
+  /// of all servers to OFF.
+  /// \sa UpdateLauncherConnectorNode()
+  /// \sa SendGetRunningServersCommand()
+  void UpdateLauncher(vtkMRMLPlusServerLauncherNode* launcherNode);
+
+  /// If the launcher has no connector node, calls GetOrAddConnectorNode and then updates the launcher hostname/port
+  // \sa GetOrAddConnectorNode()
+  void UpdateLauncherConnectorNode(vtkMRMLPlusServerLauncherNode* launcherNode);
+
+  /// Send a command to the connector node for the specified launcher in order to get a list of the currently running servers
+  /// \sa OnGetRunningServersCompleted()
+  void SendGetRunningServersCommand(vtkMRMLPlusServerLauncherNode* launcherNode);
+
+  /// Searches the scene for a vtkMRMLIGTLConnector node matching the hostname and port specified by the launcher node and
+  /// creates one if it does not exist
+  vtkMRMLIGTLConnectorNode* GetOrAddConnectorNode(std::string hostname, int port, std::string baseName="");
+
+  /// Calls UpdateServer on all vtkMRMLPlusServerNode in the scene
+  /// \sa UpdateServer()
+  void UpdateAllServers();
+
+  /// If a server node is controlled locally and it's state doesn't match the desired state, then calls SendStartServerCommand
+  /// or SendStopServerCommand to Start/Stop the server and match the desired state
+  /// \sa SendStartServerCommand()
+  /// \sa SendStopServerCommand()
+  void UpdateServer(vtkMRMLPlusServerNode* serverNode);
+
+  /// Send a command to the connector node to start the specified server
+  void SendStartServerCommand(vtkMRMLPlusServerNode* serverNode);
+
+  /// Send a command to the connector node to stop the specified server
+  void SendStopServerCommand(vtkMRMLPlusServerNode* serverNode);
+
+  void UpdatePlusOpenIGTLinkConnectors(vtkMRMLPlusServerNode* serverNode);
+
+  /// Callback function when a response is received for a GetRunningServersCommand.
+  /// Sends GetConfigFileContentsCompleted if an unknown remote server is detected
+  /// \sa SendGetRunningServersCommand()
+  /// \sa OnGetConfigFileContentsCompleted()
+  static void OnGetRunningServersCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
+
+  /// Callback function when a response is received for GetConfigFileContentsCompleted.
+  /// sa OnGetRunningServersCompleted()
+  static void OnGetConfigFileContentsCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
+
+  /// Callback when a command is received on the connector node used by a launcher node
+  static void OnLauncherCommandReceived(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
+
   ///////////////////////
   //Static methods
 
@@ -134,32 +198,32 @@ protected:
 
   ///////////////////////
   // Callback functions for when commands are received
-  static void onRequestCaptureDeviceIDsCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
-  static void onRequestVolumeReconstructorDeviceIDsCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
-  static void onRequestDeviceIDsCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
+  static void OnRequestCaptureDeviceIDsCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
+  static void OnRequestVolumeReconstructorDeviceIDsCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
+  static void OnRequestDeviceIDsCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
 
-  static void onRecordingStarted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
-  static void onRecordingCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
+  static void OnRecordingStarted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
+  static void OnRecordingCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
 
-  //static void onOfflineVolumeReconstructionStarted(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
-  static void onOfflineVolumeReconstructionCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
+  //static void OnOfflineVolumeReconstructionStarted(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata);
+  static void OnOfflineVolumeReconstructionCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
 
-  static void onScoutScanStarted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
-  static void onScoutScanRecorded(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
-  static void onScoutScanCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
+  static void OnScoutScanStarted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
+  static void OnScoutScanRecorded(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
+  static void OnScoutScanCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
 
-  static void onLiveVolumeReconstructionStarted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
-  static void onLiveVolumeSnapshotAquired(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
-  static void onLiveVolumeReconstructionCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
+  static void OnLiveVolumeReconstructionStarted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
+  static void OnLiveVolumeSnapshotAquired(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
+  static void OnLiveVolumeReconstructionCompleted(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
 
-  static void onPrintCommandResponseRequested(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
+  static void OnPrintCommandResponseRequested(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
 
   ///////////////////////
   // Delayed callbacks called when the required volumes in the scene are updated, invoked when the corresponding devices are modified
-  static void onOfflineVolumeReconstructedFinalize(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
-  static void onScoutVolumeReconstructedFinalize(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
-  static void onSnapshotAquiredFinalize(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
-  static void onLiveVolumeReconstructedFinalized(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
+  static void OnOfflineVolumeReconstructedFinalize(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
+  static void OnScoutVolumeReconstructedFinalize(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
+  static void OnSnapshotAquiredFinalize(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
+  static void OnLiveVolumeReconstructedFinalized(vtkObject* caller, unsigned long eid, void* clientdata, void* calldata);
 
   double CommandTimeoutSec;
   bool CommandBlocking;
@@ -167,6 +231,12 @@ protected:
 
   typedef std::map<vtkMRMLPlusRemoteNode*, ParameterNodeCommands> ParameterNodeMapType;
   ParameterNodeMapType NodeCommandMap;
+
+  typedef std::map<vtkMRMLPlusServerLauncherNode*, LauncherCommands> LauncherCommandMapType;
+  LauncherCommandMapType LauncherCommandMap;
+
+  typedef std::map<vtkMRMLPlusServerNode*, ServerCommands> ServerCommandMapType;
+  ServerCommandMapType ServerCommandMap;
 
 private:
   vtkSlicerPlusRemoteLogic(const vtkSlicerPlusRemoteLogic&); // Not implemented

@@ -25,11 +25,17 @@ set(MODULE_SRCS
   qSlicer${MODULE_NAME}Module.h
   qSlicer${MODULE_NAME}ModuleWidget.cxx
   qSlicer${MODULE_NAME}ModuleWidget.h
+  qSlicerPlusConfigFileReader.cxx
+  qSlicerPlusConfigFileReader.h
+  qSlicerPlusConfigFileIOOptionsWidget.cxx
+  qSlicerPlusConfigFileIOOptionsWidget.h
   )
 
 set(MODULE_MOC_SRCS
   qSlicer${MODULE_NAME}Module.h
   qSlicer${MODULE_NAME}ModuleWidget.h
+  qSlicerPlusConfigFileReader.h
+  qSlicerPlusConfigFileIOOptionsWidget.h
   )
   
 set(MODULE_TARGET_LIBRARIES
@@ -44,6 +50,7 @@ set(MODULE_TARGET_LIBRARIES
 
 set(MODULE_UI_SRCS
   Resources/UI/qSlicer${MODULE_NAME}ModuleWidget.ui
+  Resources/UI/qSlicerPlusConfigFileIOOptionsWidget.ui
   )
 
 set(MODULE_RESOURCES

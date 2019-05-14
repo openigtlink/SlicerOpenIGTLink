@@ -1,15 +1,39 @@
-#include "vtkObjectFactory.h"
+/*=auto=========================================================================
+
+  Portions (c) Copyright 2009 Brigham and Women's Hospital (BWH) All Rights Reserved.
+
+  See Doc/copyright/copyright.txt
+  or http://www.slicer.org/copyright/copyright.txt for details.
+
+  Program:   3D Slicer
+  Module:    $RCSfile: vtkMRMLTextNode.cxx,v $
+  Date:      $Date: 2006/03/19 17:12:29 $
+  Version:   $Revision: 1.3 $
+
+=========================================================================auto=*/
+
+// SlicerOpenIGTLink MRML includes
 #include "vtkMRMLTextNode.h"
+#include "vtkMRMLTextStorageNode.h"
+
+// MRML includes
+#include <vtkMRMLScene.h>
+
+// VTK includes
+#include "vtkObjectFactory.h"
 #include "vtkXMLUtilities.h"
+
+const int LENGTH_BEFORE_STORAGE_NODE = 256;
 
 //----------------------------------------------------------------------------
 vtkMRMLNodeNewMacro(vtkMRMLTextNode);
 
 //-----------------------------------------------------------------------------
 vtkMRMLTextNode::vtkMRMLTextNode()
+  : Text(NULL)
+  , Encoding(ENCODING_US_ASCII)
+  , ForceStorageNode(false)
 {
-  this->Text = NULL;
-  this->Encoding = ENCODING_US_ASCII;
 }
 
 //-----------------------------------------------------------------------------
@@ -22,7 +46,7 @@ vtkMRMLTextNode::~vtkMRMLTextNode()
 void vtkMRMLTextNode::SetText(const char* text)
 {
   vtkDebugMacro( << this->GetClassName() << " (" << this << "): setting Text to " << (text ? text : "(null)"));
-  \
+
   if (this->Text == nullptr && text == nullptr)
   {
     return;
@@ -59,34 +83,10 @@ void vtkMRMLTextNode::ReadXMLAttributes(const char** atts)
 {
   int disabledModify = this->StartModify();
   Superclass::ReadXMLAttributes(atts);
-
-  const char* attName;
-  const char* attValue;
-  while (*atts != NULL)
-  {
-    attName = *(atts++);
-    attValue = *(atts++);
-    if (!strcmp(attName, "text"))
-    {
-      this->SetText(attValue);
-    }
-    else if (!strcmp(attName, "encoding"))
-    {
-      std::stringstream ss;
-      ss << attValue;
-      int encoding = 0;
-      ss >> encoding;
-      if (encoding >= 3)
-      {
-        this->SetEncoding(encoding);
-      }
-      else
-      {
-        vtkErrorMacro("Failed to set encoding. Invalid input value: " << attValue);
-      }
-    }
-  }
-
+  vtkMRMLReadXMLBeginMacro(atts);
+  vtkMRMLReadXMLStringMacro(text, Text);
+  vtkMRMLReadXMLIntMacro(encoding, Encoding);
+  vtkMRMLReadXMLEndMacro();
   this->EndModify(disabledModify);
 }
 
@@ -94,18 +94,13 @@ void vtkMRMLTextNode::ReadXMLAttributes(const char** atts)
 void vtkMRMLTextNode::WriteXML(ostream& of, int nIndent)
 {
   Superclass::WriteXML(of, nIndent);
-
-  vtkIndent indent(nIndent);
-
-  of << indent << " text=\"";
-  if (this->GetText() != NULL)
+  vtkMRMLWriteXMLBeginMacro(of);
+  if (!this->GetStorageNode())
   {
-    // Write to XML, encoding special characters, such as " ' \ < > &
-    vtkXMLUtilities::EncodeString(this->GetText(), VTK_ENCODING_NONE, of, VTK_ENCODING_NONE, 1 /* encode special characters */);
+    vtkMRMLWriteXMLStringMacro(text, Text);
   }
-  of << "\"";
-
-  of << indent << " encoding=\"" << this->GetEncoding() << "\"";
+  vtkMRMLWriteXMLIntMacro(encoding, Encoding);
+  vtkMRMLWriteXMLEndMacro();
 }
 
 //----------------------------------------------------------------------------
@@ -113,11 +108,10 @@ void vtkMRMLTextNode::Copy(vtkMRMLNode* anode)
 {
   int disabledModify = this->StartModify();
   Superclass::Copy(anode);
-  vtkMRMLTextNode* node = vtkMRMLTextNode::SafeDownCast(anode);
-
-  this->SetText(node->GetText());
-  this->SetEncoding(node->GetEncoding());
-
+  vtkMRMLCopyBeginMacro(anode);
+  vtkMRMLCopyStringMacro(Text);
+  vtkMRMLCopyIntMacro(Encoding);
+  vtkMRMLCopyEndMacro();
   this->EndModify(disabledModify);
 }
 
@@ -125,8 +119,47 @@ void vtkMRMLTextNode::Copy(vtkMRMLNode* anode)
 void vtkMRMLTextNode::PrintSelf(ostream& os, vtkIndent indent)
 {
   Superclass::PrintSelf(os, indent);
-
-  os << "Text: " << ((this->GetText()) ? this->GetText() : "(none)") << "\n";
-  os << "Encoding: " << this->GetEncoding() << "\n";
+  vtkMRMLPrintBeginMacro(os, indent);
+  vtkMRMLPrintStringMacro(Text);
+  vtkMRMLPrintIntMacro(Encoding);
+  vtkMRMLPrintEndMacro();
 }
 
+//---------------------------------------------------------------------------
+std::string vtkMRMLTextNode::GetDefaultStorageNodeClassName(const char* filename)
+{
+  if (!this->Text || !this->Scene)
+  {
+    return nullptr;
+  }
+
+  if (!this->ForceStorageNode)
+  {
+    int length = strlen(this->Text);
+    if (length < LENGTH_BEFORE_STORAGE_NODE)
+    {
+      return "";
+    }
+  }
+  return "vtkMRMLTextStorageNode";
+}
+
+//---------------------------------------------------------------------------
+vtkMRMLStorageNode* vtkMRMLTextNode::CreateDefaultStorageNode()
+{
+  if (!this->Text || !this->Scene)
+  {
+    return nullptr;
+  }
+
+  if (!this->ForceStorageNode)
+  {
+    int length = strlen(this->Text);
+    if (length < LENGTH_BEFORE_STORAGE_NODE)
+    {
+      return nullptr;
+    }
+  }
+  return vtkMRMLTextStorageNode::SafeDownCast(
+    this->Scene->CreateNodeByClass(this->GetDefaultStorageNodeClassName().c_str()));
+}
