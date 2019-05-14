@@ -199,6 +199,9 @@ void qSlicerPlusRemoteModuleWidget::setup()
 
   connect(d->ConfigFilenameLineEdit, SIGNAL(textEdited(QString)), this, SLOT(updateParameterNodeFromGui()));
 
+  d->PlusLauncherControlTab->layout()->setAlignment(Qt::AlignTop);
+  d->PlusServerControlTab->layout()->setAlignment(Qt::AlignTop);
+
   d->logic()->CreateDefaultParameterSet();
 }
 
