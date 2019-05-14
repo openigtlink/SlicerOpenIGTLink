@@ -39,7 +39,7 @@
 
 // PlusRemote includes
 #include "vtkMRMLPlusRemoteNode.h"
-#include "vtkMRMLPlusServerLauncherRemoteNode.h"
+#include "vtkMRMLPlusServerLauncherNode.h"
 #include "vtkSlicerPlusRemoteLogic.h"
 
 //-----------------------------------------------------------------------------
@@ -159,7 +159,7 @@ void qSlicerPlusRemoteModuleWidget::setup()
   connect(d->ParameterNodeSelector, SIGNAL(nodeActivated(vtkMRMLNode*)), this, SLOT(onParameterSetSelected(vtkMRMLNode*)));
   connect(d->ParameterNodeSelector, SIGNAL(currentNodeChanged(vtkMRMLNode*)), this, SLOT(onParameterSetSelected(vtkMRMLNode*)));
 
-  connect(d->OpenIGTLinkConnectorNodeSelector, SIGNAL(nodeActivated(vtkMRMLNode*)), this, SLOT(updateParameterNodeFromGui(vtkMRMLNode*)));
+  connect(d->OpenIGTLinkConnectorNodeSelector, SIGNAL(nodeActivated(vtkMRMLNode*)), this, SLOT(updateParameterNodeFromGui()));
   connect(d->OpenIGTLinkConnectorNodeSelector, SIGNAL(currentNodeChanged(vtkMRMLNode*)), this, SLOT(updateParameterNodeFromGui()));
 
   connect(d->CaptureIDSelector, SIGNAL(currentTextChanged(QString)), this, SLOT(updateParameterNodeFromGui()));
@@ -695,7 +695,7 @@ void qSlicerPlusRemoteModuleWidget::updateParameterNodeFromGui()
     qvtkReconnect(oldConnectorNode, newConnectorNode, vtkMRMLIGTLConnectorNode::ConnectedEvent, this, SLOT(onConnectorNodeConnected()));
     qvtkReconnect(oldConnectorNode, newConnectorNode, vtkMRMLIGTLConnectorNode::DisconnectedEvent, this, SLOT(onConnectorNodeDisconnected()));
     d->ParameterNode->SetAndObserveOpenIGTLinkConnectorNode(newConnectorNode);
-    if (newConnectorNode->GetState() == vtkMRMLIGTLConnectorNode::StateConnected)
+    if (newConnectorNode && newConnectorNode->GetState() == vtkMRMLIGTLConnectorNode::StateConnected)
     {
       this->onConnectorNodeConnected();
     }

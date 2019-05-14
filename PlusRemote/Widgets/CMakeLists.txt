@@ -12,14 +12,18 @@ set(${KIT}_INCLUDE_DIRECTORIES
 set(${KIT}_SRCS
   qMRMLPlusServerLauncherRemoteWidget.cxx
   qMRMLPlusServerLauncherRemoteWidget.h
+  qMRMLPlusServerLauncherTableView.cxx
+  qMRMLPlusServerLauncherTableView.h
   )
 
 set(${KIT}_MOC_SRCS
   qMRMLPlusServerLauncherRemoteWidget.h
+  qMRMLPlusServerLauncherTableView.h
   )
 
 set(${KIT}_UI_SRCS
   Resources/UI/qMRMLPlusServerLauncherRemoteWidget.ui
+  Resources/UI/qMRMLPlusServerLauncherTableView.ui
   )
 
 set(${KIT}_RESOURCES
@@ -29,6 +33,7 @@ set(${KIT}_RESOURCES
 set(${KIT}_TARGET_LIBRARIES
   vtkSlicerOpenIGTLinkIFModuleMRML
   vtkSlicer${MODULE_NAME}ModuleMRML
+  vtkSlicer${MODULE_NAME}ModuleLogic
   )
 
 #-----------------------------------------------------------------------------

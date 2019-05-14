@@ -6,223 +6,85 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>345</width>
-    <height>198</height>
+    <width>557</width>
+    <height>278</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>Plus Server Launcher Remote</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <property name="sizeConstraint">
     <enum>QLayout::SetMinimumSize</enum>
    </property>
    <item>
-    <widget class="ctkCollapsibleGroupBox" name="LauncherConnectionGroupBox">
-     <property name="title">
-      <string>Launcher connection info</string>
-     </property>
-     <layout class="QHBoxLayout" name="HorizontalLayout">
-      <item>
-       <widget class="QLabel" name="HostnameLabel">
-        <property name="text">
-         <string>Hostname:Port:</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="HostnameLineEdit">
-        <property name="text">
-         <string>localhost:18904</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="LauncherConnectCheckBox">
-        <property name="text">
-         <string>Connect</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QToolButton" name="LauncherStatusButton">
-        <property name="text">
-         <string>...</string>
-        </property>
-        <property name="icon">
-         <iconset resource="../qMRMLPlusServerLauncherRemoteWidget.qrc">
-          <normaloff>:/Icons/PlusLauncherRemoteDisconnected.png</normaloff>:/Icons/PlusLauncherRemoteDisconnected.png</iconset>
-        </property>
-        <property name="iconSize">
-         <size>
-          <width>30</width>
-          <height>30</height>
-         </size>
-        </property>
-        <property name="checkable">
-         <bool>true</bool>
-        </property>
-        <property name="popupMode">
-         <enum>QToolButton::InstantPopup</enum>
-        </property>
-        <property name="toolButtonStyle">
-         <enum>Qt::ToolButtonIconOnly</enum>
-        </property>
-        <property name="autoRaise">
-         <bool>true</bool>
-        </property>
-        <property name="arrowType">
-         <enum>Qt::NoArrow</enum>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="LoadConfigLayout">
-     <item>
-      <widget class="QLabel" name="ConfigFileLabel">
+    <layout class="QFormLayout" name="formLayout">
+     <item row="2" column="0">
+      <widget class="QLabel" name="HostnameLabel">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
        <property name="text">
-        <string>Config file:</string>
+        <string>Hostname:</string>
        </property>
       </widget>
      </item>
-     <item>
-      <widget class="qMRMLNodeComboBox" name="ConfigFileSelectorComboBox">
+     <item row="2" column="1">
+      <widget class="QLineEdit" name="HostnameLineEdit">
        <property name="enabled">
         <bool>false</bool>
        </property>
-       <property name="focusPolicy">
-        <enum>Qt::WheelFocus</enum>
+       <property name="text">
+        <string>localhost</string>
        </property>
-       <property name="nodeTypes">
-        <stringlist>
-         <string>vtkMRMLTextNode</string>
-        </stringlist>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="PortLabel">
+       <property name="enabled">
+        <bool>true</bool>
        </property>
-       <property name="addEnabled">
+       <property name="text">
+        <string>Port:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QLineEdit" name="PortLineEdit">
+       <property name="enabled">
         <bool>false</bool>
        </property>
+       <property name="text">
+        <string>18904</string>
+       </property>
       </widget>
      </item>
-     <item>
-      <widget class="QToolButton" name="LoadConfigFileButton">
+     <item row="1" column="1">
+      <widget class="qMRMLNodeComboBox" name="PlusServerLauncherComboBox">
+       <property name="nodeTypes">
+        <stringlist>
+         <string>vtkMRMLPlusServerLauncherNode</string>
+        </stringlist>
+       </property>
+       <property name="noneEnabled">
+        <bool>true</bool>
+       </property>
+       <property name="renameEnabled">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label">
        <property name="text">
-        <string>...</string>
+        <string>Launcher node:</string>
        </property>
       </widget>
      </item>
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="LaunchServerLayout">
-     <item>
-      <spacer name="HorizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <widget class="QPushButton" name="StartStopServerButton">
-       <property name="text">
-        <string>Launch server</string>
-       </property>
-       <property name="iconSize">
-        <size>
-         <width>20</width>
-         <height>20</height>
-        </size>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <widget class="QGroupBox" name="LogGroupBox">
-     <property name="visible">
-      <bool>false</bool>
-     </property>
-     <property name="title">
-      <string>Log</string>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout_4">
-      <item>
-       <widget class="QTextEdit" name="ServerLogTextEdit">
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="ClearLogButton">
-        <property name="text">
-         <string>Clear</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="HorizontalLayout_3">
-        <item>
-         <widget class="QLabel" name="LogLevelLabel">
-          <property name="text">
-           <string>Log level:</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QComboBox" name="LogLevelComboBox"/>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="ctkCollapsibleGroupBox" name="ConfigFileGroupBox">
-     <property name="title">
-      <string>Config File</string>
-     </property>
-     <property name="collapsed">
-      <bool>true</bool>
-     </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_5">
-      <item>
-       <layout class="QVBoxLayout" name="verticalLayout">
-        <item>
-         <widget class="QTextEdit" name="ConfigFileTextEdit">
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <spacer name="VerticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>40</height>
-      </size>
-     </property>
-    </spacer>
+    <widget class="qMRMLPlusServerLauncherTableView" name="PlusServerLauncherTable"/>
    </item>
   </layout>
  </widget>
@@ -240,10 +102,9 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>ctkCollapsibleGroupBox</class>
-   <extends>QGroupBox</extends>
-   <header>ctkCollapsibleGroupBox.h</header>
-   <container>1</container>
+   <class>qMRMLPlusServerLauncherTableView</class>
+   <extends>qMRMLWidget</extends>
+   <header>qMRMLPlusServerLauncherTableView.h</header>
   </customwidget>
  </customwidgets>
  <resources>
@@ -251,18 +112,50 @@
  </resources>
  <connections>
   <connection>
-   <sender>LauncherStatusButton</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>LogGroupBox</receiver>
-   <slot>setVisible(bool)</slot>
+   <sender>qMRMLPlusServerLauncherRemoteWidget</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>PlusServerLauncherTable</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>358</x>
-     <y>44</y>
+     <x>154</x>
+     <y>136</y>
     </hint>
     <hint type="destinationlabel">
-     <x>49</x>
-     <y>14</y>
+     <x>154</x>
+     <y>150</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>PlusServerLauncherComboBox</sender>
+   <signal>currentNodeChanged(vtkMRMLNode*)</signal>
+   <receiver>PlusServerLauncherTable</receiver>
+   <slot>setLauncherNode(vtkMRMLNode*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>154</x>
+     <y>18</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>154</x>
+     <y>149</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>qMRMLPlusServerLauncherRemoteWidget</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>PlusServerLauncherComboBox</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>249</x>
+     <y>168</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>249</x>
+     <y>18</y>
     </hint>
    </hints>
   </connection>

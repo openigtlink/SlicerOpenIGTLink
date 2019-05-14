@@ -18,21 +18,20 @@ set(${KIT}_SRCS
 if(OpenIGTLink_PROTOCOL_VERSION GREATER 1)
   list(APPEND ${KIT}_SRCS
     vtkMRMLIGTLQueryNode.cxx
+    vtkMRMLIGTLSensorNode.cxx
+    vtkMRMLIGTLTrackingDataBundleNode.cxx
+    vtkMRMLIGTLTrackingDataQueryNode.cxx
     vtkMRMLImageMetaListNode.cxx
     vtkMRMLLabelMetaListNode.cxx
     vtkMRMLTextNode.cxx
-    vtkMRMLIGTLTrackingDataQueryNode.cxx
-    vtkMRMLIGTLTrackingDataBundleNode.cxx
-    vtkMRMLIGTLSensorNode.cxx
+    vtkMRMLTextStorageNode.cxx
     vtkSlicerOpenIGTLinkCommand.cxx
-    vtkSlicerOpenIGTLinkCommand.h
     )
 endif()
 
 if(SlicerOpenIGTLink_USE_VP9)
   list(APPEND ${KIT}_SRCS
     vtkIGTLVP9VolumeCodec.cxx
-    vtkIGTLVP9VolumeCodec.h
   )
 endif()
 

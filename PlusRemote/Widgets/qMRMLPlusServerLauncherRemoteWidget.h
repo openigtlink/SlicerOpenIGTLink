@@ -32,7 +32,7 @@
 
 class qMRMLPlusServerLauncherRemoteWidgetPrivate;
 class vtkMRMLIGTLConnectorNode;
-class vtkMRMLPlusServerLauncherRemoteNode;
+class vtkMRMLPlusServerLauncherNode;
 class vtkMRMLNode;
 
 /// \ingroup Slicer_QtModules_PlusRemote
@@ -40,7 +40,6 @@ class Q_SLICER_MODULE_PLUSREMOTE_WIDGETS_EXPORT qMRMLPlusServerLauncherRemoteWid
 {
   Q_OBJECT
   QVTK_OBJECT
-  Q_PROPERTY(bool logVisible READ logVisible WRITE setLogVisible)
 
 public:
   typedef qMRMLWidget Superclass;
@@ -49,42 +48,17 @@ public:
   /// Destructor
   virtual ~qMRMLPlusServerLauncherRemoteWidget();
 
-  /// Get the segment editor parameter set node
-  Q_INVOKABLE vtkMRMLPlusServerLauncherRemoteNode* plusRemoteLauncherNode()const;
-
-  /// Show/hide the log section
-  bool logVisible() const;
-  void setLogVisible(bool);
-
 public slots:
   /// Set the MRML scene associated with the widget
   virtual void setMRMLScene(vtkMRMLScene* newScene);
-
-  /// Create a parameter node if one doesn't exist
-  virtual void initializeParameterSetNode();
 
   ///
   virtual void onMRMLSceneEndCloseEvent();
 
   /// Update widget state from the MRML scene
   virtual void updateWidgetFromMRML();
-  virtual void updateStatusIcon();
-
-  ///
-  void onConnectCheckBoxChanged(bool checked);
-  virtual void onLoadConfigFile();
-  virtual void onConfigFileChanged(vtkMRMLNode* configFileNode);
-  virtual void onLogLevelChanged(int index);
-  virtual void onHostChanged(const QString& text);
-  virtual void onStartStopButton();
-  virtual void onClearLogButton();
-
-  virtual void launchServer();
-  virtual void stopServer();
-  virtual void subscribeToLogMessages();
-
-  void setAndObserveLauncherConnectorNode(vtkMRMLIGTLConnectorNode*);
-  void setParameterSetNode(vtkMRMLPlusServerLauncherRemoteNode*);
+  /// Update mrml from the widget state
+  virtual void updateMRMLFromWidget();
 
 protected:
   QScopedPointer<qMRMLPlusServerLauncherRemoteWidgetPrivate> d_ptr;
