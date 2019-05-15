@@ -49,7 +49,7 @@ const std::string vtkMRMLPlusServerNode::LAUNCHER_REFERENCE_ROLE = "launcherNode
 const std::string vtkMRMLPlusServerNode::PLUS_SERVER_CONNECTOR_REFERENCE_ROLE = "plusServerConnectorNodeRef";
 
 //------------------------------------------------------------------------------
-const std::string vtkMRMLPlusServerNode::PLUS_SERVER_ATTRIBUTE_PREFIX = "PLUS_SERVER";
+const std::string vtkMRMLPlusServerNode::PLUS_SERVER_ATTRIBUTE_PREFIX = "PlusServer.";
 const std::string vtkMRMLPlusServerNode::SERVER_ID_ATTRIBUTE_NAME = PLUS_SERVER_ATTRIBUTE_PREFIX + "serverID";
 
 //----------------------------------------------------------------------------

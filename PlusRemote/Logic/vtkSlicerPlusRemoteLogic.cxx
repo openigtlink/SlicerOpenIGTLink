@@ -2097,7 +2097,7 @@ void vtkSlicerPlusRemoteLogic::OnGetRunningServersCompleted(vtkObject * caller, 
       serverNode = vtkSmartPointer<vtkMRMLPlusServerNode>::Take(vtkMRMLPlusServerNode::SafeDownCast(scene->CreateNodeByClass("vtkMRMLPlusServerNode")));
       serverNode->SetControlledLocally(false);
       serverNode->SetState(vtkMRMLPlusServerNode::State::On);
-      std::string name = scene->GenerateUniqueName(*runningServerIt);
+      std::string name = scene->GenerateUniqueName(*runningServerIt + "_Server");
       serverNode->SetName(name.c_str());
       serverNode->SetServerID(*runningServerIt);
       scene->AddNode(serverNode);
