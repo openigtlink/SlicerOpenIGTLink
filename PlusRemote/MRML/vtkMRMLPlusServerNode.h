@@ -43,13 +43,12 @@ class VTK_SLICER_PLUSREMOTE_MODULE_MRML_EXPORT vtkMRMLPlusServerNode : public vt
 
 public:
 
-  enum State
+  enum ServerState
   {
     Off = 0,
     On,
     Starting,
     Stopping,
-    NumberOfStates,
   };
 
   static const std::string CONFIG_REFERENCE_ROLE;
@@ -80,14 +79,13 @@ protected:
 
 public:
 
-  enum
+  enum ServerLogLevel
   {
-    LOG_ERROR = 1,
-    LOG_WARNING = 2,
-    LOG_INFO = 3,
-    LOG_DEBUG = 4,
-    LOG_TRACE = 5,
-    LogLast,
+    Error = 1,
+    Warning = 2,
+    Info = 3,
+    Debug = 4,
+    Trace = 5,
   };
 
   /// Get the ID of the server. Used for identifying the server when communicating with Plus

@@ -367,7 +367,7 @@ void vtkSlicerPlusRemoteLogic::OnMRMLSceneNodeAboutToBeRemoved(vtkMRMLNode* node
     if (launcherNode)
     {
       if (serverNode->GetControlledLocally() &&
-        serverNode->GetState() == vtkMRMLPlusServerNode::State::On)
+        serverNode->GetState() == vtkMRMLPlusServerNode::On)
       {
         this->SendStopServerCommand(serverNode);
       }
@@ -1859,7 +1859,7 @@ void vtkSlicerPlusRemoteLogic::UpdateLauncher(vtkMRMLPlusServerLauncherNode * la
   {
     for (vtkMRMLPlusServerNode* serverNode : launcherNode->GetServerNodes())
     {
-      serverNode->SetState(vtkMRMLPlusServerNode::State::Off);
+      serverNode->SetState(vtkMRMLPlusServerNode::Off);
     }
   }
 }
@@ -2096,7 +2096,7 @@ void vtkSlicerPlusRemoteLogic::OnGetRunningServersCompleted(vtkObject * caller, 
     {
       serverNode = vtkSmartPointer<vtkMRMLPlusServerNode>::Take(vtkMRMLPlusServerNode::SafeDownCast(scene->CreateNodeByClass("vtkMRMLPlusServerNode")));
       serverNode->SetControlledLocally(false);
-      serverNode->SetState(vtkMRMLPlusServerNode::State::On);
+      serverNode->SetState(vtkMRMLPlusServerNode::On);
       std::string name = scene->GenerateUniqueName(*runningServerIt + "_Server");
       serverNode->SetName(name.c_str());
       serverNode->SetServerID(*runningServerIt);
@@ -2115,16 +2115,16 @@ void vtkSlicerPlusRemoteLogic::OnGetRunningServersCompleted(vtkObject * caller, 
   {
     vtkMRMLPlusServerNode* serverNode = *serverNodeIt;
     if (serverRunning[serverNode->GetID()] &&
-      serverNode->GetState() != vtkMRMLPlusServerNode::State::On &&
-      serverNode->GetState() != vtkMRMLPlusServerNode::State::Stopping)
+      serverNode->GetState() != vtkMRMLPlusServerNode::On &&
+      serverNode->GetState() != vtkMRMLPlusServerNode::Stopping)
     {
-      serverNode->SetState(vtkMRMLPlusServerNode::State::On);
+      serverNode->SetState(vtkMRMLPlusServerNode::On);
     }
     else if (!serverRunning[serverNode->GetID()] &&
-      serverNode->GetState() == vtkMRMLPlusServerNode::State::On ||
-      serverNode->GetState() == vtkMRMLPlusServerNode::State::Stopping)
+      serverNode->GetState() == vtkMRMLPlusServerNode::On ||
+      serverNode->GetState() == vtkMRMLPlusServerNode::Stopping)
     {
-      serverNode->SetState(vtkMRMLPlusServerNode::State::Off);
+      serverNode->SetState(vtkMRMLPlusServerNode::Off);
     }
   }
 }
@@ -2254,9 +2254,9 @@ void vtkSlicerPlusRemoteLogic::UpdateServer(vtkMRMLPlusServerNode * serverNode)
   if (serverNode->GetControlledLocally())
   {
     // Send server start/stop commands to attempt to match states
-    if (serverNode->GetDesiredState() == vtkMRMLPlusServerNode::State::On)
+    if (serverNode->GetDesiredState() == vtkMRMLPlusServerNode::On)
     {
-      if (serverNode->GetState() == vtkMRMLPlusServerNode::State::Off)
+      if (serverNode->GetState() == vtkMRMLPlusServerNode::Off)
       {
         this->SendStartServerCommand(serverNode);
       }
@@ -2265,9 +2265,9 @@ void vtkSlicerPlusRemoteLogic::UpdateServer(vtkMRMLPlusServerNode * serverNode)
       //  this->SendStopServerCommand(serverNode);
       //}
     }
-    else if (serverNode->GetDesiredState() == vtkMRMLPlusServerNode::State::Off)
+    else if (serverNode->GetDesiredState() == vtkMRMLPlusServerNode::Off)
     {
-      if (serverNode->GetState() == vtkMRMLPlusServerNode::State::On)
+      if (serverNode->GetState() == vtkMRMLPlusServerNode::On)
       {
         this->SendStopServerCommand(serverNode);
       }
@@ -2278,19 +2278,19 @@ void vtkSlicerPlusRemoteLogic::UpdateServer(vtkMRMLPlusServerNode * serverNode)
     serverNode->SetDesiredState(serverNode->GetState());
   }
 
-  if (serverNode->GetState() == vtkMRMLPlusServerNode::State::Starting &&
+  if (serverNode->GetState() == vtkMRMLPlusServerNode::Starting &&
     serverNode->GetSecondsSinceStateChange() > serverNode->GetTimeoutSeconds())
   {
-    serverNode->SetState(vtkMRMLPlusServerNode::State::Off);
+    serverNode->SetState(vtkMRMLPlusServerNode::Off);
   }
-  else if (serverNode->GetState() == vtkMRMLPlusServerNode::State::Stopping &&
+  else if (serverNode->GetState() == vtkMRMLPlusServerNode::Stopping &&
     serverNode->GetSecondsSinceStateChange() > serverNode->GetTimeoutSeconds())
   {
-    serverNode->SetState(vtkMRMLPlusServerNode::State::On);
+    serverNode->SetState(vtkMRMLPlusServerNode::On);
   }
 
-  if (serverNode->GetDesiredState() == vtkMRMLPlusServerNode::State::On &&
-    serverNode->GetState() == vtkMRMLPlusServerNode::State::On)
+  if (serverNode->GetDesiredState() == vtkMRMLPlusServerNode::On &&
+    serverNode->GetState() == vtkMRMLPlusServerNode::On)
   {
     this->UpdatePlusOpenIGTLinkConnectors(serverNode);
   }
@@ -2360,7 +2360,7 @@ void vtkSlicerPlusRemoteLogic::SendStartServerCommand(vtkMRMLPlusServerNode * se
   }
 
   vtkMRMLTextNode* configFileNode = serverNode->GetConfigNode();
-  serverNode->SetState(vtkMRMLPlusServerNode::State::Starting);
+  serverNode->SetState(vtkMRMLPlusServerNode::Starting);
 
   ServerCommands* command = &this->ServerCommandMap[serverNode];
   if (!command->AddConfigFile.Command->IsInProgress() || !command->StartServer.Command->IsInProgress())
@@ -2411,7 +2411,7 @@ void vtkSlicerPlusRemoteLogic::SendStopServerCommand(vtkMRMLPlusServerNode * ser
     return;
   }
 
-  serverNode->SetState(vtkMRMLPlusServerNode::State::Stopping);
+  serverNode->SetState(vtkMRMLPlusServerNode::Stopping);
 
   std::stringstream startServerCommandText;
   startServerCommandText << "<Command>" << std::endl;

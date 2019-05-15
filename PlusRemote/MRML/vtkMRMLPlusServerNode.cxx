@@ -58,9 +58,9 @@ vtkMRMLNodeNewMacro(vtkMRMLPlusServerNode);
 //----------------------------------------------------------------------------
 vtkMRMLPlusServerNode::vtkMRMLPlusServerNode()
   : ControlledLocally(true)
-  , DesiredState(State::Off)
-  , State(State::Off)
-  , LogLevel(LOG_INFO)
+  , DesiredState(Off)
+  , State(Off)
+  , LogLevel(Info)
   , TimeoutSeconds(15.0)
 {
 }
@@ -226,13 +226,13 @@ std::vector<vtkMRMLIGTLConnectorNode*> vtkMRMLPlusServerNode::GetPlusOpenIGTLink
 //----------------------------------------------------------------------------
 void vtkMRMLPlusServerNode::StartServer()
 {
-  this->SetDesiredState(State::On);
+  this->SetDesiredState(On);
 }
 
 //----------------------------------------------------------------------------
 void vtkMRMLPlusServerNode::StopServer()
 {
-  this->SetDesiredState(State::Off);
+  this->SetDesiredState(Off);
 }
 
 //----------------------------------------------------------------------------
@@ -371,13 +371,13 @@ const char* vtkMRMLPlusServerNode::GetStateAsString(int state)
   std::string stateString = "Unknown";
   switch (state)
   {
-  case State::Off:
+  case Off:
     return "Off";
-  case State::On:
+  case On:
     return "On";
-  case State::Starting:
+  case Starting:
     return "Starting";
-  case State::Stopping:
+  case Stopping:
     return "Stopping";
   }
   return "";
@@ -397,24 +397,24 @@ int vtkMRMLPlusServerNode::GetStateFromString(const char* stateString)
     return -1;
   }
 
-  if (strcmp(stateString, GetStateAsString(State::On)) == 0)
+  if (strcmp(stateString, GetStateAsString(On)) == 0)
   {
-    return State::On;
+    return On;
   }
 
-  if (strcmp(stateString, GetStateAsString(State::Off)) == 0)
+  if (strcmp(stateString, GetStateAsString(Off)) == 0)
   {
-    return State::Off;
+    return Off;
   }
   
-  if (strcmp(stateString, GetStateAsString(State::Starting)) == 0)
+  if (strcmp(stateString, GetStateAsString(Starting)) == 0)
   {
-    return State::Starting;
+    return Starting;
   }
 
-  if (strcmp(stateString, GetStateAsString(State::Stopping)) == 0)
+  if (strcmp(stateString, GetStateAsString(Stopping)) == 0)
   {
-    return State::Stopping;
+    return Stopping;
   }
 
   return -1;
@@ -425,15 +425,15 @@ const char* vtkMRMLPlusServerNode::GetLogLevelAsString(int logLevel)
 {
   switch (logLevel)
   {
-  case LOG_ERROR:
+  case Error:
     return "Error";
-  case LOG_WARNING:
+  case Warning:
     return "Warning";
-  case LOG_INFO:
+  case Info:
     return "Info";
-  case LOG_DEBUG:
+  case Debug:
     return "Debug";
-  case LOG_TRACE:
+  case Trace:
     return "Trace";
   }
   return "Unknown";
