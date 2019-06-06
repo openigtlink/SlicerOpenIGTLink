@@ -44,6 +44,7 @@
 // PlusRemote mrml includes
 #include <vtkMRMLPlusRemoteNode.h>
 #include <vtkMRMLPlusServerLauncherNode.h>
+#include <vtkMRMLPlusServerNode.h>
 
 static const double UPDATE_PLUS_REMOTE_NODES_PERIOD_SEC = 0.2;
 
@@ -187,8 +188,10 @@ void qSlicerPlusRemoteModule::onNodeAddedEvent(vtkObject*, vtkObject* node)
 {
   Q_D(qSlicerPlusRemoteModule);
 
-  vtkMRMLPlusServerLauncherNode* plusServerLauncherNode = vtkMRMLPlusServerLauncherNode::SafeDownCast(node);
-  if (plusServerLauncherNode)
+  vtkMRMLPlusRemoteNode* plusRemoteNode = vtkMRMLPlusRemoteNode::SafeDownCast(node);
+  vtkMRMLPlusServerLauncherNode* launcherNode = vtkMRMLPlusServerLauncherNode::SafeDownCast(node);
+  vtkMRMLPlusServerNode* serverNode = vtkMRMLPlusServerNode::SafeDownCast(node);
+  if (plusRemoteNode || launcherNode || serverNode)
   {
     // If the timer is not active
     if (!d->UpdateAllPlusRemoteNodesTimer.isActive())
@@ -204,7 +207,9 @@ void qSlicerPlusRemoteModule::onNodeRemovedEvent(vtkObject*, vtkObject* node)
   Q_D(qSlicerPlusRemoteModule);
 
   vtkMRMLPlusRemoteNode* plusRemoteNode = vtkMRMLPlusRemoteNode::SafeDownCast(node);
-  if (plusRemoteNode)
+  vtkMRMLPlusServerLauncherNode* launcherNode = vtkMRMLPlusServerLauncherNode::SafeDownCast(node);
+  vtkMRMLPlusServerNode* serverNode = vtkMRMLPlusServerNode::SafeDownCast(node);
+  if (plusRemoteNode || launcherNode || serverNode)
   {
     // If the timer is active
     if (d->UpdateAllPlusRemoteNodesTimer.isActive())
@@ -213,9 +218,13 @@ void qSlicerPlusRemoteModule::onNodeRemovedEvent(vtkObject*, vtkObject* node)
       vtkMRMLScene* scene = qSlicerCoreApplication::application()->mrmlScene();
       if (scene)
       {
-        std::vector<vtkMRMLNode*> nodes;
-        this->mrmlScene()->GetNodesByClass("vtkMRMLPlusRemoteNode", nodes);
-        if (nodes.size() == 0)
+        std::vector<vtkMRMLNode*> plusRemoteNodes;
+        this->mrmlScene()->GetNodesByClass("vtkMRMLPlusRemoteNode", plusRemoteNodes);
+        std::vector<vtkMRMLNode*> launcherNodes;
+        this->mrmlScene()->GetNodesByClass("vtkMRMLPlusServerLauncherNode", launcherNodes);
+        std::vector<vtkMRMLNode*> serverNodes;
+        this->mrmlScene()->GetNodesByClass("vtkMRMLPlusServerNode", serverNodes);
+        if (plusRemoteNodes.size() == 0 && launcherNodes.size() == 0 && serverNodes.size() == 0)
         {
           // The last plus remote node was removed
           d->UpdateAllPlusRemoteNodesTimer.stop();

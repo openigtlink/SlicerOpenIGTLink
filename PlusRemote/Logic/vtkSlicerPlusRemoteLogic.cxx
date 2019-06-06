@@ -824,6 +824,8 @@ void vtkSlicerPlusRemoteLogic::StopLiveVolumeReconstruction(vtkMRMLPlusRemoteNod
   std::stringstream ss;
   vtkXMLUtilities::FlattenElement(commandElement, ss);
 
+  parameterNode->SetLiveReconstructionStatus(vtkMRMLPlusRemoteNode::PLUS_REMOTE_RECONSTRUCTING);
+
   commands->CmdStopVolumeReconstruction.Command->SetCommandContent(ss.str());
   commands->CmdStopVolumeReconstruction.Callback->Logic = this;
   commands->CmdStopVolumeReconstruction.Callback->ParameterNode = parameterNode;
