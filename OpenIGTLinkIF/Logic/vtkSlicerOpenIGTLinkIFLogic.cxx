@@ -13,7 +13,7 @@
 ==========================================================================*/
 
 // Slicer includes
-#include <vtkObjectFactory.h>
+#include "vtkSlicerVersionConfigure.h" // For Slicer_VERSION_MAJOR,Slicer_VERSION_MINOR
 #include <vtkSlicerColorLogic.h>
 
 // OpenIGTLinkIF MRML includes
@@ -21,8 +21,11 @@
 #include "vtkMRMLIGTLConnectorNode.h"
 #include "vtkMRMLImageMetaListNode.h"
 #include "vtkMRMLLabelMetaListNode.h"
+#if Slicer_VERSION_MAJOR < 4 || Slicer_VERSION_MAJOR == 4 && Slicer_VERSION_MINOR < 11
+// TODO: When the stable version of Slicer includes the Texts module/widgets, they can be removed from SlicerOpenIGTLink
 #include "vtkMRMLTextNode.h"
 #include "vtkMRMLTextStorageNode.h"
+#endif
 #include "vtkMRMLIGTLTrackingDataQueryNode.h"
 #include "vtkMRMLIGTLTrackingDataBundleNode.h"
 #include "vtkMRMLIGTLQueryNode.h"
@@ -53,6 +56,7 @@
 #include <vtkImageData.h>
 #include <vtkNew.h>
 #include <vtkPolyData.h>
+#include <vtkObjectFactory.h>
 #include <vtkSphereSource.h>
 #include <vtkTransform.h>
 #include <vtkTransformPolyDataFilter.h>
@@ -188,13 +192,15 @@ void vtkSlicerOpenIGTLinkIFLogic::RegisterNodes()
   scene->RegisterNodeClass(vtkNew<vtkMRMLIGTLConnectorNode>().GetPointer());
   scene->RegisterNodeClass(vtkNew<vtkMRMLImageMetaListNode>().GetPointer());
   scene->RegisterNodeClass(vtkNew<vtkMRMLLabelMetaListNode>().GetPointer());
-  scene->RegisterNodeClass(vtkNew<vtkMRMLTextNode>().GetPointer());
-  scene->RegisterNodeClass(vtkNew<vtkMRMLTextStorageNode>().GetPointer());
   scene->RegisterNodeClass(vtkNew<vtkMRMLIGTLTrackingDataQueryNode>().GetPointer());
   scene->RegisterNodeClass(vtkNew<vtkMRMLIGTLTrackingDataBundleNode>().GetPointer());
   scene->RegisterNodeClass(vtkNew<vtkMRMLIGTLStatusNode>().GetPointer());
   scene->RegisterNodeClass(vtkNew<vtkMRMLIGTLSensorNode>().GetPointer());
-
+#if Slicer_VERSION_MAJOR < 4 || Slicer_VERSION_MAJOR == 4 && Slicer_VERSION_MINOR < 11
+  // TODO: When the stable version of Slicer includes the Texts module/widgets, they can be removed from SlicerOpenIGTLink
+  scene->RegisterNodeClass(vtkNew<vtkMRMLTextNode>().GetPointer());
+  scene->RegisterNodeClass(vtkNew<vtkMRMLTextStorageNode>().GetPointer());
+#endif
   vtkStreamingVolumeCodecFactory* codecFactory = vtkStreamingVolumeCodecFactory::GetInstance();
 #if defined(OpenIGTLink_USE_VP9)
   codecFactory->RegisterStreamingCodec(vtkSmartPointer<vtkIGTLVP9VolumeCodec>::New());

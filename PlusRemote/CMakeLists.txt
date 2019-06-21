@@ -57,6 +57,13 @@ set(MODULE_RESOURCES
   Resources/qSlicer${MODULE_NAME}Module.qrc
   )
 
+if (Slicer_VERSION VERSION_LESS "4.11.0")
+  #TODO: When the stable version of Slicer includes the Texts module/widgets, they can be removed from SlicerOpenIGTLink
+  list(APPEND MODULE_INCLUDE_DIRECTORIES
+    ${vtkSlicerOpenIGTLinkIFModuleMRML_SOURCE_DIR}/Text
+    )
+endif()
+
 #-----------------------------------------------------------------------------
 slicerMacroBuildQtModule(
   NAME ${MODULE_NAME}

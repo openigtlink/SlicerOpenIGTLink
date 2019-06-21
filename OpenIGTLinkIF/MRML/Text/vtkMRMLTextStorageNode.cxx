@@ -57,43 +57,43 @@ bool vtkMRMLTextStorageNode::CanReadInReferenceNode(vtkMRMLNode* refNode)
 int vtkMRMLTextStorageNode::ReadDataInternal(vtkMRMLNode * refNode)
 {
   if (!this->CanReadInReferenceNode(refNode))
-  {
+    {
     return 0;
-  }
+    }
 
   vtkMRMLTextNode* textNode = dynamic_cast<vtkMRMLTextNode*>(refNode);
   if (!textNode)
-  {
+    {
     vtkErrorMacro("ReadDataInternal: not a text node.");
     return 0;
-  }
+    }
 
   std::string fullName = this->GetFullNameFromFileName();
 
   // check that the file exists
   if (vtksys::SystemTools::FileExists(fullName.c_str()) == false)
-  {
+    {
     vtkErrorMacro("ReadDataInternal: text file '" << fullName.c_str() << "' not found.");
     return 0;
-  }
+    }
 
   // compute file extension
   std::string extension = vtkMRMLStorageNode::GetLowercaseExtensionFromFileName(fullName);
   if (extension.empty())
-  {
+    {
     vtkErrorMacro("ReadData: no file extension specified: " << fullName.c_str());
     return 0;
-  }
+    }
 
   vtkDebugMacro("ReadDataInternal: extension = " << extension.c_str());
 
   std::ifstream inputFile;
   inputFile.open(fullName);
   if (inputFile.fail())
-  {
+    {
     vtkErrorMacro("vtkMRMLTextStorageNode::ReadDataInternal: Could not read file");
     return false;
-  }
+    }
 
   std::stringstream ss;
   ss << inputFile.rdbuf();
@@ -109,10 +109,10 @@ bool vtkMRMLTextStorageNode::CanWriteFromReferenceNode(vtkMRMLNode * refNode)
 {
   vtkMRMLTextNode* textNode = vtkMRMLTextNode::SafeDownCast(refNode);
   if (textNode == NULL)
-  {
+    {
     vtkErrorMacro("vtkMRMLTextStorageNode::CanWriteFromReferenceNode: input is not a text node");
     return false;
-  }
+    }
   return true;
 }
 
@@ -121,33 +121,30 @@ int vtkMRMLTextStorageNode::WriteDataInternal(vtkMRMLNode * refNode)
 {
   vtkMRMLTextNode* textNode = vtkMRMLTextNode::SafeDownCast(refNode);
   if (textNode == NULL)
-  {
+    {
     vtkErrorMacro(<< "vtkMRMLTextStorageNode::WriteDataInternal: Do not recognize node type " << refNode->GetClassName());
     return 0;
-  }
+    }
 
   std::string fullName = this->GetFullNameFromFileName();
   if (fullName == std::string(""))
-  {
+    {
     vtkErrorMacro("WriteData: File name not specified");
     return 0;
-  }
+    }
 
   // check if the file exists
   if (vtksys::SystemTools::FileExists(fullName.c_str()))
-  {
-    if (!vtksys::SystemTools::RemoveFile(fullName.c_str()))
     {
+    if (!vtksys::SystemTools::RemoveFile(fullName.c_str()))
+      {
       vtkErrorMacro("WriteData: Could not overwrite existing file");
+      }
     }
-  }
 
   ofstream file;
   file.open(fullName);
-  if (textNode->GetText())
-  {
-    file << textNode->GetText();
-  }
+  file << textNode->GetText();
   this->StageWriteData(refNode);
   return true;
 }

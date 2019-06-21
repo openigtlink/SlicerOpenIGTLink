@@ -23,10 +23,12 @@
 
 // SlicerQt includes
 #include "qSlicerFileReader.h"
+#include "qSlicerPlusRemoteModuleExport.h"
+
 class qSlicerPlusConfigFileReaderPrivate;
 
 //-----------------------------------------------------------------------------
-class qSlicerPlusConfigFileReader
+class Q_SLICER_QTMODULES_PLUSREMOTE_EXPORT qSlicerPlusConfigFileReader
   : public qSlicerFileReader
 {
   Q_OBJECT

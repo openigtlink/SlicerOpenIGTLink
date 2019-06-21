@@ -2372,12 +2372,7 @@ void vtkSlicerPlusRemoteLogic::SendStartServerCommand(vtkMRMLPlusServerNode * se
 
     if (configFileNode)
     {
-      std::string configFileContent;
-      if (configFileNode->GetText())
-      {
-        configFileContent = configFileNode->GetText();
-      }
-
+      std::string configFileContent = configFileNode->GetText();
       command->AddConfigFile.Command->SetCommandContent("<Command/>");
       command->AddConfigFile.Command->SetCommandMetaDataElement("ConfigFileName", configFileName);
       command->AddConfigFile.Command->SetCommandMetaDataElement("ConfigFileContent", configFileContent);

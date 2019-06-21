@@ -21,11 +21,11 @@
 #ifndef __vtkMRMLTextStorageNode_h
 #define __vtkMRMLTextStorageNode_h
 
-// OpenIGTLinkIF MRML includes
-#include "vtkSlicerOpenIGTLinkIFModuleMRMLExport.h"
-
 // MRML includes
 #include <vtkMRMLStorageNode.h>
+
+// OpenIGTLinkIF MRML includes
+#include "vtkSlicerOpenIGTLinkIFModuleMRMLExport.h"
 
 /// \ingroup Slicer_QtModules_Sequences
 class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkMRMLTextStorageNode : public vtkMRMLStorageNode

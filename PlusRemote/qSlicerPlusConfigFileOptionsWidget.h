@@ -32,7 +32,7 @@ Care Ontario.
 class qSlicerPlusConfigFileIOOptionsWidgetPrivate;
 
 /// \ingroup Slicer_QtModules_PlusConfigFile
-class Q_SLICER_QTMODULES_PlusConfigFile_EXPORT qSlicerPlusConfigFileIOOptionsWidget :
+class Q_SLICER_QTMODULES_PLUSREMOTE_EXPORT qSlicerPlusConfigFileIOOptionsWidget :
   public qSlicerIOOptionsWidget
 {
   Q_OBJECT

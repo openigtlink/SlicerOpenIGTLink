@@ -17,11 +17,11 @@ limitations under the License.
 
 // MRML includes
 #include <vtkMRMLScene.h>
+#include "vtkMRMLTextNode.h"
 
 // OpenIGTLinkIF MRML includes
 #include "vtkMRMLIGTLConnectorNode.h"
 #include "vtkMRMLIGTLQueryNode.h"
-#include "vtkMRMLTextNode.h"
 #include "vtkSlicerOpenIGTLinkCommand.h"
 
 // OpenIGTLinkRemote logic includes
