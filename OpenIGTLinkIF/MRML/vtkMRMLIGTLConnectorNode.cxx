@@ -34,7 +34,7 @@ Version:   $Revision: 1.2 $
 // OpenIGTLinkIF MRML includes
 #include "vtkMRMLIGTLConnectorNode.h"
 #include "vtkMRMLIGTLStatusNode.h"
-#include <vtkMRMLImageMetaListNode.h>
+#include "vtkMRMLImageMetaListNode.h"
 #include "vtkMRMLLabelMetaListNode.h"
 #include "vtkMRMLTextNode.h"
 
@@ -206,11 +206,7 @@ unsigned int vtkMRMLIGTLConnectorNode::vtkInternal::AssignOutGoingNodeToDevice(v
   {
     igtlioStringDevice* stringDevice = static_cast<igtlioStringDevice*>(device.GetPointer());
     vtkMRMLTextNode* textNode = vtkMRMLTextNode::SafeDownCast(node);
-    std::string text;
-    if (textNode->GetText())
-    {
-      text = textNode->GetText();
-    }
+    std::string text = textNode->GetText();
     igtlioStringConverter::ContentData content = { static_cast<unsigned int>(textNode->GetEncoding()), text };
     stringDevice->SetContent(content);
     modifiedEvent = vtkMRMLTextNode::TextModifiedEvent;

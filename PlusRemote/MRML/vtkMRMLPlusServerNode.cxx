@@ -24,7 +24,9 @@
 #include "vtkMRMLPlusServerLauncherNode.h"
 
 // MRML includes
+#include <vtkMRMLNode.h>
 #include <vtkMRMLScene.h>
+#include <vtkMRMLTextNode.h>
 
 // VTK includes
 #include <vtkNew.h>
@@ -40,8 +42,6 @@
 
 // OpenIGTLinkIF includes
 #include <vtkMRMLIGTLConnectorNode.h>
-#include <vtkMRMLTextNode.h>
-#include <vtkMRMLNode.h>
 
 //------------------------------------------------------------------------------
 const std::string vtkMRMLPlusServerNode::CONFIG_REFERENCE_ROLE = "configNodeRef";
@@ -261,12 +261,7 @@ void vtkMRMLPlusServerNode::UpdateConfigFileInfo()
     configFileNode->SetAttribute(SERVER_ID_ATTRIBUTE_NAME.c_str(), this->ServerID.c_str());
   }
 
-  std::string content;
-  if (configFileNode && configFileNode->GetText())
-  {
-    content = configFileNode->GetText();
-  }
-
+  std::string content = configFileNode->GetText();
   vtkMRMLPlusServerNode::PlusConfigFileInfo configInfo = vtkMRMLPlusServerNode::GetPlusConfigFileInfo(content);
   this->SetDeviceSetName(configInfo.Name);
   this->SetDeviceSetDescription(configInfo.Description);

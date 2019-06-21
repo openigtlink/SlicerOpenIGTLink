@@ -8,6 +8,13 @@ set(${KIT}_INCLUDE_DIRECTORIES
   ${vtkSlicerOpenIGTLinkIFModuleMRML_INCLUDE_DIRS}
   )
 
+if (Slicer_VERSION VERSION_LESS "4.11.0")
+  #TODO: When the stable version of Slicer includes the Texts module/widgets, they can be removed from SlicerOpenIGTLink
+  list(APPEND ${KIT}_INCLUDE_DIRECTORIES
+    ${vtkSlicerOpenIGTLinkIFModuleMRML_SOURCE_DIR}/Text
+    )
+endif()
+
 set(${KIT}_SRCS
   vtkMRMLPlusRemoteNode.cxx
   vtkMRMLPlusRemoteNode.h

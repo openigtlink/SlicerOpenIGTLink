@@ -40,27 +40,34 @@ set(MODULE_EXPORT_DIRECTIVE "Q_SLICER_QTMODULES_OPENIGTLINKIF_EXPORT")
 
 # Additional includes - Current_{source,binary} and Slicer_{Libs,Base} already included
 set(MODULE_INCLUDE_DIRECTORIES
-  ${CMAKE_CURRENT_SOURCE_DIR}/GUI
-  ${CMAKE_CURRENT_BINARY_DIR}/GUI
-  ${CMAKE_CURRENT_SOURCE_DIR}/Logic
-  ${CMAKE_CURRENT_BINARY_DIR}/Logic
-  ${CMAKE_CURRENT_SOURCE_DIR}/MRML
-  ${CMAKE_CURRENT_BINARY_DIR}/MRML
-  ${CMAKE_CURRENT_SOURCE_DIR}/Widgets
-  ${CMAKE_CURRENT_BINARY_DIR}/Widgets
+  ${vtkSlicer${MODULE_NAME}ModuleLogic_INCLUDE_DIRS}
+  ${vtkSlicer${MODULE_NAME}ModuleMRML_INCLUDE_DIRS}
+  ${qSlicer${MODULE_NAME}ModuleWidgets_INCLUDE_DIRS}
   )
 
 set(MODULE_SRCS
   qSlicerOpenIGTLinkIFModule.cxx
   qSlicerOpenIGTLinkIFModule.h
-  qSlicerTextFileReader.cxx
-  qSlicerTextFileReader.h
   )
 
 set(MODULE_MOC_SRCS
   qSlicerOpenIGTLinkIFModule.h
-  qSlicerTextFileReader.h
   )
+
+  if (Slicer_VERSION VERSION_LESS "4.11.0")
+    #TODO: When the stable version of Slicer includes the Texts module/widgets, they can be removed from SlicerOpenIGTLink
+    list(APPEND MODULE_SRCS
+      qSlicerTextFileReader.cxx
+      qSlicerTextFileReader.h
+      )
+    list(APPEND MODULE_MOC_SRCS
+      qSlicerTextFileReader.h
+      )
+    list(APPEND MODULE_INCLUDE_DIRECTORIES  
+      ${vtkSlicer${MODULE_NAME}ModuleMRML_SOURCE_DIR}/Text
+      ${vtkSlicer${MODULE_NAME}ModuleMRML_BINARY_DIR}/Text
+      )
+  endif()
 
 set(MODULE_UI_SRCS
 )
