@@ -10,6 +10,7 @@ The "Ultrasound Remote Control" module allows users to modify the following imag
 - Gain (%)
 - Frequency (MHz)
 - Dynamic Range (dB)
+- Power (Db)
 
 Developers
 --
