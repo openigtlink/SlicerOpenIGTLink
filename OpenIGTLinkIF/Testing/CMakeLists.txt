@@ -24,9 +24,13 @@ set(${KIT}_TARGET_LIBRARIES
   SlicerBaseLogic
   )
 
-# Add '--launcher-additional-settings' to launch command
-list(FIND Slicer_LAUNCH_COMMAND "--launch" launch_index)
-list(INSERT Slicer_LAUNCH_COMMAND ${launch_index} ${Slicer_ADDITIONAL_LAUNCHER_SETTINGS}) 
+# Add '--launcher-additional-settings' to launch command,
+# but only if additional launcher settings file is available
+# (the file is not created if the extension is bundled with the main application).
+if(NOT "${Slicer_ADDITIONAL_LAUNCHER_SETTINGS}" STREQUAL "")
+  list(FIND Slicer_LAUNCH_COMMAND "--launch" launch_index)
+  list(INSERT Slicer_LAUNCH_COMMAND ${launch_index} ${Slicer_ADDITIONAL_LAUNCHER_SETTINGS})
+endif()
 
 #-----------------------------------------------------------------------------
 add_executable(${KIT}CxxTests ${Tests})
