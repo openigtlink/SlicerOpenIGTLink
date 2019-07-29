@@ -1,7 +1,7 @@
 set(proj YASM)
 
 # Set dependency list
-set(${proj}_DEPENDS "")
+set(${proj}_DEPENDS python)
 
 # Include dependent projects if any
 ExternalProject_Include_Dependencies(${proj} PROJECT_VAR proj DEPENDS_VAR ${proj}_DEPENDS)
@@ -26,7 +26,7 @@ if(NOT DEFINED YASM_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
       "-DCMAKE_PROJECT_yasm_INCLUDE:FILEPATH=${CMAKE_ROOT}/Modules/CTestUseLaunchers.cmake")
   endif()
 
-  find_package(PythonInterp "2.7" REQUIRED QUIET)
+  find_package(Python COMPONENTS Interpreter REQUIRED QUIET)
 
   ExternalProject_SetIfNotDefined(
     ${CMAKE_PROJECT_NAME}_${proj}_GIT_REPOSITORY
@@ -66,7 +66,7 @@ if(NOT DEFINED YASM_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
       # Install directories
       -DYASM_INSTALL_BIN_DIR:STRING=bin
       # Options
-      -DBUILD_TESTING:BOOL=OFF 
+      -DBUILD_TESTING:BOOL=OFF
       -DBUILD_EXAMPLES:BOOL=OFF
       -DBUILD_SHARED_LIBS:BOOL=OFF
       # Dependencies
@@ -89,7 +89,7 @@ if(NOT DEFINED YASM_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
   # Launcher setting specific to install tree
 
   #  NA
-  
+
 else()
   ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
 endif()

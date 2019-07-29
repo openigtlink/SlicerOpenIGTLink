@@ -1,7 +1,7 @@
 set(proj OpenIGTLinkIO)
 
 # Set dependency list
-set(${proj}_DEPENDS OpenIGTLink)
+set(${proj}_DEPENDS OpenIGTLink VTK)
 
 # Include dependent projects if any
 ExternalProject_Include_Dependencies(${proj} PROJECT_VAR proj DEPENDS_VAR ${proj}_DEPENDS)
@@ -47,7 +47,7 @@ if(NOT DEFINED OpenIGTLinkIO_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj
     GIT_TAG ${${CMAKE_PROJECT_NAME}_${proj}_GIT_TAG}
     SOURCE_DIR "${EP_SOURCE_DIR}"
     BINARY_DIR "${EP_BINARY_DIR}"
-    CMAKE_CACHE_ARGS 
+    CMAKE_CACHE_ARGS
       ${ep_common_args}
       # Compiler settings
       -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
@@ -76,7 +76,7 @@ if(NOT DEFINED OpenIGTLinkIO_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj
     INSTALL_COMMAND ""
     DEPENDS
       ${${proj}_DEPENDS}
-    )  
+    )
   ExternalProject_GenerateProjectDescription_Step(${proj})
 
   set(OpenIGTLinkIO_DIR ${EP_BINARY_DIR})
@@ -111,7 +111,7 @@ if(NOT DEFINED OpenIGTLinkIO_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj
 
 else()
   ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDS})
-endif()    
+endif()
 
 mark_as_superbuild(${proj}_DIR:PATH)
 ExternalProject_Message(${proj} "${proj}_DIR:${${proj}_DIR}")
