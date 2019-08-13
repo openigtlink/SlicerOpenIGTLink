@@ -22,6 +22,8 @@ set(${KIT}_SRCS
   vtkMRMLPlusServerNode.h
   vtkMRMLPlusServerLauncherNode.cxx
   vtkMRMLPlusServerLauncherNode.h
+  vtkSlicerPlusOpenIGTLinkCommand.cxx
+  vtkSlicerPlusOpenIGTLinkCommand.h
   )
 
 set(${KIT}_TARGET_LIBRARIES

@@ -36,6 +36,7 @@
 
 class vtkMRMLIGTLQueryNode;
 class vtkMutexLock;
+class vtkSlicerOpenIGTLinkCommand;
 
 typedef void* IGTLDevicePointer;
 
@@ -253,9 +254,11 @@ public:
   /// Records the id of the command in the command object
   /// Invokes a CommandResponse event on the command object when a response is received.
   void SendCommand(igtlioCommandPointer command);
+  void SendCommand(vtkSlicerOpenIGTLinkCommand* command);
 
   /// Send a command response from the given device. Asynchronous.
   int SendCommandResponse(igtlioCommandPointer command);
+  void SendCommandResponse(vtkSlicerOpenIGTLinkCommand* command);
 
   /// Cancels the command in the specified device
   void CancelCommand(igtlioCommandPointer command);
@@ -278,7 +281,6 @@ public:
   // Description:
   // Get OpenIGTLink's time stamp information. Returns 0, if it fails to obtain time stamp.
   int GetIGTLTimeStamp(vtkMRMLNode* node, int& second, int& nanosecond);
-
 
   std::vector<std::string> GetDeviceTypeFromMRMLNodeType(const char* NodeTag);
 

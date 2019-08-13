@@ -37,6 +37,7 @@ Version:   $Revision: 1.2 $
 #include "vtkMRMLImageMetaListNode.h"
 #include "vtkMRMLLabelMetaListNode.h"
 #include "vtkMRMLTextNode.h"
+#include "vtkSlicerOpenIGTLinkCommand.h"
 
 // MRML includes
 #include <vtkMRMLColorLogic.h>
@@ -2150,6 +2151,12 @@ void vtkMRMLIGTLConnectorNode::SendCommand(igtlioCommandPointer command)
   this->Internal->SendCommand(command);
 }
 
+//----------------------------------------------------------------------------
+void vtkMRMLIGTLConnectorNode::SendCommand(vtkSlicerOpenIGTLinkCommand* command)
+{
+  this->SendCommand(command->GetCommand());
+}
+
 //---------------------------------------------------------------------------
 igtlioCommandPointer vtkMRMLIGTLConnectorNode::SendCommand(std::string name, std::string content,
   bool blocking/*=true*/, double timeout_s/*=5*/, igtl::MessageBase::MetaDataMap* metaData/*=NULL*/, int clientId/*=-1*/)
@@ -2171,6 +2178,12 @@ igtlioCommandPointer vtkMRMLIGTLConnectorNode::SendCommand(std::string name, std
 int vtkMRMLIGTLConnectorNode::SendCommandResponse(igtlioCommandPointer command)
 {
   return this->Internal->SendCommandResponse(command);
+}
+
+//----------------------------------------------------------------------------
+void vtkMRMLIGTLConnectorNode::SendCommandResponse(vtkSlicerOpenIGTLinkCommand* command)
+{
+  this->SendCommandResponse(command->GetCommand());
 }
 
 //---------------------------------------------------------------------------

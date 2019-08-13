@@ -24,7 +24,6 @@ Ontario with funds provided by the Ontario Ministry of Health and Long-Term Care
 // OpenIGTLinkIF includes
 #include <vtkSlicerOpenIGTLinkCommand.h>
 
-
 //----------------------------------------------------------------------------
 vtkStandardNewMacro(vtkSlicerOpenIGTLinkCommand);
 
@@ -63,6 +62,7 @@ void vtkSlicerOpenIGTLinkCommand::SendCommand(vtkMRMLIGTLConnectorNode* connecto
     this->Command->AddObserver(igtlioCommand::CommandExpiredEvent, this->Callback);
     this->Command->AddObserver(igtlioCommand::CommandReceivedEvent, this->Callback);
     this->Command->AddObserver(igtlioCommand::CommandResponseEvent, this->Callback);
+    this->Command->AddObserver(vtkCommand::ModifiedEvent, this->Callback);
   }
 
   connectorNode->SendCommand(this->Command);

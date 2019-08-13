@@ -27,9 +27,7 @@ Ontario with funds provided by the Ontario Ministry of Health and Long-Term Care
 
 class VTK_SLICER_OPENIGTLINKIF_MODULE_MRML_EXPORT vtkSlicerOpenIGTLinkCommand : public vtkObject
 {
-
 public:
-
   static vtkSlicerOpenIGTLinkCommand* New();
   vtkTypeMacro(vtkSlicerOpenIGTLinkCommand, vtkObject);
   void PrintSelf(ostream& os, vtkIndent indent);
@@ -41,8 +39,6 @@ protected:
 private:
   vtkSlicerOpenIGTLinkCommand(const vtkSlicerOpenIGTLinkCommand&); // Not implemented
   void operator=(const vtkSlicerOpenIGTLinkCommand&);               // Not implemented
-  //
-  //    igtlioCommandStatus::CommandExpired
 
 public:
   enum
@@ -59,18 +55,18 @@ public:
 public:
   void SendCommand(vtkMRMLIGTLConnectorNode* connectorNode);
 
-  void SetName(std::string);
+  virtual void SetName(std::string);
   std::string GetName();
 
-  void SetCommandContent(std::string);
-  std::string GetCommandContent();
+  virtual void SetCommandContent(std::string);
+  virtual std::string GetCommandContent();
 
   void ClearCommandMetaData();
   void SetCommandMetaDataElement(std::string key, std::string value);
   std::string GetCommandMetaDataElement(std::string key);
 
-  void SetResponseContent(std::string);
-  std::string GetResponseContent();
+  virtual void SetResponseContent(std::string);
+  virtual std::string GetResponseContent();
 
   void ClearResponseMetaData();
   void SetResponseMetaDataElement(std::string key, std::string value);
