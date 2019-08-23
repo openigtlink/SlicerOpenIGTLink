@@ -189,11 +189,11 @@ unsigned int vtkMRMLIGTLConnectorNode::vtkInternal::AssignOutGoingNodeToDevice(v
   {
     igtlioTransformDevice* transformDevice = static_cast<igtlioTransformDevice*>(device.GetPointer());
     vtkSmartPointer<vtkMatrix4x4> mat = vtkSmartPointer<vtkMatrix4x4>::New();
-    vtkMRMLLinearTransformNode* transformNode = vtkMRMLLinearTransformNode::SafeDownCast(node);
+    vtkMRMLTransformNode* transformNode = vtkMRMLTransformNode::SafeDownCast(node);
     transformNode->GetMatrixTransformToParent(mat);
     igtlioTransformConverter::ContentData content = { mat, transformNode->GetName(), "", "" };
     transformDevice->SetContent(content);
-    modifiedEvent = vtkMRMLLinearTransformNode::TransformModifiedEvent;
+    modifiedEvent = vtkMRMLTransformNode::TransformModifiedEvent;
   }
   else if (device->GetDeviceType().compare("POLYDATA") == 0)
   {
@@ -329,7 +329,7 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
       igtlioTransformDevice* transformDevice = reinterpret_cast<igtlioTransformDevice*>(modifiedDevice);
       if (strcmp(modifiedNode->GetName(), deviceName.c_str()) == 0)
       {
-        vtkMRMLLinearTransformNode* transformNode = vtkMRMLLinearTransformNode::SafeDownCast(modifiedNode);
+        vtkMRMLTransformNode* transformNode = vtkMRMLTransformNode::SafeDownCast(modifiedNode);
         vtkSmartPointer<vtkMatrix4x4> transfromMatrix = vtkSmartPointer<vtkMatrix4x4>::New();
         transfromMatrix->DeepCopy(transformDevice->GetContent().transform);
         transformNode->SetMatrixTransformToParent(transfromMatrix.GetPointer());
@@ -683,8 +683,8 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
   }
   else if (strcmp(device->GetDeviceType().c_str(), "TRANSFORM") == 0)
   {
-    vtkSmartPointer<vtkMRMLLinearTransformNode> transformNode =
-      vtkMRMLLinearTransformNode::SafeDownCast(this->External->GetScene()->GetFirstNode(deviceName.c_str(), "vtkMRMLLinearTransformNode"));
+    vtkSmartPointer<vtkMRMLTransformNode> transformNode =
+      vtkMRMLTransformNode::SafeDownCast(this->External->GetScene()->GetFirstNode(deviceName.c_str(), "vtkMRMLTransformNode"));
     if (transformNode)
     {
       this->External->RegisterIncomingMRMLNode(transformNode, device);
