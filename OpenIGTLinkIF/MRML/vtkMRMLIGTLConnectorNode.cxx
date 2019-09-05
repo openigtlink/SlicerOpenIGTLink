@@ -1451,7 +1451,7 @@ void vtkMRMLIGTLConnectorNode::OnNodeReferenceAdded(vtkMRMLNodeReference* refere
     nodeInfo.nanosecond = 0;
     this->Internal->IncomingMRMLNodeInfoMap[node->GetID()] = nodeInfo;
   }
-  else
+  else if (strcmp(reference->GetReferenceRole(), this->GetOutgoingNodeReferenceRole()) == 0)
   {
     // Find a converter for the node
     igtlioDevicePointer device = NULL;
@@ -1461,6 +1461,11 @@ void vtkMRMLIGTLConnectorNode::OnNodeReferenceAdded(vtkMRMLNodeReference* refere
       igtlioDeviceKeyType key;
       key.name = node->GetName();
       std::vector<std::string> deviceTypes = this->GetDeviceTypeFromMRMLNodeType(node->GetNodeTagName());
+      if (deviceTypes.empty())
+      {
+        vtkErrorMacro("Outgoing node reference is not supported for node type: " << node->GetClassName());
+      }
+
       for (size_t typeIndex = 0; typeIndex < deviceTypes.size(); typeIndex++)
       {
         key.type = deviceTypes[typeIndex];
@@ -1473,10 +1478,14 @@ void vtkMRMLIGTLConnectorNode::OnNodeReferenceAdded(vtkMRMLNodeReference* refere
       if (device == NULL)
       {
         //If no device is found, add a device using the first device type, such as prefer "IMAGE" over "VIDEO" for ScalarVolumeNode.
-        device = this->Internal->IOConnector->GetDeviceFactory()->create(deviceTypes[0], key.name);
-        device->SetMessageDirection(igtlioDevice::MESSAGE_DIRECTION_OUT);
+        igtlioDeviceFactoryPointer factory = this->Internal->IOConnector->GetDeviceFactory();
+        if (factory && !deviceTypes.empty())
+        {
+          device = factory->create(deviceTypes[0], key.name);
+        }
         if (device)
         {
+          device->SetMessageDirection(igtlioDevice::MESSAGE_DIRECTION_OUT);
           this->Internal->OutgoingMRMLIDToDeviceMap[node->GetID()] = device;
           this->Internal->IOConnector->AddDevice(device);
         }
@@ -1488,7 +1497,17 @@ void vtkMRMLIGTLConnectorNode::OnNodeReferenceAdded(vtkMRMLNodeReference* refere
     }
     if (!device)
     {
-      // TODO: Remove the reference ID?
+      // Could not create outgoing node. Remove the node reference
+      int n = this->GetNumberOfNodeReferences(this->GetOutgoingNodeReferenceRole());
+      for (int i = 0; i < n; i++)
+      {
+        const char* id = this->GetNthNodeReferenceID(this->GetOutgoingNodeReferenceRole(), i);
+        if (strcmp(node->GetID(), id) == 0)
+        {
+          this->RemoveNthNodeReferenceID(this->OutgoingNodeReferenceRole, i);
+          break;
+        }
+      }
       return;
     }
     device->SetMessageDirection(igtlioDevice::MESSAGE_DIRECTION_OUT);
@@ -1787,18 +1806,6 @@ int vtkMRMLIGTLConnectorNode::RegisterOutgoingMRMLNode(vtkMRMLNode* node, const 
         break;
       }
     }
-    /*--------
-    // device should be added in the OnNodeReferenceAdded function already,
-    // delete the following lines in the future
-    this->OutgoingMRMLIDToDeviceMap[node->GetName()] = device;
-    if (!device)
-      {
-      device = this->Internal->IOConnector->GetDeviceFactory()->create(key.type, key.name);
-      device->SetMessageDirection(igtlioDevice::MESSAGE_DIRECTION_OUT);
-      this->Internal->IOConnector->AddDevice(device);
-      }
-    */
-
     this->Modified();
 
     return 1;
