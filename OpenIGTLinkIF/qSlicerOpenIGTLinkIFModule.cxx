@@ -126,12 +126,6 @@ void qSlicerOpenIGTLinkIFModule::setup()
   this->Superclass::setup();
 
   qSlicerCoreApplication* app = qSlicerCoreApplication::application();
-#if Slicer_VERSION_MAJOR < 4 || Slicer_VERSION_MAJOR == 4 && Slicer_VERSION_MINOR < 11
-  // TODO: When the stable version of Slicer includes the Texts module/widgets, they can be removed from SlicerOpenIGTLink
-  qSlicerTextFileReader* textFileReader = new qSlicerTextFileReader(this);
-  app->coreIOManager()->registerIO(textFileReader);
-  app->coreIOManager()->registerIO(new qSlicerNodeWriter("TextFileImporter", textFileReader->fileType(), QStringList() << "vtkMRMLTextNode", false, this));
-#endif
 
   // If the object factory is initialized simultaneously on multiple threads,
   // there can be a conflict between factory initializations.
