@@ -27,20 +27,6 @@ if(OpenIGTLink_PROTOCOL_VERSION GREATER 1)
     vtkMRMLLabelMetaListNode.cxx
     vtkSlicerOpenIGTLinkCommand.cxx
     )
-
-  if (Slicer_VERSION VERSION_LESS "4.11.0")
-    #TODO: When the stable version of Slicer includes the Texts module/widgets, they can be removed from SlicerOpenIGTLink
-    list(APPEND ${KIT}_SRCS
-      Text/vtkMRMLTextNode.cxx
-      Text/vtkMRMLTextStorageNode.cxx
-      )
-    list(APPEND ${KIT}_INCLUDE_DIRECTORIES
-      ${CMAKE_CURRENT_SOURCE_DIR}/Text
-      ${CMAKE_CURRENT_BINARY_DIR}/Text
-      )
-    configure_file(Text/vtkMRMLTextNode.h ${CMAKE_CURRENT_BINARY_DIR}/Text/vtkMRMLTextNode.h COPYONLY)
-	configure_file(Text/vtkMRMLTextStorageNode.h ${CMAKE_CURRENT_BINARY_DIR}/Text/vtkMRMLTextStorageNode.h COPYONLY)
-  endif()
 endif()
 
 if(SlicerOpenIGTLink_USE_VP9)
