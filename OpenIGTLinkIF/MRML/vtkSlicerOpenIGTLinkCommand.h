@@ -82,6 +82,8 @@ public:
   std::string GetResponseMetaDataElement(std::string key);
 
   std::map<std::string, std::pair<IANA_ENCODING_TYPE, std::string> > GetCommandMetaData();
+  std::map<std::string, std::pair<IANA_ENCODING_TYPE, std::string> > GetResponseMetaData();
+
 
   void SetTimeoutSec(double);
   double GetTimeoutSec();
