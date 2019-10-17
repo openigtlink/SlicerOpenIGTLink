@@ -153,6 +153,12 @@ std::map<std::string, std::pair<IANA_ENCODING_TYPE, std::string> > vtkSlicerOpen
 }
 
 //---------------------------------------------------------------------------
+std::map<std::string, std::pair<IANA_ENCODING_TYPE, std::string> > vtkSlicerOpenIGTLinkCommand::GetResponseMetaData()
+{
+  return this->Command->GetResponseMetaData();
+}
+
+//---------------------------------------------------------------------------
 void vtkSlicerOpenIGTLinkCommand::SetResponseMetaDataElement(std::string key, std::string value)
 {
   this->Command->SetResponseMetaDataElement(key, value);
