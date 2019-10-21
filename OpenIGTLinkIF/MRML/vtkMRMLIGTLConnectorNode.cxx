@@ -1154,6 +1154,11 @@ void vtkMRMLIGTLConnectorNode::PushOnConnect()
   for (int i = 0; i < this->GetNumberOfOutgoingMRMLNodes(); ++i)
   {
     vtkMRMLNode* node = this->GetOutgoingMRMLNode(i);
+    if (!node)
+    {
+      vtkErrorMacro("PushOnConnect: Could not find outgoing node!");
+      continue;
+    }
     const char* pushOnConnect = node->GetAttribute("OpenIGTLinkIF.pushOnConnect");
     if (pushOnConnect && strcmp(pushOnConnect, "true") == 0)
     {
