@@ -29,6 +29,7 @@ Version:   $Revision: 1.2 $
 #include <vtkMatrix4x4.h>
 #include <vtkNew.h>
 #include <vtkObjectFactory.h>
+#include <vtkCommand.h>
 
 // STD includes
 #include <string>
@@ -109,7 +110,7 @@ void vtkMRMLIGTLTrackingDataBundleNode::vtkInternal::UpdateTransformNode(const c
     vtkmat[i] = igtlmat[i];
   }
   node->SetMatrixTransformToParent(mat.GetPointer());
-
+  this->External->InvokeEvent(vtkCommand::ModifiedEvent);
 }
 
 //----------------------------------------------------------------------------
@@ -203,8 +204,9 @@ void vtkMRMLIGTLTrackingDataBundleNode::UpdateTransformNode(const char* name, vt
     node = iter->second.node;
   }
 
-  node->ApplyTransformMatrix(matrix);
+  node->SetMatrixTransformToParent(matrix);
   node->Delete();
+  this->InvokeEvent(vtkCommand::ModifiedEvent);
 }
 
 //----------------------------------------------------------------------------

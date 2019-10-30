@@ -27,6 +27,7 @@ Version:   $Revision: 1.2 $
 #include <igtlioStatusDevice.h>
 #include <igtlioStringDevice.h>
 #include <igtlioTransformDevice.h>
+#include <igtlioTrackingDataDevice.h>
 #if defined(OpenIGTLink_ENABLE_VIDEOSTREAMING)
 #include <igtlioVideoDevice.h>
 #endif
@@ -37,6 +38,7 @@ Version:   $Revision: 1.2 $
 #include "vtkMRMLImageMetaListNode.h"
 #include "vtkMRMLLabelMetaListNode.h"
 #include "vtkMRMLTextNode.h"
+#include "vtkMRMLIGTLTrackingDataBundleNode.h"
 #include "vtkSlicerOpenIGTLinkCommand.h"
 
 // MRML includes
@@ -211,6 +213,40 @@ unsigned int vtkMRMLIGTLConnectorNode::vtkInternal::AssignOutGoingNodeToDevice(v
     igtlioStringConverter::ContentData content = { static_cast<unsigned int>(textNode->GetEncoding()), text };
     stringDevice->SetContent(content);
     modifiedEvent = vtkMRMLTextNode::TextModifiedEvent;
+  }
+  else if (device->GetDeviceType().compare("TDATA") == 0)
+  {
+    igtlioTrackingDataDevice* tdataDevice = static_cast<igtlioTrackingDataDevice*>(device.GetPointer());
+    igtlioTrackingDataConverter::ContentData content = tdataDevice->GetContent();
+    vtkMRMLIGTLTrackingDataBundleNode* tBundleNode = vtkMRMLIGTLTrackingDataBundleNode::SafeDownCast(node);
+    if (tBundleNode)
+    {
+      int nElements = tBundleNode->GetNumberOfTransformNodes();
+      for (int i = 0; i < nElements; i ++)
+      {
+        vtkMRMLLinearTransformNode* transformNode = tBundleNode->GetTransformNode(i);
+        vtkSmartPointer<vtkMatrix4x4> mat = vtkSmartPointer<vtkMatrix4x4>::New();
+        transformNode->GetMatrixTransformToParent(mat);
+        bool found(false);
+        for (auto iter = content.trackingDataElements.begin(); iter != content.trackingDataElements.end(); ++iter)
+        {
+          if(iter->second.deviceName.compare(transformNode->GetName()) == 0)
+          {
+            // already exists, update transform
+            found = true;
+            iter->second.transform = mat;
+            break;
+          }
+        }
+        if (!found)
+        {
+      content.trackingDataElements[static_cast<int>(content.trackingDataElements.size())] = igtlioTrackingDataConverter::ContentEntry(mat, transformNode->GetName(), transformNode->GetName());
+        }
+      }
+    }
+    
+    tdataDevice->SetContent(content);
+    modifiedEvent = vtkCommand::ModifiedEvent;
   }
   else if (device->GetDeviceType().compare("COMMAND") == 0)
   {
@@ -416,6 +452,42 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
             labelMetaElement.Size[i] = labelMetaIt->Size[i];
           }
           labelMetaNode->AddLabelMetaElement(labelMetaElement);
+        }
+      }
+    }
+    else if (strcmp(deviceType.c_str(), "TDATA") == 0)
+    {
+      igtlioTrackingDataDevice* tdataDevice = reinterpret_cast<igtlioTrackingDataDevice*>(modifiedDevice);
+      if (strcmp(modifiedNode->GetName(), deviceName.c_str()) == 0)
+      {
+        vtkMRMLIGTLTrackingDataBundleNode* tBundleNode = vtkMRMLIGTLTrackingDataBundleNode::SafeDownCast(modifiedNode);
+        if (tBundleNode)
+        {
+          int nElements = tBundleNode->GetNumberOfTransformNodes();
+          igtlioTrackingDataConverter::ContentData content = tdataDevice->GetContent();
+          for (auto iter = content.trackingDataElements.begin(); iter != content.trackingDataElements.end(); ++iter)
+          {
+            bool found(false);
+            vtkSmartPointer<vtkMatrix4x4> mat = vtkSmartPointer<vtkMatrix4x4>::New();
+            
+            for (int i = 0; i < nElements; i ++)
+            {
+              vtkMRMLLinearTransformNode* transformNode = tBundleNode->GetTransformNode(i);
+              if(iter->second.deviceName.compare(transformNode->GetName()) == 0)
+              {
+                // already exists, update transform
+                found = true;
+                mat->DeepCopy(iter->second.transform);
+                transformNode->SetMatrixTransformToParent(mat.GetPointer());
+                transformNode->Modified();
+                break;
+              }
+            }
+            if(!found)
+            {
+              tBundleNode->UpdateTransformNode(iter->second.deviceName.c_str(), mat, iter->second.type);
+            }
+          }
         }
       }
     }
@@ -833,6 +905,34 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
     this->External->RegisterIncomingMRMLNode(labelMetaNode, device);
     return labelMetaNode;
   }
+  else if (strcmp(device->GetDeviceType().c_str(), "TDATA") == 0)
+  {
+    igtlioTrackingDataDevice* tdata = dynamic_cast<igtlioTrackingDataDevice*>(device);
+    if (tdata == nullptr)
+    {
+      vtkErrorWithObjectMacro(this->External, "TDATA message type but not a TDATA device. Cannot process.")
+      return NULL;
+    }
+    auto contentCopy = tdata->GetContent();
+    
+    vtkSmartPointer<vtkMRMLIGTLTrackingDataBundleNode> tdatanode =
+    vtkMRMLIGTLTrackingDataBundleNode::SafeDownCast(this->External->GetScene()->GetFirstNode(deviceName.c_str(), "vtkMRMLIGTLTrackingDataBundleNode"));
+    if (tdatanode)
+    {
+      this->External->RegisterIncomingMRMLNode(tdatanode, device);
+      return tdatanode;
+    }
+    tdatanode = vtkMRMLIGTLTrackingDataBundleNode::New();
+    tdatanode->SetName(deviceName.c_str());
+    tdatanode->SetDescription("Received by OpenIGTLink");
+    for (auto iter = contentCopy.trackingDataElements.cbegin(); iter != contentCopy.trackingDataElements.cend(); ++iter)
+    {
+      tdatanode->UpdateTransformNode(iter->second.deviceName.c_str(), iter->second.transform, iter->second.type);
+    }
+    this->External->GetScene()->AddNode(tdatanode);
+    this->External->RegisterIncomingMRMLNode(tdatanode, device);
+    return tdatanode;
+  }
   return NULL;
 }
 
@@ -974,7 +1074,7 @@ vtkMRMLIGTLConnectorNode::vtkMRMLIGTLConnectorNode()
   this->Internal->DeviceTypeToNodeTagMap["STRING"] = std::vector<std::string>(1, "Text");
   this->Internal->DeviceTypeToNodeTagMap["IMGMETA"] = std::vector<std::string>(1, "ImageMetaList");
   this->Internal->DeviceTypeToNodeTagMap["LBMETA"] = std::vector<std::string>(1, "LabelMetaList");
-
+  this->Internal->DeviceTypeToNodeTagMap["TDATA"] = std::vector<std::string>(1, "IGTLTrackingDataSplitter");
 }
 
 //----------------------------------------------------------------------------
@@ -1705,7 +1805,7 @@ void vtkMRMLIGTLConnectorNode::UnregisterIncomingMRMLNode(vtkMRMLNode* node)
     const char* id = this->GetNthNodeReferenceID(this->GetIncomingNodeReferenceRole(), i);
     if (strcmp(node->GetID(), id) == 0)
     {
-      // Alredy on the list. Remove it.
+      // Already on the list. Remove it.
       this->RemoveNthNodeReferenceID(this->GetIncomingNodeReferenceRole(), i);
       vtkInternal::NodeInfoMapType::iterator iter;
       iter = this->Internal->IncomingMRMLNodeInfoMap.find(id);
