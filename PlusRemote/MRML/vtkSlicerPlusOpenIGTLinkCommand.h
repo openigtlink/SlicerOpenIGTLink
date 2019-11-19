@@ -89,8 +89,8 @@ public:
 
   /// If >0 then commands expires after the specified timeout (state changes from Waiting to Expired).
   // Default timeout is 10 seconds, as most commands should return with a result immediately.
-  vtkGetMacro(CommandTimeoutSec, double);
-  vtkSetMacro(CommandTimeoutSec, double);
+  double GetCommandTimeoutSec() { return this->GetTimeoutSec(); };
+  void SetCommandTimeoutSec(double timeoutSec) { this->SetTimeoutSec(timeoutSec); };
 
   // Response information
 
@@ -137,7 +137,6 @@ private:
   void operator=(const vtkSlicerPlusOpenIGTLinkCommand&);               // Not implemented
 
   char* ID;
-  double CommandTimeoutSec;
   vtkXMLDataElement* CommandXML;
   vtkXMLDataElement* ResponseXML;
 };

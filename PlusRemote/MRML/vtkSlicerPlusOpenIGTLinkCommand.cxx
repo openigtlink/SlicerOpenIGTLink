@@ -33,10 +33,10 @@ vtkStandardNewMacro(vtkSlicerPlusOpenIGTLinkCommand);
 //----------------------------------------------------------------------------
 vtkSlicerPlusOpenIGTLinkCommand::vtkSlicerPlusOpenIGTLinkCommand()
   : ID(NULL)
-  , CommandTimeoutSec(10)
   , CommandXML(NULL)
   , ResponseXML(NULL)
 {
+  this->SetCommandTimeoutSec(10);
   this->CommandXML = vtkXMLDataElement::New();
   this->CommandXML->SetName("Command");
 }
