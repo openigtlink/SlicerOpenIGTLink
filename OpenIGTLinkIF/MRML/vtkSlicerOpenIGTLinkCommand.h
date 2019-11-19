@@ -52,6 +52,15 @@ public:
     CommandWaiting = igtlioCommandStatus::CommandWaiting,
   };
 
+  enum
+  {
+    CommandCompletedEvent = igtlioCommand::CommandCompletedEvent,
+    CommandCancelledEvent = igtlioCommand::CommandCancelledEvent,
+    CommandExpiredEvent = igtlioCommand::CommandExpiredEvent,
+    CommandReceivedEvent = igtlioCommand::CommandReceivedEvent,
+    CommandResponseEvent = igtlioCommand::CommandResponseEvent,
+  };
+
 public:
   void SendCommand(vtkMRMLIGTLConnectorNode* connectorNode);
 
