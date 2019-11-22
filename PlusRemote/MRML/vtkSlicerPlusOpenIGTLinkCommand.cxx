@@ -203,7 +203,7 @@ const std::string vtkSlicerPlusOpenIGTLinkCommand::GetResponseText()
 {
   if (!this->ResponseXML)
   {
-    return nullptr;
+    return "";
   }
   return this->GetResponseContent();
 }

@@ -32,9 +32,18 @@ vtkSlicerOpenIGTLinkCommand::vtkSlicerOpenIGTLinkCommand()
   : Callback(vtkSmartPointer<vtkCallbackCommand>::New())
   , Command(igtlioCommandPointer::New())
 {
+  this->SetBlocking(false);
+
   this->Callback->SetCallback(vtkSlicerOpenIGTLinkCommand::CommandCallback);
   this->Callback->SetClientData(this);
   this->ClearCommand();
+
+  this->Command->AddObserver(igtlioCommand::CommandCancelledEvent, this->Callback);
+  this->Command->AddObserver(igtlioCommand::CommandCompletedEvent, this->Callback);
+  this->Command->AddObserver(igtlioCommand::CommandExpiredEvent, this->Callback);
+  this->Command->AddObserver(igtlioCommand::CommandReceivedEvent, this->Callback);
+  this->Command->AddObserver(igtlioCommand::CommandResponseEvent, this->Callback);
+  this->Command->AddObserver(vtkCommand::ModifiedEvent, this->Callback);
 }
 
 //---------------------------------------------------------------------------
@@ -55,16 +64,6 @@ void vtkSlicerOpenIGTLinkCommand::ClearCommand()
 //---------------------------------------------------------------------------
 void vtkSlicerOpenIGTLinkCommand::SendCommand(vtkMRMLIGTLConnectorNode* connectorNode)
 {
-  if (!connectorNode->HasObserver(igtlioCommand::CommandCancelledEvent, this->Callback))
-  {
-    this->Command->AddObserver(igtlioCommand::CommandCancelledEvent, this->Callback);
-    this->Command->AddObserver(igtlioCommand::CommandCompletedEvent, this->Callback);
-    this->Command->AddObserver(igtlioCommand::CommandExpiredEvent, this->Callback);
-    this->Command->AddObserver(igtlioCommand::CommandReceivedEvent, this->Callback);
-    this->Command->AddObserver(igtlioCommand::CommandResponseEvent, this->Callback);
-    this->Command->AddObserver(vtkCommand::ModifiedEvent, this->Callback);
-  }
-
   connectorNode->SendCommand(this->Command);
 }
 
