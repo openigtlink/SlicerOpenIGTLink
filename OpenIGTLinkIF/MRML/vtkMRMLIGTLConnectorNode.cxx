@@ -222,7 +222,7 @@ unsigned int vtkMRMLIGTLConnectorNode::vtkInternal::AssignOutGoingNodeToDevice(v
     if (tBundleNode)
     {
       int nElements = tBundleNode->GetNumberOfTransformNodes();
-      for (int i = 0; i < nElements; i ++)
+      for (int i = 0; i < nElements; i++)
       {
         vtkMRMLLinearTransformNode* transformNode = tBundleNode->GetTransformNode(i);
         vtkSmartPointer<vtkMatrix4x4> mat = vtkSmartPointer<vtkMatrix4x4>::New();
@@ -230,7 +230,7 @@ unsigned int vtkMRMLIGTLConnectorNode::vtkInternal::AssignOutGoingNodeToDevice(v
         bool found(false);
         for (auto iter = content.trackingDataElements.begin(); iter != content.trackingDataElements.end(); ++iter)
         {
-          if(iter->second.deviceName.compare(transformNode->GetName()) == 0)
+          if (iter->second.deviceName.compare(transformNode->GetName()) == 0)
           {
             // already exists, update transform
             found = true;
@@ -240,11 +240,11 @@ unsigned int vtkMRMLIGTLConnectorNode::vtkInternal::AssignOutGoingNodeToDevice(v
         }
         if (!found)
         {
-      content.trackingDataElements[static_cast<int>(content.trackingDataElements.size())] = igtlioTrackingDataConverter::ContentEntry(mat, transformNode->GetName(), transformNode->GetName());
+          content.trackingDataElements[static_cast<int>(content.trackingDataElements.size())] = igtlioTrackingDataConverter::ContentEntry(mat, transformNode->GetName(), transformNode->GetName());
         }
       }
     }
-    
+
     tdataDevice->SetContent(content);
     modifiedEvent = vtkCommand::ModifiedEvent;
   }
@@ -469,11 +469,11 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
           {
             bool found(false);
             vtkSmartPointer<vtkMatrix4x4> mat = vtkSmartPointer<vtkMatrix4x4>::New();
-            
-            for (int i = 0; i < nElements; i ++)
+
+            for (int i = 0; i < nElements; i++)
             {
               vtkMRMLLinearTransformNode* transformNode = tBundleNode->GetTransformNode(i);
-              if(iter->second.deviceName.compare(transformNode->GetName()) == 0)
+              if (iter->second.deviceName.compare(transformNode->GetName()) == 0)
               {
                 // already exists, update transform
                 found = true;
@@ -483,7 +483,7 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
                 break;
               }
             }
-            if(!found)
+            if (!found)
             {
               tBundleNode->UpdateTransformNode(iter->second.deviceName.c_str(), mat, iter->second.type);
             }
@@ -910,13 +910,13 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
     igtlioTrackingDataDevice* tdata = dynamic_cast<igtlioTrackingDataDevice*>(device);
     if (tdata == nullptr)
     {
-      vtkErrorWithObjectMacro(this->External, "TDATA message type but not a TDATA device. Cannot process.")
+      vtkErrorWithObjectMacro(this->External, "TDATA message type but not a TDATA device. Cannot process.");
       return NULL;
     }
     auto contentCopy = tdata->GetContent();
-    
+
     vtkSmartPointer<vtkMRMLIGTLTrackingDataBundleNode> tdatanode =
-    vtkMRMLIGTLTrackingDataBundleNode::SafeDownCast(this->External->GetScene()->GetFirstNode(deviceName.c_str(), "vtkMRMLIGTLTrackingDataBundleNode"));
+      vtkMRMLIGTLTrackingDataBundleNode::SafeDownCast(this->External->GetScene()->GetFirstNode(deviceName.c_str(), "vtkMRMLIGTLTrackingDataBundleNode"));
     if (tdatanode)
     {
       this->External->RegisterIncomingMRMLNode(tdatanode, device);
@@ -1062,6 +1062,8 @@ vtkMRMLIGTLConnectorNode::vtkMRMLIGTLConnectorNode()
   this->SetOutgoingNodeReferenceMRMLAttributeName("outgoingNodeRef");
   this->AddNodeReferenceRole(this->GetOutgoingNodeReferenceRole(),
     this->GetOutgoingNodeReferenceMRMLAttributeName());
+
+  this->OutgoingMessageHeaderVersionMaximum = -1;
 
   this->Internal->DeviceTypeToNodeTagMap.clear();
   std::string volumeTags[] = { "Volume", "VectorVolume", "StreamingVolume" };
@@ -1220,7 +1222,11 @@ void vtkMRMLIGTLConnectorNode::ProcessIOConnectorEvents(vtkObject* caller, unsig
       statusDevice = vtkSmartPointer<igtlioStatusDevice>::New();
       connector->AddDevice(statusDevice);
     }
-    statusDevice->SetMetaDataElement("dummy", "dummy"); // existence of metadata makes the IO connector send a header v2 message
+
+    if (this->OutgoingMessageHeaderVersionMaximum < 0 || this->OutgoingMessageHeaderVersionMaximum >= IGTL_HEADER_VERSION_2)
+    {
+      statusDevice->SetMetaDataElement("dummy", "dummy"); // existence of metadata makes the IO connector send a header v2 message
+    }
     connector->SendMessage(igtlioDeviceKeyType::CreateDeviceKey(statusDevice));
     connector->RemoveDevice(statusDevice);
 
@@ -1353,7 +1359,10 @@ void vtkMRMLIGTLConnectorNode::WriteXML(ostream& of, int nIndent)
   of << " checkCRC=\"" << this->Internal->IOConnector->GetCheckCRC() << "\" ";
   of << " state=\"" << this->Internal->IOConnector->GetState() << "\"";
   of << " restrictDeviceName=\"" << this->Internal->IOConnector->GetRestrictDeviceName() << "\" ";
-
+  if (this->OutgoingMessageHeaderVersionMaximum > 0)
+  {
+    of << " outgoingMessageHeaderVersionMaximum=\"" << this->GetOutgoingMessageHeaderVersionMaximum() << "\" ";
+  }
 }
 
 
@@ -1427,6 +1436,14 @@ void vtkMRMLIGTLConnectorNode::ReadXMLAttributes(const char** atts)
       std::stringstream ss;
       ss << attValue;
       ss >> state;
+    }
+    if (!strcmp(attName, "outgoingMessageHeaderVersionMaximum"))
+    {
+      std::stringstream ss;
+      ss << attValue;
+      int outgoingMessageHeaderVersionMaximum = -1;
+      ss >> outgoingMessageHeaderVersionMaximum;
+      this->SetOutgoingMessageHeaderVersionMaximum(outgoingMessageHeaderVersionMaximum);
     }
 
     switch (type)
@@ -2015,34 +2032,36 @@ int vtkMRMLIGTLConnectorNode::PushNode(vtkMRMLNode* node)
   key.name = device->GetDeviceName();
   key.type = device->GetDeviceType();
   device->ClearMetaData();
-  device->SetMetaDataElement(MEMLNodeNameKey, IANA_TYPE_US_ASCII, node->GetNodeTagName());
-
-  if (node->IsA("vtkMRMLTransformNode"))
+  if (this->OutgoingMessageHeaderVersionMaximum < 0 || this->OutgoingMessageHeaderVersionMaximum >= IGTL_HEADER_VERSION_2)
   {
-    const char* transformStatusAttribute = node->GetAttribute("TransformStatus");
-    if (transformStatusAttribute)
+    device->SetMetaDataElement(MEMLNodeNameKey, IANA_TYPE_US_ASCII, node->GetNodeTagName());
+    if (node->IsA("vtkMRMLTransformNode"))
     {
-      device->SetMetaDataElement("TransformStatus", transformStatusAttribute);
+      const char* transformStatusAttribute = node->GetAttribute("TransformStatus");
+      if (transformStatusAttribute)
+      {
+        device->SetMetaDataElement("TransformStatus", transformStatusAttribute);
+      }
+      else
+      {
+        // If no transform status is specified, the transform node is assumed to be valid.
+        // Transform status should be set to "OK", rather than "UNKNOWN" to reflect this.
+        device->SetMetaDataElement("TransformStatus", "OK");
+      }
     }
     else
     {
-      // If no transform status is specified, the transform node is assumed to be valid.
-      // Transform status should be set to "OK", rather than "UNKNOWN" to reflect this.
-      device->SetMetaDataElement("TransformStatus", "OK");
-    }
-  }
-  else
-  {
-    const char* statusAttribute = node->GetAttribute("Status");
-    if (statusAttribute)
-    {
-      device->SetMetaDataElement("Status", statusAttribute);
-    }
-    else
-    {
-      // If no status is specified, the node is assumed to be valid.
-      // Status should be set to "OK", rather than "UNKNOWN" to reflect this.
-      device->SetMetaDataElement("Status", "OK");
+      const char* statusAttribute = node->GetAttribute("Status");
+      if (statusAttribute)
+      {
+        device->SetMetaDataElement("Status", statusAttribute);
+      }
+      else
+      {
+        // If no status is specified, the node is assumed to be valid.
+        // Status should be set to "OK", rather than "UNKNOWN" to reflect this.
+        device->SetMetaDataElement("Status", "OK");
+      }
     }
   }
 
