@@ -100,7 +100,9 @@ public:
   // Description:
   // Get node XML tag name (like Volume, Model)
   virtual const char* GetNodeTagName() override
-  {return "IGTLConnector";};
+  {
+    return "IGTLConnector";
+  };
 
   // method to propagate events generated in mrml
   virtual void ProcessMRMLEvents(vtkObject* caller, unsigned long event, void* callData) override;
@@ -296,6 +298,11 @@ public:
   //ETX
 #endif // __VTK_WRAP__
 
+  // Outgoing header version
+  // Should be set before messages are sent
+  vtkGetMacro(OutgoingMessageHeaderVersionMaximum, int);
+  vtkSetMacro(OutgoingMessageHeaderVersionMaximum, int);
+
 protected:
   //----------------------------------------------------------------
   // Constructor and destroctor
@@ -305,6 +312,11 @@ protected:
   ~vtkMRMLIGTLConnectorNode();
   vtkMRMLIGTLConnectorNode(const vtkMRMLIGTLConnectorNode&);
   void operator=(const vtkMRMLIGTLConnectorNode&);
+
+  //----------------------------------------------------------------
+  // Outgoing header version
+  //----------------------------------------------------------------
+  int OutgoingMessageHeaderVersionMaximum;
 
   //----------------------------------------------------------------
   // Reference role strings
