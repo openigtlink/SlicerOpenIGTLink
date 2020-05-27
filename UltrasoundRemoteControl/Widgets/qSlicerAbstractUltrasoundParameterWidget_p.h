@@ -37,7 +37,7 @@ protected:
   qSlicerAbstractUltrasoundParameterWidget* const q_ptr;
 
 public:
-  vtkSmartPointer<vtkMRMLIGTLConnectorNode> ConnectorNode;
+  vtkWeakPointer<vtkMRMLIGTLConnectorNode> ConnectorNode;
 
   std::string           ParameterName;
   std::string           DeviceID;
