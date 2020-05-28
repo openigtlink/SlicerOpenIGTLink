@@ -1504,7 +1504,6 @@ void vtkMRMLIGTLConnectorNode::Copy(vtkMRMLNode* anode)
     this->Internal->IOConnector->SetType(igtlioConnector::TYPE_NOT_DEFINED);
     break;
   }
-  this->Internal->IOConnector->SetState(node->Internal->IOConnector->GetState());
   this->Internal->IOConnector->SetPersistent(node->Internal->IOConnector->GetPersistent());
   this->SetCheckCRC(node->GetCheckCRC());
 }
