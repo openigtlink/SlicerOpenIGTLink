@@ -73,6 +73,7 @@ public slots:
   virtual void setMRMLScene(vtkMRMLScene*);
   void onNodeAddedEvent(vtkObject*, vtkObject*);
   void onNodeRemovedEvent(vtkObject*, vtkObject*);
+  void onModulesAboutToBeUnloaded();
 
   void updateAllPlusRemoteNodes();
 

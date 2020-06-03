@@ -74,16 +74,18 @@ protected:
   /// Register MRML Node classes to Scene. Gets called automatically when the MRMLScene is attached to this logic class.
   virtual void RegisterNodes();
 
-
   void ProcessMRMLSceneEvents(vtkObject *caller, unsigned long event, void *callData) override;
 
   /// Initialize listening to MRML events
-  virtual void SetMRMLSceneInternal(vtkMRMLScene* newScene) override;
-  virtual void OnMRMLSceneNodeAdded(vtkMRMLNode* node) override;
+  void SetMRMLSceneInternal(vtkMRMLScene* newScene) override;
+  void OnMRMLSceneStartClose() override;
   virtual void OnMRMLSceneNodeAboutToBeRemoved(vtkMRMLNode* node);
 
 public:
   void CreateDefaultParameterSet();
+
+  /// Close all servers that are controlled by the scene
+  void CloseAllServers();
 
   /// Send a command to get the list of capture devices from the Plus
   void RequestCaptureDeviceIDs(vtkMRMLPlusRemoteNode*);

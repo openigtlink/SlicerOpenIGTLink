@@ -323,6 +323,7 @@ void vtkSlicerPlusRemoteLogic::RegisterNodes()
 void vtkSlicerPlusRemoteLogic::SetMRMLSceneInternal(vtkMRMLScene* newScene)
 {
   vtkNew<vtkIntArray> sceneEvents;
+  sceneEvents->InsertNextValue(vtkMRMLScene::StartCloseEvent);
   sceneEvents->InsertNextValue(vtkMRMLScene::NodeAddedEvent);
   sceneEvents->InsertNextValue(vtkMRMLScene::NodeAboutToBeRemovedEvent);
   this->SetAndObserveMRMLSceneEventsInternal(newScene, sceneEvents.GetPointer());
@@ -338,17 +339,31 @@ void vtkSlicerPlusRemoteLogic::ProcessMRMLSceneEvents(vtkObject *caller, unsigne
   {
   case vtkMRMLScene::NodeAboutToBeRemovedEvent:
     node = reinterpret_cast<vtkMRMLNode*>(callData);
-    assert(node);
     this->OnMRMLSceneNodeAboutToBeRemoved(node);
   }
 }
 
 //---------------------------------------------------------------------------
-void vtkSlicerPlusRemoteLogic::OnMRMLSceneNodeAdded(vtkMRMLNode* node)
+void vtkSlicerPlusRemoteLogic::OnMRMLSceneStartClose()
 {
-  if (!node)
+  this->CloseAllServers();
+}
+
+//---------------------------------------------------------------------------
+void vtkSlicerPlusRemoteLogic::CloseAllServers()
+{
+  vtkMRMLScene* scene = this->GetMRMLScene();
+  if (!scene)
   {
     return;
+  }
+  vtkSmartPointer<vtkCollection> serverNodes = vtkSmartPointer<vtkCollection>::Take(scene->GetNodesByClass("vtkMRMLPlusServerNode"));
+  vtkSmartPointer<vtkCollectionIterator> serverNodeIt = vtkSmartPointer<vtkCollectionIterator>::New();
+  serverNodeIt->SetCollection(serverNodes);
+  for (serverNodeIt->InitTraversal(); !serverNodeIt->IsDoneWithTraversal(); serverNodeIt->GoToNextItem())
+  {
+    vtkMRMLPlusServerNode* plusRemoteNode = vtkMRMLPlusServerNode::SafeDownCast(serverNodeIt->GetCurrentObject());
+    this->OnMRMLSceneNodeAboutToBeRemoved(plusRemoteNode);
   }
 }
 
@@ -371,6 +386,7 @@ void vtkSlicerPlusRemoteLogic::OnMRMLSceneNodeAboutToBeRemoved(vtkMRMLNode* node
       {
         this->SendStopServerCommand(serverNode);
       }
+      serverNode->SetDesiredState(vtkMRMLPlusServerNode::Off);
       launcherNode->RemoveServerNode(serverNode);
     }
     ServerCommandMapType::iterator serverCommand = this->ServerCommandMap.find(serverNode);

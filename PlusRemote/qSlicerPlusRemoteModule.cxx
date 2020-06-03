@@ -25,6 +25,10 @@
 #include <QTimer>
 #include <QtPlugin>
 
+// Slicer includes
+#include <qSlicerModuleFactoryManager.h>
+#include <qSlicerModuleManager.h>
+
 // MRML includes
 #include <vtkMRMLScene.h>
 
@@ -97,6 +101,9 @@ qSlicerPlusRemoteModule::qSlicerPlusRemoteModule(QObject* _parent)
     this->qvtkConnect(scene, vtkMRMLScene::NodeAddedEvent, this, SLOT(onNodeAddedEvent(vtkObject*, vtkObject*)));
     this->qvtkConnect(scene, vtkMRMLScene::NodeRemovedEvent, this, SLOT(onNodeRemovedEvent(vtkObject*, vtkObject*)));
   }
+  qSlicerModuleManager* moduleManager = qSlicerCoreApplication::application()->moduleManager();
+  qSlicerModuleFactoryManager* moduleFactoryManager = moduleManager->factoryManager();
+  connect(moduleFactoryManager, SIGNAL(modulesAboutToBeUnloaded(QStringList)), this, SLOT(onModulesAboutToBeUnloaded()));
 }
 
 //-----------------------------------------------------------------------------
@@ -181,6 +188,17 @@ qSlicerAbstractModuleRepresentation* qSlicerPlusRemoteModule::createWidgetRepres
 vtkMRMLAbstractLogic* qSlicerPlusRemoteModule::createLogic()
 {
   return vtkSlicerPlusRemoteLogic::New();
+}
+
+//-----------------------------------------------------------------------------
+void qSlicerPlusRemoteModule::onModulesAboutToBeUnloaded()
+{
+  vtkSlicerPlusRemoteLogic* logic = vtkSlicerPlusRemoteLogic::SafeDownCast(this->logic());
+  if (!logic)
+    {
+    return;
+    }
+  logic->CloseAllServers();
 }
 
 // --------------------------------------------------------------------------
