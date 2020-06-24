@@ -25,6 +25,7 @@ Version:   $Revision: 1.2 $
 #include <igtlioStringDevice.h>
 #include <igtlioTransformDevice.h>
 #include <igtlioTrackingDataDevice.h>
+#include <igtlioNDArrayDevice.h>
 #if defined(OpenIGTLink_ENABLE_VIDEOSTREAMING)
 #include <igtlioVideoDevice.h>
 #endif
@@ -60,6 +61,7 @@ Version:   $Revision: 1.2 $
 #include <vtkMatrix3x3.h>
 #include <vtkMatrix4x4.h>
 #include <vtkMutexLock.h>
+#include <vtkDataArray.h>
 #include <vtkPolyData.h>
 #include <vtkTable.h>
 #include <vtkTable.h>
@@ -215,6 +217,12 @@ unsigned int vtkMRMLIGTLConnectorNode::vtkInternal::AssignOutGoingNodeToDevice(v
     igtlioTransformConverter::ContentData content = { mat, transformNode->GetName(), "", "" };
     transformDevice->SetContent(content);
     modifiedEvent = vtkMRMLTransformNode::TransformModifiedEvent;
+  }
+  else if (device->GetDeviceType().compare("NDARRAY") == 0)
+  {
+    igtlioNDArrayDevice* NDArrayDevice = static_cast<igtlioNDArrayDevice*>(device.GetPointer());
+    vtkSmartPointer<vtkDataArray> arr = vtkSmartPointer<vtkDataArray>::New();
+    vtkMRMLTableNode* tableNode = vtkMRMLTableNode::SafeDownCast(node);
   }
   else if (device->GetDeviceType().compare("POLYDATA") == 0)
   {
@@ -1050,6 +1058,20 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::CreateNewMRMLNodeForDevice(i
     // its contents will be updated later
     this->External->RegisterIncomingMRMLNode(markupsNode, device);
     return markupsNode;
+  }
+  else if (strcmp(device->GetDeviceType().c_str(), "NDARRAY") == 0)
+  {
+    vtkSmartPointer<vtkMRMLTableNode> tableNode = vtkMRMLTableNode::SafeDownCast(this->External->GetScene()->GetFirstNode(deviceName.c_str(), "vtkMRMLTableNode"));
+    if (tableNode)
+    {
+      this->External->RegisterIncomingMRMLNode(tableNode, device)
+      return tableNode;
+    }
+    igtlioNDArrayDevice* ndArrayDevice = reinterpret_cast<igtlioNDArrayDevice*>(device);
+    tableNode = vtkSmartPointer<vtkMRMLTableNode>::New();
+    tableNode->SetName(deviceName.c_str());
+    tableNode->SetDescription("Recieved by OpenIGTLink");
+    igtlioNDArrayConverter::ContentData content = ndArrayDevice->GetContent();
   }
   else if (strcmp(device->GetDeviceType().c_str(), "IMGMETA") == 0)
   {
