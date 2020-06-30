@@ -32,7 +32,7 @@ Version:   $Revision: 1.2 $
 // OpenIGTLinkIF MRML includes
 #include "vtkMRMLIGTLConnectorNode.h"
 #include "vtkMRMLIGTLStatusNode.h"
-#include "vtkMRMLIGTLTableNode.h"
+#include "vtkMRMLTableNode.h"
 #include "vtkMRMLImageMetaListNode.h"
 #include "vtkMRMLLabelMetaListNode.h"
 #include "vtkMRMLTextNode.h"
@@ -59,6 +59,8 @@ Version:   $Revision: 1.2 $
 #include <vtkMatrix4x4.h>
 #include <vtkMutexLock.h>
 #include <vtkPolyData.h>
+#include <vtkTable.h>
+#include <vtkTable.h>
 #include <vtkTimerLog.h>
 #include <vtkWeakPointer.h>
 #include <vtkDataArray.h>
@@ -193,13 +195,12 @@ unsigned int vtkMRMLIGTLConnectorNode::vtkInternal::AssignOutGoingNodeToDevice(v
   }
   else if (device->GetDeviceType().compare("TABLE") == 0)
   {
-    igtlioNDArrayDevice* ndArrayDevice = static_cast<igtlioNDArrayDevice*>(device.GetPointer());
-    vtkSmartPointer<vtkDataArray> arr = vtkSmartPointer<vtkDataArray>::New();
     vtkMRMLTableNode* tableNode = vtkMRMLTableNode::SafeDownCast(node);
-    arr->SetComponent(0,0,0); // This changed
+    vtkDataArray* arr = vtkDataArray::SafeDownCast(tableNode->GetTable()->GetColumn(0));
+    //arr->SetComponent(0,0, arr); // This changed
     igtlioNDArrayConverter::ContentData content = {arr};
-    ndArrayDevice->SetContent(content);
-    modifiedEvent = vtkMRMLTableNode::ArrayModifiedEvent;
+    //device->SetContent(content);
+    //modifiedEvent = vtkMRMLTableNode::ArrayModifiedEvent;
   }
   else if (device->GetDeviceType().compare("TRANSFORM") == 0)
   {
@@ -374,13 +375,13 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
         statusNode->Modified();
       }
     }
-    else if (strcmp(deviceType.c_str(), "TABLE") == 0)
+    else if (strcmp(deviceType.c_str(), "ARRAY") == 0)
     {
         igtlioNDArrayDevice* ndArrayDevice = reinterpret_cast<igtlioNDArrayDevice*>(modifiedDevice);
             if (strcmp(modifiedNode->GetName(), deviceName.c_str()) == 0)
             {
                 vtkMRMLTableNode* tableNode = vtkMRMLTableNode::SafeDownCast(modifiedNode);
-                vtkDataArray* dataArray = vtkDataArray::SafeDownCast(modifiedNode);
+                vtkDataArray* dataArray = vtkDataArray::SafeDownCast(tableNode->GetTable()->GetColumn(0));
                 dataArray->InsertTuple(0, 0, ndArrayDevice->GetContent().NDArray_msg);
                 dataArray->Modified();
                 tableNode->AddColumn(dataArray);
@@ -790,7 +791,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
     }
   tableNode = vtkSmartPointer<vtkMRMLTableNode>::New();
   tableNode->SetName(deviceName.c_str());
-  vtkDataArray* dataArray = vtkDataArray::SafeDownCast(tableNode);
+  vtkDataArray* dataArray = vtkDataArray::SafeDownCast(tableNode->GetTable()->GetColumn(0));
   this->External->GetScene()->AddNode(tableNode);
   this->External->RegisterIncomingMRMLNode(tableNode, device);
   return tableNode;
