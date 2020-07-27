@@ -20,9 +20,9 @@ Version:   $Revision: 1.2 $
 #include <igtlioLabelMetaDevice.h>
 #include <igtlioPolyDataDevice.h>
 #include <igtlioPointDevice.h>
+#include <igtlioNDArrayDevice.h>
 #include <igtlioStatusDevice.h>
 #include <igtlioStringDevice.h>
-#include <igtlioNDArrayDevice.h>
 #include <igtlioTransformDevice.h>
 #include <igtlioTrackingDataDevice.h>
 #if defined(OpenIGTLink_ENABLE_VIDEOSTREAMING)
@@ -375,17 +375,17 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
         statusNode->Modified();
       }
     }
-    else if (strcmp(deviceType.c_str(), "ARRAY") == 0)
+    else if (strcmp(deviceType.c_str(), "NDARRAY") == 0)
     {
-        igtlioNDArrayDevice* ndArrayDevice = reinterpret_cast<igtlioNDArrayDevice*>(modifiedDevice);
+        igtlioNDArrayDevice* ndarraydevice = reinterpret_cast<igtlioNDArrayDevice*>(modifiedDevice);
             if (strcmp(modifiedNode->GetName(), deviceName.c_str()) == 0)
             {
-                vtkMRMLTableNode* tableNode = vtkMRMLTableNode::SafeDownCast(modifiedNode);
-                vtkDataArray* dataArray = vtkDataArray::SafeDownCast(tableNode->GetTable()->GetColumn(0));
-                dataArray->InsertTuple(0, 0, ndArrayDevice->GetContent().NDArray_msg);
-                dataArray->Modified();
-                tableNode->AddColumn(dataArray);
-                tableNode->Modified();
+                vtkMRMLTableNode* tablenode = vtkMRMLTableNode::SafeDownCast(modifiedNode);
+                vtkDataArray* dataarray = vtkDataArray::SafeDownCast(tablenode->GetTable()->GetColumn(0));
+                dataarray->InsertTuple(0, 0, ndarraydevice->GetContent().NDArray_msg);
+                dataarray->Modified();
+                tablenode->AddColumn(dataarray);
+                tablenode->Modified();
         }
     }
     else if (strcmp(deviceType.c_str(), "TRANSFORM") == 0)
@@ -781,7 +781,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
     this->External->RegisterIncomingMRMLNode(statusNode, device);
     return statusNode;
   }
-  else if (strcmp(device->GetDeviceType().c_str(), "ARRAY") == 0)
+  else if (strcmp(device->GetDeviceType().c_str(), "NDARRAY") == 0)
   {
   vtkSmartPointer<vtkMRMLTableNode> tableNode = vtkMRMLTableNode::SafeDownCast(this->External->GetScene()->GetFirstNode(deviceName.c_str(), "vtkMRMLTableNode"));
   if (tableNode)
@@ -795,7 +795,6 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
   this->External->GetScene()->AddNode(tableNode);
   this->External->RegisterIncomingMRMLNode(tableNode, device);
   return tableNode;
-
    }
 
   else if (strcmp(device->GetDeviceType().c_str(), "TRANSFORM") == 0)
@@ -1200,7 +1199,7 @@ std::vector<std::string> vtkMRMLIGTLConnectorNode::GetDeviceTypeFromMRMLNodeType
   return std::vector<std::string>(0);
   if (strcmp(nodeTag, "NDArrayMessage") == 0)
   {
-      return std::vector<std::string>(1, "ARRAY");
+      return std::vector<std::string>(1, "NDARRAY");
   }
 }
 
