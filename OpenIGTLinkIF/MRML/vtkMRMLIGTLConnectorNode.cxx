@@ -198,15 +198,7 @@ unsigned int vtkMRMLIGTLConnectorNode::vtkInternal::AssignOutGoingNodeToDevice(v
     statusDevice->SetContent(content);
     modifiedEvent = vtkMRMLIGTLStatusNode::StatusModifiedEvent;
   }
-  else if (device->GetDeviceType().compare("NDARRAY") == 0)
-  {
-      vtkMRMLTableNode* tableNode = vtkMRMLTableNode::SafeDownCast(node);
-      vtkDataArray* arr = vtkDataArray::SafeDownCast(tableNode->GetTable()->GetColumn(0));
-      //arr->SetComponent(0,0, arr); // This changed
-      igtlioNDArrayConverter::ContentData content = { arr };
-      //device->SetContent(content);
-      //modifiedEvent = vtkMRMLTableNode::ArrayModifiedEvent;
-  }
+
   else if (device->GetDeviceType().compare("TRANSFORM") == 0)
   {
     igtlioTransformDevice* transformDevice = static_cast<igtlioTransformDevice*>(device.GetPointer());
@@ -221,10 +213,7 @@ unsigned int vtkMRMLIGTLConnectorNode::vtkInternal::AssignOutGoingNodeToDevice(v
   {
     vtkMRMLTableNode* tableNode = vtkMRMLTableNode::SafeDownCast(node);
     vtkDataArray* arr = vtkDataArray::SafeDownCast(tableNode->GetTable()->GetColumn(0));
-    //arr->SetComponent(0,0, arr); // This changed
     igtlioNDArrayConverter::ContentData content = {arr};
-    //device->SetContent(content);
-    //modifiedEvent = vtkMRMLTableNode::ArrayModifiedEvent;
   }
   else if (device->GetDeviceType().compare("POLYDATA") == 0)
   {
@@ -358,18 +347,25 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
   vtkObject* vtkNotUsed(caller), unsigned long vtkNotUsed(event), igtlioDevice* modifiedDevice)
 {
   vtkMRMLNode* modifiedNode = this->GetMRMLNodeforDevice(modifiedDevice);
+  
   if (!modifiedNode)
   {
     // Could not find or add node.
     return;
   }
-
+  
   int wasModifyingNode = modifiedNode->StartModify();
 
   const std::string deviceType = modifiedDevice->GetDeviceType();
   const std::string deviceName = modifiedDevice->GetDeviceName();
+
+  std::cout << deviceType << std::endl;
+  std::cout << deviceName << std::endl;
+  int diff = strcmp(deviceType.c_str(), "NDARRAY");
+  std::cout << diff << std::endl;
   if (this->External->GetNodeTagFromDeviceType(deviceType.c_str()).size() > 0)
   {
+    std::cout << "anything" << std::endl;
     if (strcmp(deviceType.c_str(), "IMAGE") == 0)
     {
       igtlioImageDevice* imageDevice = reinterpret_cast<igtlioImageDevice*>(modifiedDevice);
@@ -428,7 +424,7 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
         statusNode->Modified();
       }
     }
-    else if (strcmp(deviceType.c_str(), "ARRAY") == 0)
+    else if (strcmp(deviceType.c_str(), "NDARRAY") == 0)
     {
         igtlioNDArrayDevice* ndArrayDevice = reinterpret_cast<igtlioNDArrayDevice*>(modifiedDevice);
             if (strcmp(modifiedNode->GetName(), deviceName.c_str()) == 0)
