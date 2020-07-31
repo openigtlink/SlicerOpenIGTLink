@@ -10,10 +10,6 @@ set(MODULE_TITLE "OpenIGTLinkIF")
 string(TOUPPER ${MODULE_NAME} MODULE_NAME_UPPER)
 
 #-----------------------------------------------------------------------------
-find_package(Slicer REQUIRED)
-include(${Slicer_USE_FILE})
-
-#-----------------------------------------------------------------------------
 # OpenIGTlinkIF version number.
 set(OpenIGTLinkIF_VERSION_MAJOR "2")
 set(OpenIGTLinkIF_VERSION_MINOR "0")
