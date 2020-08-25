@@ -476,12 +476,12 @@ void vtkMRMLPlusRemoteNode::Copy(vtkMRMLNode* anode)
   vtkMRMLCopyBeginMacro(anode);
 
   vtkMRMLCopyStdStringMacro(CurrentCaptureID);
-  vtkMRMLCopyStdStringVectorMacroMacro(CaptureIDs);
+  vtkMRMLCopyStdStringVectorMacro(CaptureIDs);
 
   vtkMRMLCopyStdStringMacro(CurrentVolumeReconstructorID);
-  vtkMRMLCopyStdStringVectorMacroMacro(VolumeReconstructorIDs);
+  vtkMRMLCopyStdStringVectorMacro(VolumeReconstructorIDs);
 
-  vtkMRMLCopyStdStringVectorMacroMacro(DeviceIDs);
+  vtkMRMLCopyStdStringVectorMacro(DeviceIDs);
   vtkMRMLCopyStdStringMacro(CurrentDeviceID);
   vtkMRMLCopyStdStringMacro(DeviceIDType);
 
@@ -490,7 +490,7 @@ void vtkMRMLPlusRemoteNode::Copy(vtkMRMLNode* anode)
   vtkMRMLCopyStdStringMacro(RecordingFilename);
   vtkMRMLCopyBooleanMacro(RecordingFilenameCompletion);
   vtkMRMLCopyBooleanMacro(RecordingEnableCompression);
-  vtkMRMLCopyStdStringVectorMacroMacro(RecordedVolumes);
+  vtkMRMLCopyStdStringVectorMacro(RecordedVolumes);
 
   vtkMRMLCopyEnumMacro(OfflineReconstructionStatus);
   vtkMRMLCopyStdStringMacro(OfflineReconstructionMessage);
