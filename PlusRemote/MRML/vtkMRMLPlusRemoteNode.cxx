@@ -26,6 +26,7 @@
 
 // Slicer includes
 #include <vtkMRMLLinearTransformNode.h>
+#include <vtkSlicerVersionConfigure.h> // For Slicer_VERSION_MAJOR,Slicer_VERSION_MINOR
 
 // std includes
 #include <sstream>
@@ -476,12 +477,25 @@ void vtkMRMLPlusRemoteNode::Copy(vtkMRMLNode* anode)
   vtkMRMLCopyBeginMacro(anode);
 
   vtkMRMLCopyStdStringMacro(CurrentCaptureID);
+
+#if Slicer_VERSION_MAJOR < 4 || Slicer_VERSION_MAJOR == 4 && Slicer_VERSION_MINOR < 11
+  vtkMRMLCopyStdStringVectorMacroMacro(CaptureIDs);
+#else
   vtkMRMLCopyStdStringVectorMacro(CaptureIDs);
+#endif
 
   vtkMRMLCopyStdStringMacro(CurrentVolumeReconstructorID);
+#if Slicer_VERSION_MAJOR < 4 || Slicer_VERSION_MAJOR == 4 && Slicer_VERSION_MINOR < 11
+  vtkMRMLCopyStdStringVectorMacroMacro(VolumeReconstructorIDs);
+#else
   vtkMRMLCopyStdStringVectorMacro(VolumeReconstructorIDs);
+#endif
 
+#if Slicer_VERSION_MAJOR < 4 || Slicer_VERSION_MAJOR == 4 && Slicer_VERSION_MINOR < 11
+  vtkMRMLCopyStdStringVectorMacroMacro(DeviceIDs);
+#else
   vtkMRMLCopyStdStringVectorMacro(DeviceIDs);
+#endif
   vtkMRMLCopyStdStringMacro(CurrentDeviceID);
   vtkMRMLCopyStdStringMacro(DeviceIDType);
 
@@ -490,7 +504,11 @@ void vtkMRMLPlusRemoteNode::Copy(vtkMRMLNode* anode)
   vtkMRMLCopyStdStringMacro(RecordingFilename);
   vtkMRMLCopyBooleanMacro(RecordingFilenameCompletion);
   vtkMRMLCopyBooleanMacro(RecordingEnableCompression);
+#if Slicer_VERSION_MAJOR < 4 || Slicer_VERSION_MAJOR == 4 && Slicer_VERSION_MINOR < 11
+  vtkMRMLCopyStdStringVectorMacroMacro(RecordedVolumes);
+#else
   vtkMRMLCopyStdStringVectorMacro(RecordedVolumes);
+#endif
 
   vtkMRMLCopyEnumMacro(OfflineReconstructionStatus);
   vtkMRMLCopyStdStringMacro(OfflineReconstructionMessage);
