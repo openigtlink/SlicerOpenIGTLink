@@ -2,6 +2,11 @@ set(proj OpenIGTLinkIO)
 
 # Set dependency list
 set(${proj}_DEPENDS OpenIGTLink)
+if(DEFINED Slicer_SOURCE_DIR)
+  list(APPEND ${proj}_DEPENDS
+    VTK
+    )
+endif()
 
 # Include dependent projects if any
 ExternalProject_Include_Dependencies(${proj} PROJECT_VAR proj DEPENDS_VAR ${proj}_DEPENDS)
