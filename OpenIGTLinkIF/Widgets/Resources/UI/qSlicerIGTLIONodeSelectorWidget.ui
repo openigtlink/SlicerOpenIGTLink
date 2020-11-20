@@ -40,6 +40,7 @@
        <string>vtkMRMLVolumeNode</string>
        <string>vtkMRMLModelNode</string>
        <string>vtkMRMLTextNode</string>
+       <string>vtkMRMLMarkupsFiducialNode</string>
        <string>vtkMRMLIGTLTrackingDataBundleNode</string>
       </stringlist>
      </property>
