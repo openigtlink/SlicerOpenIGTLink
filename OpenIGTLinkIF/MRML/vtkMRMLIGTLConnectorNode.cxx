@@ -35,6 +35,7 @@ Version:   $Revision: 1.2 $
 #include "vtkMRMLTableNode.h"
 #include "vtkMRMLImageMetaListNode.h"
 #include "vtkMRMLLabelMetaListNode.h"
+#include "vtkMRMLMarkupsFiducialNode.h"
 #include "vtkMRMLTextNode.h"
 #include "vtkMRMLIGTLTrackingDataBundleNode.h"
 #include "vtkSlicerOpenIGTLinkCommand.h"
@@ -228,6 +229,58 @@ unsigned int vtkMRMLIGTLConnectorNode::vtkInternal::AssignOutGoingNodeToDevice(v
     igtlioStringConverter::ContentData content = { static_cast<unsigned int>(textNode->GetEncoding()), text };
     stringDevice->SetContent(content);
     modifiedEvent = vtkMRMLTextNode::TextModifiedEvent;
+  }
+  else if (device->GetDeviceType().compare("POINT") == 0)
+  {
+    igtlioPointDevice* pointDevice = static_cast<igtlioPointDevice*>(device.GetPointer());
+    vtkMRMLMarkupsFiducialNode* markupsNode = vtkMRMLMarkupsFiducialNode::SafeDownCast(node);
+    igtlioPointConverter::ContentData content;
+    vtkMRMLMarkupsDisplayNode* displayNode = vtkMRMLMarkupsDisplayNode::SafeDownCast(markupsNode->GetDisplayNode());
+    for (int controlPointIndex = 0; controlPointIndex < markupsNode->GetNumberOfControlPoints(); controlPointIndex++)
+    {
+      igtlioPointConverter::PointElement point;
+      point.Name = markupsNode->GetNthControlPointLabel(controlPointIndex);
+
+      bool pointSelected = markupsNode->GetNthControlPointSelected(controlPointIndex);
+      point.GroupName = (pointSelected ? "Selected" : "Unselected");
+      if (displayNode)
+      {
+        double* color = (pointSelected ? displayNode->GetSelectedColor() : displayNode->GetColor());
+        point.RGBA[0] = int(color[0] * 255);
+        point.RGBA[1] = int(color[1] * 255);
+        point.RGBA[2] = int(color[2] * 255);
+      }
+      else
+      {
+        // No display node, use default generic display colors
+        if (pointSelected)
+        {
+          // red
+          point.RGBA[0] = 255;
+          point.RGBA[1] = 0;
+          point.RGBA[2] = 0;
+        }
+        else
+        {
+          // yellow
+          point.RGBA[0] = 230;
+          point.RGBA[1] = 230;
+          point.RGBA[2] = 77;
+        }
+      }
+      point.RGBA[3] = markupsNode->GetNthControlPointVisibility(controlPointIndex) ? 255 : 0;
+
+      double position[3] = { 0.0 };
+      markupsNode->GetNthControlPointPosition(controlPointIndex, position);
+      point.Position[0] = position[0];
+      point.Position[1] = position[1];
+      point.Position[2] = position[2];
+      point.Radius = 0.0; // TODO: ream from measurement array
+      // point.Owner; TODO: set device name of the ower image
+      content.PointElements.push_back(point);
+    }
+    pointDevice->SetContent(content);
+    modifiedEvent = vtkMRMLMarkupsNode::PointModifiedEvent;
   }
   else if (device->GetDeviceType().compare("TDATA") == 0)
   {
@@ -448,6 +501,76 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
         textNode->SetEncoding(stringDevice->GetContent().encoding);
         textNode->SetText(stringDevice->GetContent().string_msg.c_str());
         textNode->Modified();
+      }
+    }
+    else if (strcmp(deviceType.c_str(), "POINT") == 0)
+    {
+      igtlioPointDevice* pointDevice = reinterpret_cast<igtlioPointDevice*>(modifiedDevice);
+      double selectedColor[3] = { 1.0, 1.0, 1.0 };
+      double unselectedColor[3] = { 1.0, 1.0, 1.0 };
+      bool selectedColorDefined = false;
+      bool unselectedColorDefined = false;
+      if (strcmp(modifiedNode->GetName(), deviceName.c_str()) == 0)
+      {
+        vtkMRMLMarkupsFiducialNode* markupsNode = vtkMRMLMarkupsFiducialNode::SafeDownCast(modifiedNode);
+        MRMLNodeModifyBlocker blocker(markupsNode);
+
+        igtlioPointConverter::PointList& points = pointDevice->GetContent().PointElements;
+        // Remove unneeded existing points
+        int numberOfPointsToRemove = markupsNode->GetNumberOfControlPoints() - points.size();
+        for (int i = 0; i < numberOfPointsToRemove; i++)
+        {
+          markupsNode->RemoveNthControlPoint(markupsNode->GetNumberOfControlPoints() - 1);
+        }
+        // Add/update other control points
+        for (int controlPointIndex = 0; controlPointIndex < points.size(); controlPointIndex++)
+        {
+          igtlioPointConverter::PointElement& point = points[controlPointIndex];
+          bool selected = (point.GroupName != "Unselected");
+
+          // Use the first encountered selected/unselected color and opacity for all points
+          if (selected && !selectedColorDefined)
+          {
+            selectedColor[0] = point.RGBA[0] / 255.0;
+            selectedColor[1] = point.RGBA[1] / 255.0;
+            selectedColor[2] = point.RGBA[2] / 255.0;
+            selectedColorDefined = true;
+          }
+          else if (!selected && !unselectedColorDefined)
+          {
+            unselectedColor[0] = point.RGBA[0] / 255.0;
+            unselectedColor[1] = point.RGBA[1] / 255.0;
+            unselectedColor[2] = point.RGBA[2] / 255.0;
+            unselectedColorDefined = true;
+          }
+
+          if (markupsNode->GetNumberOfControlPoints() <= controlPointIndex)
+          {
+            markupsNode->AddControlPoint(vtkVector3d(point.Position[0], point.Position[1], point.Position[2]), point.Name);
+          }
+          else
+          {
+            markupsNode->SetNthControlPointLabel(controlPointIndex, point.Name);
+            markupsNode->SetNthControlPointPosition(controlPointIndex, point.Position[0], point.Position[1], point.Position[2]);
+          }
+          markupsNode->SetNthControlPointSelected(controlPointIndex, selected);
+          markupsNode->SetNthControlPointVisibility(controlPointIndex, point.RGBA[3]>0);
+          // Note: we currently do not preserve point.Radius and point.Owner information
+        }
+
+        vtkMRMLMarkupsDisplayNode* displayNode = vtkMRMLMarkupsDisplayNode::SafeDownCast(markupsNode->GetDisplayNode());
+        if (displayNode)
+        {
+          MRMLNodeModifyBlocker blocker(displayNode);
+          if (selectedColorDefined)
+          {
+            displayNode->SetSelectedColor(selectedColor);
+          }
+          if (unselectedColorDefined)
+          {
+            displayNode->SetColor(unselectedColor);
+          }
+        }
       }
     }
     else if (strcmp(deviceType.c_str(), "IMGMETA") == 0)
@@ -830,11 +953,8 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
     transformNode = vtkSmartPointer<vtkMRMLLinearTransformNode>::New();
     transformNode->SetName(deviceName.c_str());
     transformNode->SetDescription("Received by OpenIGTLink");
-
-    vtkMatrix4x4* transform = vtkMatrix4x4::New();
-    transform->Identity();
-    transformNode->ApplyTransformMatrix(transform);
-    transform->Delete();
+    vtkNew<vtkMatrix4x4> transform;
+    transformNode->SetMatrixTransformToParent(transform);
     this->External->GetScene()->AddNode(transformNode);
     this->External->RegisterIncomingMRMLNode(transformNode, device);
     return transformNode;
@@ -897,6 +1017,23 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
     this->External->GetScene()->AddNode(textNode);
     this->External->RegisterIncomingMRMLNode(textNode, device);
     return textNode;
+  }
+  else if (strcmp(device->GetDeviceType().c_str(), "POINT") == 0)
+  {
+    vtkSmartPointer<vtkMRMLMarkupsFiducialNode> markupsNode =
+      vtkMRMLMarkupsFiducialNode::SafeDownCast(this->External->GetScene()->GetFirstNode(deviceName.c_str(), "vtkMRMLMarkupsFiducialNode"));
+    if (markupsNode)
+    {
+      this->External->RegisterIncomingMRMLNode(markupsNode, device);
+      return markupsNode;
+    }
+    markupsNode = vtkMRMLMarkupsFiducialNode::SafeDownCast(this->External->GetScene()->AddNewNodeByClass("vtkMRMLMarkupsFiducialNode"));
+    markupsNode->SetName(deviceName.c_str());
+    markupsNode->SetDescription("Received by OpenIGTLink");
+    markupsNode->CreateDefaultDisplayNodes();
+    // its contents will be updated later
+    this->External->RegisterIncomingMRMLNode(markupsNode, device);
+    return markupsNode;
   }
   else if (strcmp(device->GetDeviceType().c_str(), "IMGMETA") == 0)
   {
@@ -1138,6 +1275,7 @@ vtkMRMLIGTLConnectorNode::vtkMRMLIGTLConnectorNode()
   std::string modelTags[] = { "Model", "FiberBundle" };
   this->Internal->DeviceTypeToNodeTagMap["POLYDATA"] = std::vector<std::string>(modelTags, modelTags + 2);
   this->Internal->DeviceTypeToNodeTagMap["STRING"] = std::vector<std::string>(1, "Text");
+  this->Internal->DeviceTypeToNodeTagMap["POINT"] = std::vector<std::string>(1, "MarkupsFiducial");
   this->Internal->DeviceTypeToNodeTagMap["IMGMETA"] = std::vector<std::string>(1, "ImageMetaList");
   this->Internal->DeviceTypeToNodeTagMap["LBMETA"] = std::vector<std::string>(1, "LabelMetaList");
   this->Internal->DeviceTypeToNodeTagMap["TDATA"] = std::vector<std::string>(1, "IGTLTrackingDataSplitter");
@@ -1216,6 +1354,11 @@ std::vector<std::string> vtkMRMLIGTLConnectorNode::GetDeviceTypeFromMRMLNodeType
   {
     return std::vector<std::string>(1, "STRING");
   }
+  if (strcmp(nodeTag, "MarkupsFiducial") == 0)
+  {
+    return std::vector<std::string>(1, "POINT");
+  }
+
   return std::vector<std::string>(0);
   if (strcmp(nodeTag, "NDArrayMessage") == 0)
   {
