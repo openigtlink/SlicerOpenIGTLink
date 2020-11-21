@@ -76,7 +76,7 @@ Version:   $Revision: 1.2 $
 #include <qSlicerApplication.h>
 #include <qSlicerLayoutManager.h>
 
-#define MEMLNodeNameKey "MEMLNodeName"
+#define MRMLNodeNameKey "MRMLNodeName"
 
 //------------------------------------------------------------------------------
 vtkMRMLNodeNewMacro(vtkMRMLIGTLConnectorNode);
@@ -973,7 +973,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
     igtlioPolyDataConverter::ContentData content = polyDevice->GetContent();
 
     std::string mrmlNodeTagName = "";
-    if (device->GetMetaDataElement(MEMLNodeNameKey, mrmlNodeTagName))
+    if (device->GetMetaDataElement(MRMLNodeNameKey, mrmlNodeTagName))
     {
       std::string className = this->External->GetScene()->GetClassNameByTag(mrmlNodeTagName.c_str());
       vtkMRMLNode* createdNode = this->External->GetScene()->CreateNodeByClass(className.c_str());
@@ -2245,7 +2245,7 @@ int vtkMRMLIGTLConnectorNode::PushNode(vtkMRMLNode* node)
   device->ClearMetaData();
   if (this->OutgoingMessageHeaderVersionMaximum < 0 || this->OutgoingMessageHeaderVersionMaximum >= IGTL_HEADER_VERSION_2)
   {
-    device->SetMetaDataElement(MEMLNodeNameKey, IANA_TYPE_US_ASCII, node->GetNodeTagName());
+    device->SetMetaDataElement(MRMLNodeNameKey, IANA_TYPE_US_ASCII, node->GetNodeTagName());
     if (node->IsA("vtkMRMLTransformNode"))
     {
       const char* transformStatusAttribute = node->GetAttribute("TransformStatus");
