@@ -195,12 +195,12 @@ unsigned int vtkMRMLIGTLConnectorNode::vtkInternal::AssignOutGoingNodeToDevice(v
   }
   else if (device->GetDeviceType().compare("NDARRAY") == 0)
   {
-    vtkMRMLTableNode* tableNode = vtkMRMLTableNode::SafeDownCast(node);
-    vtkDataArray* arr = vtkDataArray::SafeDownCast(tableNode->GetTable()->GetColumn(0));
-    //arr->SetComponent(0,0, arr); // This changed
-    igtlioNDArrayConverter::ContentData content = {arr};
-    //device->SetContent(content);
-    //modifiedEvent = vtkMRMLTableNode::ArrayModifiedEvent;
+      vtkMRMLTableNode* tableNode = vtkMRMLTableNode::SafeDownCast(node);
+      vtkDataArray* arr = vtkDataArray::SafeDownCast(tableNode->GetTable()->GetColumn(0));
+      //arr->SetComponent(0,0, arr); // This changed
+      igtlioNDArrayConverter::ContentData content = { arr };
+      //device->SetContent(content);
+      //modifiedEvent = vtkMRMLTableNode::ArrayModifiedEvent;
   }
   else if (device->GetDeviceType().compare("TRANSFORM") == 0)
   {
@@ -391,12 +391,21 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
                 std::cout << "In this NDArray" << std::endl;
                 vtkMRMLTableNode* tablenode = vtkMRMLTableNode::SafeDownCast(modifiedNode);
                 vtkSmartPointer<vtkTable> table = vtkSmartPointer<vtkTable>::New();
-                vtkDataArray* dataarray = vtkDataArray::SafeDownCast(ndarraydevice->GetContent().NDArray_msg);
+                //vtkDataArray* dataarray = vtkDataArray::SafeDownCast(ndarraydevice->GetContent().NDArray_msg);
+                vtkCollection* collectionRef = vtkCollection::SafeDownCast(ndarraydevice->GetContent().collection);
+                
                 //dataarray->InsertTuple(0, 0, );
-                dataarray->Modified();
-                table->AddColumn(dataarray);
+               
+                /*table->AddColumn(collection);
                 tablenode->SetAndObserveTable(table);
-                tablenode->Modified();
+                tablenode->Modified();*/
+                for (int i = 0; i < collectionRef->GetNumberOfItems(); ++i) {
+                    vtkDataArray* collection = vtkDataArray::SafeDownCast(ndarraydevice->GetContent().collection->GetItemAsObject(i));
+                    table->AddColumn(collection);
+                    tablenode->SetAndObserveTable(table);
+                    tablenode->Modified();
+                }
+                
         }
     }
     else if (strcmp(deviceType.c_str(), "TRANSFORM") == 0)
@@ -802,7 +811,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
     }
   tableNode = vtkSmartPointer<vtkMRMLTableNode>::New();
   tableNode->SetName(deviceName.c_str());
-  vtkDataArray* dataArray = vtkDataArray::SafeDownCast(tableNode->GetTable()->GetColumn(0));
+  vtkCollection* dataArray = vtkCollection::SafeDownCast(tableNode->GetTable()->GetColumn(0));
   this->External->GetScene()->AddNode(tableNode);
   this->External->RegisterIncomingMRMLNode(tableNode, device);
   return tableNode;
