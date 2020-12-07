@@ -371,7 +371,7 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
 #if VTK_MAJOR_VERSION >= 9
           vtkSmartPointer<vtkMatrix3x3> mat = vtkSmartPointer<vtkMatrix3x3>::New();
           mat->Identity();
-          volumeNode->GetImageData()->SetDirectionMatrix(mat); // IGTL device sets directions in image data, do not duplicate with IJKtoRAS origin
+          volumeNode->GetImageData()->SetDirectionMatrix(mat); // IGTL device sets directions in image data, do not duplicate with IJKtoRAS directions
 #endif
           volumeNode->Modified();
         }
