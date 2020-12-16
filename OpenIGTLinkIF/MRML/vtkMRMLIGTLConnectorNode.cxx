@@ -467,7 +467,7 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
         vtkMRMLMarkupsFiducialNode* markupsNode = vtkMRMLMarkupsFiducialNode::SafeDownCast(modifiedNode);
         MRMLNodeModifyBlocker blocker(markupsNode);
 
-        igtlioPointConverter::PointList& points = pointDevice->GetContent().PointElements;
+        const igtlioPointConverter::PointList& points = pointDevice->GetContent().PointElements;
         // Remove unneeded existing points
         int numberOfPointsToRemove = markupsNode->GetNumberOfControlPoints() - points.size();
         for (int i = 0; i < numberOfPointsToRemove; i++)
@@ -477,7 +477,7 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
         // Add/update other control points
         for (int controlPointIndex = 0; controlPointIndex < points.size(); controlPointIndex++)
         {
-          igtlioPointConverter::PointElement& point = points[controlPointIndex];
+          const igtlioPointConverter::PointElement& point = points[controlPointIndex];
           bool selected = (point.GroupName != "Unselected");
 
           // Use the first encountered selected/unselected color and opacity for all points
