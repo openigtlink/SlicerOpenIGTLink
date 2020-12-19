@@ -57,6 +57,7 @@ Version:   $Revision: 1.2 $
 // VTK includes
 #include <vtkCollection.h>
 #include <vtkImageData.h>
+#include <vtkMatrix3x3.h>
 #include <vtkMatrix4x4.h>
 #include <vtkMutexLock.h>
 #include <vtkPolyData.h>
@@ -365,6 +366,13 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
         {
           volumeNode->SetIJKToRASMatrix(imageDevice->GetContent().transform);
           volumeNode->SetAndObserveImageData(imageDevice->GetContent().image);
+          volumeNode->GetImageData()->SetSpacing(1.0, 1.0, 1.0); // IGTL device sets spacing in image data, do not duplicate with IJKtoRAS spacing
+          volumeNode->GetImageData()->SetOrigin(0.0, 0.0, 0.0); // IGTL device sets origin in image data, do not duplicate with IJKtoRAS origin
+#if VTK_MAJOR_VERSION >= 9
+          vtkSmartPointer<vtkMatrix3x3> mat = vtkSmartPointer<vtkMatrix3x3>::New();
+          mat->Identity();
+          volumeNode->GetImageData()->SetDirectionMatrix(mat); // IGTL device sets directions in image data, do not duplicate with IJKtoRAS directions
+#endif
           volumeNode->Modified();
         }
       }
