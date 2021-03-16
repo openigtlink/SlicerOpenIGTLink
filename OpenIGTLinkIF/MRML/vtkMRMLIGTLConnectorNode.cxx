@@ -431,15 +431,6 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
         transfromMatrix->DeepCopy(transformDevice->GetContent().transform);
         transformNode->SetMatrixTransformToParent(transfromMatrix.GetPointer());
         transformNode->Modified();
-
-        // Copy transform status from metadata to node attributes
-        for (igtl::MessageBase::MetaDataMap::const_iterator iter = modifiedDevice->GetMetaData().begin(); iter != modifiedDevice->GetMetaData().end(); ++iter)
-        {
-          if (iter->first.find("Status") != std::string::npos)
-          {
-            transformNode->SetAttribute(iter->first.c_str(), iter->second.second.c_str());
-          }
-        }
       }
     }
     else if (strcmp(deviceType.c_str(), "POLYDATA") == 0)
@@ -631,6 +622,12 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
     queryNode->SetResponseDataNodeID(modifiedNode->GetID());
     queryNode->SetQueryStatus(vtkMRMLIGTLQueryNode::STATUS_SUCCESS);
     queryNode->InvokeEvent(vtkMRMLIGTLQueryNode::ResponseEvent);
+  }
+
+  // Copy all device metadata to node attributes
+  for (igtl::MessageBase::MetaDataMap::const_iterator iter = modifiedDevice->GetMetaData().begin(); iter != modifiedDevice->GetMetaData().end(); ++iter)
+  {
+    modifiedNode->SetAttribute(iter->first.c_str(), iter->second.second.c_str());
   }
 
   this->IncomingNodeClientIDMap[modifiedNode->GetName()] = modifiedDevice->GetClientID();
