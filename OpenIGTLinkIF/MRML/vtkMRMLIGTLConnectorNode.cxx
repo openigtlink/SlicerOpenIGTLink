@@ -1,15 +1,11 @@
 /*=auto=========================================================================
-
 Portions (c) Copyright 2009 Brigham and Women's Hospital (BWH) All Rights Reserved.
-
 See Doc/copyright/copyright.txt
 or http://www.slicer.org/copyright/copyright.txt for details.
-
 Program:   3D Slicer
 Module:    $RCSfile: vtkMRMLConnectorNode.cxx,v $
 Date:      $Date: 2006/03/17 15:10:10 $
 Version:   $Revision: 1.2 $
-
 =========================================================================auto=*/
 
 // OpenIGTLink includes
@@ -24,6 +20,7 @@ Version:   $Revision: 1.2 $
 #include <igtlioLabelMetaDevice.h>
 #include <igtlioPolyDataDevice.h>
 #include <igtlioPointDevice.h>
+#include <igtlioNDArrayDevice.h>
 #include <igtlioStatusDevice.h>
 #include <igtlioStringDevice.h>
 #include <igtlioTransformDevice.h>
@@ -35,6 +32,7 @@ Version:   $Revision: 1.2 $
 // OpenIGTLinkIF MRML includes
 #include "vtkMRMLIGTLConnectorNode.h"
 #include "vtkMRMLIGTLStatusNode.h"
+#include "vtkMRMLTableNode.h"
 #include "vtkMRMLImageMetaListNode.h"
 #include "vtkMRMLLabelMetaListNode.h"
 #include "vtkMRMLMarkupsFiducialNode.h"
@@ -45,6 +43,7 @@ Version:   $Revision: 1.2 $
 // MRML includes
 #include <vtkMRMLColorLogic.h>
 #include <vtkMRMLColorTableNode.h>
+#include <vtkMRMLTableNode.h>
 #include <vtkMRMLLinearTransformNode.h>
 #include <vtkMRMLModelNode.h>
 #include <vtkMRMLScalarVolumeDisplayNode.h>
@@ -53,6 +52,7 @@ Version:   $Revision: 1.2 $
 #include <vtkMRMLVectorVolumeDisplayNode.h>
 #include <vtkMRMLVectorVolumeNode.h>
 #include <vtkMRMLVolumeNode.h>
+#include <vtkMRMLTableNode.h>
 
 // VTK includes
 #include <vtkCollection.h>
@@ -61,8 +61,14 @@ Version:   $Revision: 1.2 $
 #include <vtkMatrix4x4.h>
 #include <vtkMutexLock.h>
 #include <vtkPolyData.h>
+#include <vtkTable.h>
+#include <vtkTable.h>
 #include <vtkTimerLog.h>
 #include <vtkWeakPointer.h>
+#include <vtkDataArray.h>
+#include <vtkTableToArray.h>
+
+#include <igtlioNDArrayConverter.h>
 
 // vtksys includes
 #include <vtksys/SystemTools.hxx>
@@ -188,6 +194,15 @@ unsigned int vtkMRMLIGTLConnectorNode::vtkInternal::AssignOutGoingNodeToDevice(v
     igtlioStatusConverter::ContentData content = { static_cast<int>(statusNode->GetCode()), static_cast<int>(statusNode->GetSubCode()), statusNode->GetErrorName(), statusNode->GetStatusString() };
     statusDevice->SetContent(content);
     modifiedEvent = vtkMRMLIGTLStatusNode::StatusModifiedEvent;
+  }
+  else if (device->GetDeviceType().compare("NDARRAY") == 0)
+  {
+      vtkMRMLTableNode* tableNode = vtkMRMLTableNode::SafeDownCast(node);
+      vtkDataArray* arr = vtkDataArray::SafeDownCast(tableNode->GetTable()->GetColumn(0));
+      //arr->SetComponent(0,0, arr); // This changed
+      igtlioNDArrayConverter::ContentData content = { arr };
+      //device->SetContent(content);
+      //modifiedEvent = vtkMRMLTableNode::ArrayModifiedEvent;
   }
   else if (device->GetDeviceType().compare("TRANSFORM") == 0)
   {
@@ -344,18 +359,25 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
   vtkObject* vtkNotUsed(caller), unsigned long vtkNotUsed(event), igtlioDevice* modifiedDevice)
 {
   vtkMRMLNode* modifiedNode = this->GetMRMLNodeforDevice(modifiedDevice);
+  
   if (!modifiedNode)
   {
     // Could not find or add node.
     return;
   }
-
+  
   int wasModifyingNode = modifiedNode->StartModify();
 
   const std::string deviceType = modifiedDevice->GetDeviceType();
   const std::string deviceName = modifiedDevice->GetDeviceName();
+
+  std::cout << deviceType << std::endl;
+  std::cout << deviceName << std::endl;
+  int diff = strcmp(deviceType.c_str(), "NDARRAY");
+  std::cout << diff << std::endl;
   if (this->External->GetNodeTagFromDeviceType(deviceType.c_str()).size() > 0)
   {
+    std::cout << "anything" << std::endl;
     if (strcmp(deviceType.c_str(), "IMAGE") == 0)
     {
       igtlioImageDevice* imageDevice = reinterpret_cast<igtlioImageDevice*>(modifiedDevice);
@@ -420,6 +442,32 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
         statusNode->SetStatus(statusDevice->GetContent().code, statusDevice->GetContent().subcode, statusDevice->GetContent().errorname.c_str(), statusDevice->GetContent().statusstring.c_str());
         statusNode->Modified();
       }
+    }
+    else if (strcmp(deviceType.c_str(), "NDARRAY") == 0)
+    {
+        std::cout << "Device type is nd array" << std::endl;
+        igtlioNDArrayDevice* ndarraydevice = reinterpret_cast<igtlioNDArrayDevice*>(modifiedDevice);
+            if (strcmp(modifiedNode->GetName(), deviceName.c_str()) == 0)
+            {
+                std::cout << "In this NDArray" << std::endl;
+                vtkMRMLTableNode* tablenode = vtkMRMLTableNode::SafeDownCast(modifiedNode);
+                vtkSmartPointer<vtkTable> table = vtkSmartPointer<vtkTable>::New();
+                //vtkDataArray* dataarray = vtkDataArray::SafeDownCast(ndarraydevice->GetContent().NDArray_msg);
+                vtkCollection* collectionRef = vtkCollection::SafeDownCast(ndarraydevice->GetContent().collection);
+                
+                //dataarray->InsertTuple(0, 0, );
+               
+                /*table->AddColumn(collection);
+                tablenode->SetAndObserveTable(table);
+                tablenode->Modified();*/
+                for (int i = 0; i < collectionRef->GetNumberOfItems(); ++i) {
+                    vtkDataArray* collection = vtkDataArray::SafeDownCast(ndarraydevice->GetContent().collection->GetItemAsObject(i));
+                    table->AddColumn(collection);
+                    tablenode->SetAndObserveTable(table);
+                    tablenode->Modified();
+                }
+                
+        }
     }
     else if (strcmp(deviceType.c_str(), "TRANSFORM") == 0)
     {
@@ -884,6 +932,22 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
     this->External->RegisterIncomingMRMLNode(statusNode, device);
     return statusNode;
   }
+  else if (strcmp(device->GetDeviceType().c_str(), "NDARRAY") == 0)
+  {
+  vtkSmartPointer<vtkMRMLTableNode> tableNode = vtkMRMLTableNode::SafeDownCast(this->External->GetScene()->GetFirstNode(deviceName.c_str(), "vtkMRMLTableNode"));
+  if (tableNode)
+  {
+      this->External->RegisterIncomingMRMLNode(tableNode, device);
+      return tableNode;
+    }
+  tableNode = vtkSmartPointer<vtkMRMLTableNode>::New();
+  tableNode->SetName(deviceName.c_str());
+  vtkCollection* dataArray = vtkCollection::SafeDownCast(tableNode->GetTable()->GetColumn(0));
+  this->External->GetScene()->AddNode(tableNode);
+  this->External->RegisterIncomingMRMLNode(tableNode, device);
+  return tableNode;
+   }
+
   else if (strcmp(device->GetDeviceType().c_str(), "TRANSFORM") == 0)
   {
     vtkSmartPointer<vtkMRMLTransformNode> transformNode =
@@ -1223,6 +1287,7 @@ vtkMRMLIGTLConnectorNode::vtkMRMLIGTLConnectorNode()
   this->Internal->DeviceTypeToNodeTagMap["IMGMETA"] = std::vector<std::string>(1, "ImageMetaList");
   this->Internal->DeviceTypeToNodeTagMap["LBMETA"] = std::vector<std::string>(1, "LabelMetaList");
   this->Internal->DeviceTypeToNodeTagMap["TDATA"] = std::vector<std::string>(1, "IGTLTrackingDataSplitter");
+  this->Internal->DeviceTypeToNodeTagMap["NDARRAY"] = std::vector<std::string>(1, "TableNode");
 }
 
 //----------------------------------------------------------------------------
@@ -1303,6 +1368,10 @@ std::vector<std::string> vtkMRMLIGTLConnectorNode::GetDeviceTypeFromMRMLNodeType
   }
 
   return std::vector<std::string>(0);
+  if (strcmp(nodeTag, "NDArrayMessage") == 0)
+  {
+      return std::vector<std::string>(1, "NDARRAY");
+  }
 }
 
 //----------------------------------------------------------------------------
