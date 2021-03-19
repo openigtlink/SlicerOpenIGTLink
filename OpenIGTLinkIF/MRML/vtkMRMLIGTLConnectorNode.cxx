@@ -353,7 +353,11 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
   int wasModifyingNode = modifiedNode->StartModify();
 
   const std::string deviceType = modifiedDevice->GetDeviceType();
-  const std::string deviceName = modifiedDevice->GetDeviceName();
+  std::string deviceName = modifiedDevice->GetDeviceName();
+  if (deviceName.empty())
+  {
+    deviceName = "OpenIGTLink";
+  }
   if (this->External->GetNodeTagFromDeviceType(deviceType.c_str()).size() > 0)
   {
     if (strcmp(deviceType.c_str(), "IMAGE") == 0)
@@ -669,7 +673,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
   }
 
   const std::string deviceType = device->GetDeviceType();
-  const std::string deviceName = device->GetDeviceName();
+  std::string deviceName = device->GetDeviceName();
 
   // Found the node and return the node;
   NodeInfoMapType::iterator inIter;
@@ -700,15 +704,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
   // Device name is empty, we will not be able to find a node in the scene
   if (device->GetDeviceName().empty())
   {
-    std::string deviceType = device->GetDeviceType();
-
-    // Status messages with no device name are ignored
-    // For other message types, a warning is logged
-    if (deviceType != igtlioStatusConverter::GetIGTLTypeName())
-    {
-      vtkWarningWithObjectMacro(this->External, "Incoming " << deviceType << " device has no device name!");
-    }
-    return NULL;
+    deviceName = "OpenIGTLink";
   }
 
   // Node not found and add the node
@@ -1017,7 +1013,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeforDevice(igtlioD
   else if (strcmp(device->GetDeviceType().c_str(), "LBMETA") == 0)
   {
     vtkSmartPointer<vtkMRMLLabelMetaListNode> labelMetaNode =
-      vtkMRMLLabelMetaListNode::SafeDownCast(this->External->GetScene()->GetFirstNode(deviceName.c_str(), "vtkMRMLImageMetaListNode"));
+      vtkMRMLLabelMetaListNode::SafeDownCast(this->External->GetScene()->GetFirstNode(deviceName.c_str(), "vtkMRMLLabelMetaListNode"));
     if (labelMetaNode)
     {
       this->External->RegisterIncomingMRMLNode(labelMetaNode, device);
