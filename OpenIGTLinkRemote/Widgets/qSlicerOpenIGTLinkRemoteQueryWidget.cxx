@@ -280,10 +280,7 @@ void qSlicerOpenIGTLinkRemoteQueryWidget::queryRemoteList()
     qCritical() << Q_FUNC_INFO << " failed: invalid connector node";
     return;
   }
-  // when no device name given, connectnode will not process the response message.
-  // in openigtlink IF prior to Slicer 4.8, an node with name "OpenIGTLink" is created when no device name given.
-  // We can set the IGTLDeviceName to be "OpenIGTLink" as to be consistent with older OpenIGTLINK IF moduel. There is another limitation in set igtlDeviceName, the name should not longer than the DeviceName Length defined in Openigtlink header, otherwize the name would be trunctated and resulting miss match in GetPendingQueryNodeForDevice() call in connect node.
-  d->metadataQueryNode->SetIGTLDeviceName("OpenIGTLink");
+
   if (d->typeButtonGroup.checkedId() == qSlicerOpenIGTLinkRemoteQueryWidgetPrivate::TYPE_IMAGE)
   {
     d->metadataQueryNode->SetIGTLName("IMGMETA");
