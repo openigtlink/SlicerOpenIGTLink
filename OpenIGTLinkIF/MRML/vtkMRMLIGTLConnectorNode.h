@@ -166,7 +166,6 @@ public:
   // Description:
   // Register MRML node for incoming data.
   // Returns true on success.
-  bool RegisterIncomingMRMLNode(vtkMRMLNode* node);
   bool RegisterIncomingMRMLNode(vtkMRMLNode* node, IGTLDevicePointer device);
 
   // Description:
