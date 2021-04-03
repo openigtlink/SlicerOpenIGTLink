@@ -72,6 +72,7 @@ Version:   $Revision: 1.2 $
 #include <qSlicerLayoutManager.h>
 
 #define MRMLNodeNameKey "MRMLNodeName"
+#define OriginalNodeNameKey "OriginalNodeName"
 
 //------------------------------------------------------------------------------
 vtkMRMLNodeNewMacro(vtkMRMLIGTLConnectorNode);
@@ -372,109 +373,91 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
     if (strcmp(deviceType.c_str(), "IMAGE") == 0)
     {
       igtlioImageDevice* imageDevice = reinterpret_cast<igtlioImageDevice*>(modifiedDevice);
-      if (strcmp(modifiedNode->GetName(), deviceName.c_str()) == 0)
+      vtkMRMLVolumeNode* volumeNode = vtkMRMLVolumeNode::SafeDownCast(modifiedNode);
+      if (volumeNode)
       {
-        vtkMRMLVolumeNode* volumeNode = vtkMRMLVolumeNode::SafeDownCast(modifiedNode);
-        if (volumeNode)
-        {
-          volumeNode->SetIJKToRASMatrix(imageDevice->GetContent().transform);
-          volumeNode->SetAndObserveImageData(imageDevice->GetContent().image);
-          volumeNode->GetImageData()->SetSpacing(1.0, 1.0, 1.0); // IGTL device sets spacing in image data, do not duplicate with IJKtoRAS spacing
-          volumeNode->GetImageData()->SetOrigin(0.0, 0.0, 0.0); // IGTL device sets origin in image data, do not duplicate with IJKtoRAS origin
+        volumeNode->SetIJKToRASMatrix(imageDevice->GetContent().transform);
+        volumeNode->SetAndObserveImageData(imageDevice->GetContent().image);
+        volumeNode->GetImageData()->SetSpacing(1.0, 1.0, 1.0); // IGTL device sets spacing in image data, do not duplicate with IJKtoRAS spacing
+        volumeNode->GetImageData()->SetOrigin(0.0, 0.0, 0.0); // IGTL device sets origin in image data, do not duplicate with IJKtoRAS origin
 #if VTK_MAJOR_VERSION >= 9
-          vtkSmartPointer<vtkMatrix3x3> mat = vtkSmartPointer<vtkMatrix3x3>::New();
-          mat->Identity();
-          volumeNode->GetImageData()->SetDirectionMatrix(mat); // IGTL device sets directions in image data, do not duplicate with IJKtoRAS directions
+        vtkSmartPointer<vtkMatrix3x3> mat = vtkSmartPointer<vtkMatrix3x3>::New();
+        mat->Identity();
+        volumeNode->GetImageData()->SetDirectionMatrix(mat); // IGTL device sets directions in image data, do not duplicate with IJKtoRAS directions
 #endif
-          volumeNode->Modified();
-        }
+        volumeNode->Modified();
       }
     }
 #if defined(OpenIGTLink_ENABLE_VIDEOSTREAMING)
     else if (strcmp(deviceType.c_str(), "VIDEO") == 0)
     {
       igtlioVideoDevice* videoDevice = reinterpret_cast<igtlioVideoDevice*>(modifiedDevice);
-      if (strcmp(modifiedNode->GetName(), deviceName.c_str()) == 0)
+      vtkSmartPointer<vtkUnsignedCharArray> frameData = vtkSmartPointer<vtkUnsignedCharArray>::New();
+      frameData->Allocate(videoDevice->GetContent().videoMessage->GetBitStreamSize());
+      memcpy(frameData->GetPointer(0), videoDevice->GetContent().frameData->GetPointer(0), videoDevice->GetContent().videoMessage->GetBitStreamSize());
+
+      std::string codecName = videoDevice->GetCurrentCodecType().substr(0, 4);
+      vtkSmartPointer<vtkStreamingVolumeFrame> frame = vtkSmartPointer<vtkStreamingVolumeFrame>::New();
+      frame->SetFrameData(frameData);
+      frame->SetFrameType(videoDevice->GetContent().frameType == igtl::FrameTypeKey ? vtkStreamingVolumeFrame::IFrame : vtkStreamingVolumeFrame::PFrame);
+      videoDevice->GetContent().videoMessage->Unpack(false);
+      frame->SetDimensions(videoDevice->GetContent().videoMessage->GetWidth(),
+        videoDevice->GetContent().videoMessage->GetHeight(),
+        videoDevice->GetContent().videoMessage->GetAdditionalZDimension());
+      frame->SetNumberOfComponents(videoDevice->GetContent().grayscale ? 1 : 3);
+      frame->SetCodecFourCC(codecName);
+      if (!frame->IsKeyFrame() && this->PreviousIncomingFramesMap.find(videoDevice->GetDeviceName()) != this->PreviousIncomingFramesMap.end())
       {
-        vtkSmartPointer<vtkUnsignedCharArray> frameData = vtkSmartPointer<vtkUnsignedCharArray>::New();
-        frameData->Allocate(videoDevice->GetContent().videoMessage->GetBitStreamSize());
-        memcpy(frameData->GetPointer(0), videoDevice->GetContent().frameData->GetPointer(0), videoDevice->GetContent().videoMessage->GetBitStreamSize());
-
-        std::string codecName = videoDevice->GetCurrentCodecType().substr(0, 4);
-        vtkSmartPointer<vtkStreamingVolumeFrame> frame = vtkSmartPointer<vtkStreamingVolumeFrame>::New();
-        frame->SetFrameData(frameData);
-        frame->SetFrameType(videoDevice->GetContent().frameType == igtl::FrameTypeKey ? vtkStreamingVolumeFrame::IFrame : vtkStreamingVolumeFrame::PFrame);
-        videoDevice->GetContent().videoMessage->Unpack(false);
-        frame->SetDimensions(videoDevice->GetContent().videoMessage->GetWidth(),
-          videoDevice->GetContent().videoMessage->GetHeight(),
-          videoDevice->GetContent().videoMessage->GetAdditionalZDimension());
-        frame->SetNumberOfComponents(videoDevice->GetContent().grayscale ? 1 : 3);
-        frame->SetCodecFourCC(codecName);
-        if (!frame->IsKeyFrame() && this->PreviousIncomingFramesMap.find(videoDevice->GetDeviceName()) != this->PreviousIncomingFramesMap.end())
-        {
-          // If the current frame is not a keyframe, then it should maintain a reference to the previously received frame
-          // so that the current frame can be decoded
-          frame->SetPreviousFrame(this->PreviousIncomingFramesMap[videoDevice->GetDeviceName()]);
-        }
-        this->PreviousIncomingFramesMap[videoDevice->GetDeviceName()] = frame;
-
-        vtkMRMLStreamingVolumeNode* streamingVolumeNode = vtkMRMLStreamingVolumeNode::SafeDownCast(modifiedNode);
-        streamingVolumeNode->SetIJKToRASMatrix(videoDevice->GetContent().transform);
-        streamingVolumeNode->SetAndObserveFrame(frame);
+        // If the current frame is not a keyframe, then it should maintain a reference to the previously received frame
+        // so that the current frame can be decoded
+        frame->SetPreviousFrame(this->PreviousIncomingFramesMap[videoDevice->GetDeviceName()]);
       }
+      this->PreviousIncomingFramesMap[videoDevice->GetDeviceName()] = frame;
+
+      vtkMRMLStreamingVolumeNode* streamingVolumeNode = vtkMRMLStreamingVolumeNode::SafeDownCast(modifiedNode);
+      streamingVolumeNode->SetIJKToRASMatrix(videoDevice->GetContent().transform);
+      streamingVolumeNode->SetAndObserveFrame(frame);
     }
 #endif
     else if (strcmp(deviceType.c_str(), "STATUS") == 0)
     {
       igtlioStatusDevice* statusDevice = reinterpret_cast<igtlioStatusDevice*>(modifiedDevice);
-      if (strcmp(modifiedNode->GetName(), deviceName.c_str()) == 0)
-      {
-        vtkMRMLIGTLStatusNode* statusNode = vtkMRMLIGTLStatusNode::SafeDownCast(modifiedNode);
-        statusNode->SetStatus(statusDevice->GetContent().code, statusDevice->GetContent().subcode, statusDevice->GetContent().errorname.c_str(), statusDevice->GetContent().statusstring.c_str());
-        statusNode->Modified();
-      }
+      vtkMRMLIGTLStatusNode* statusNode = vtkMRMLIGTLStatusNode::SafeDownCast(modifiedNode);
+      statusNode->SetStatus(statusDevice->GetContent().code, statusDevice->GetContent().subcode, statusDevice->GetContent().errorname.c_str(), statusDevice->GetContent().statusstring.c_str());
+      statusNode->Modified();
     }
     else if (strcmp(deviceType.c_str(), "TRANSFORM") == 0)
     {
       igtlioTransformDevice* transformDevice = reinterpret_cast<igtlioTransformDevice*>(modifiedDevice);
-      if (strcmp(modifiedNode->GetName(), deviceName.c_str()) == 0)
-      {
-        vtkMRMLTransformNode* transformNode = vtkMRMLTransformNode::SafeDownCast(modifiedNode);
-        vtkSmartPointer<vtkMatrix4x4> transfromMatrix = vtkSmartPointer<vtkMatrix4x4>::New();
-        transfromMatrix->DeepCopy(transformDevice->GetContent().transform);
-        transformNode->SetMatrixTransformToParent(transfromMatrix.GetPointer());
-        transformNode->Modified();
+      vtkMRMLTransformNode* transformNode = vtkMRMLTransformNode::SafeDownCast(modifiedNode);
+      vtkSmartPointer<vtkMatrix4x4> transfromMatrix = vtkSmartPointer<vtkMatrix4x4>::New();
+      transfromMatrix->DeepCopy(transformDevice->GetContent().transform);
+      transformNode->SetMatrixTransformToParent(transfromMatrix.GetPointer());
+      transformNode->Modified();
 
-        // Copy transform status from metadata to node attributes
-        for (igtl::MessageBase::MetaDataMap::const_iterator iter = modifiedDevice->GetMetaData().begin(); iter != modifiedDevice->GetMetaData().end(); ++iter)
+      // Copy transform status from metadata to node attributes
+      for (igtl::MessageBase::MetaDataMap::const_iterator iter = modifiedDevice->GetMetaData().begin(); iter != modifiedDevice->GetMetaData().end(); ++iter)
+      {
+        if (iter->first.find("Status") != std::string::npos)
         {
-          if (iter->first.find("Status") != std::string::npos)
-          {
-            transformNode->SetAttribute(iter->first.c_str(), iter->second.second.c_str());
-          }
+          transformNode->SetAttribute(iter->first.c_str(), iter->second.second.c_str());
         }
       }
     }
     else if (strcmp(deviceType.c_str(), "POLYDATA") == 0)
     {
       igtlioPolyDataDevice* polyDevice = reinterpret_cast<igtlioPolyDataDevice*>(modifiedDevice);
-      if (strcmp(modifiedNode->GetName(), deviceName.c_str()) == 0)
-      {
-        vtkMRMLModelNode* modelNode = vtkMRMLModelNode::SafeDownCast(modifiedNode);
-        modelNode->SetAndObservePolyData(polyDevice->GetContent().polydata);
-        modelNode->Modified();
-      }
+      vtkMRMLModelNode* modelNode = vtkMRMLModelNode::SafeDownCast(modifiedNode);
+      modelNode->SetAndObservePolyData(polyDevice->GetContent().polydata);
+      modelNode->Modified();
     }
     else if (strcmp(deviceType.c_str(), "STRING") == 0)
     {
       igtlioStringDevice* stringDevice = reinterpret_cast<igtlioStringDevice*>(modifiedDevice);
-      if (strcmp(modifiedNode->GetName(), deviceName.c_str()) == 0)
-      {
-        vtkMRMLTextNode* textNode = vtkMRMLTextNode::SafeDownCast(modifiedNode);
-        textNode->SetEncoding(stringDevice->GetContent().encoding);
-        textNode->SetText(stringDevice->GetContent().string_msg.c_str());
-        textNode->Modified();
-      }
+      vtkMRMLTextNode* textNode = vtkMRMLTextNode::SafeDownCast(modifiedNode);
+      textNode->SetEncoding(stringDevice->GetContent().encoding);
+      textNode->SetText(stringDevice->GetContent().string_msg.c_str());
+      textNode->Modified();
     }
     else if (strcmp(deviceType.c_str(), "POINT") == 0)
     {
@@ -483,154 +466,142 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
       double unselectedColor[3] = { 1.0, 1.0, 1.0 };
       bool selectedColorDefined = false;
       bool unselectedColorDefined = false;
-      if (strcmp(modifiedNode->GetName(), deviceName.c_str()) == 0)
+      vtkMRMLMarkupsFiducialNode* markupsNode = vtkMRMLMarkupsFiducialNode::SafeDownCast(modifiedNode);
+      MRMLNodeModifyBlocker blocker(markupsNode);
+
+      const igtlioPointConverter::PointList& points = pointDevice->GetContent().PointElements;
+      // Remove unneeded existing points
+      int numberOfPointsToRemove = markupsNode->GetNumberOfControlPoints() - points.size();
+      for (int i = 0; i < numberOfPointsToRemove; i++)
       {
-        vtkMRMLMarkupsFiducialNode* markupsNode = vtkMRMLMarkupsFiducialNode::SafeDownCast(modifiedNode);
-        MRMLNodeModifyBlocker blocker(markupsNode);
+        markupsNode->RemoveNthControlPoint(markupsNode->GetNumberOfControlPoints() - 1);
+      }
+      // Add/update other control points
+      for (int controlPointIndex = 0; controlPointIndex < points.size(); controlPointIndex++)
+      {
+        const igtlioPointConverter::PointElement& point = points[controlPointIndex];
+        bool selected = (point.GroupName != "Unselected");
 
-        const igtlioPointConverter::PointList& points = pointDevice->GetContent().PointElements;
-        // Remove unneeded existing points
-        int numberOfPointsToRemove = markupsNode->GetNumberOfControlPoints() - points.size();
-        for (int i = 0; i < numberOfPointsToRemove; i++)
+        // Use the first encountered selected/unselected color and opacity for all points
+        if (selected && !selectedColorDefined)
         {
-          markupsNode->RemoveNthControlPoint(markupsNode->GetNumberOfControlPoints() - 1);
+          selectedColor[0] = point.RGBA[0] / 255.0;
+          selectedColor[1] = point.RGBA[1] / 255.0;
+          selectedColor[2] = point.RGBA[2] / 255.0;
+          selectedColorDefined = true;
         }
-        // Add/update other control points
-        for (int controlPointIndex = 0; controlPointIndex < points.size(); controlPointIndex++)
+        else if (!selected && !unselectedColorDefined)
         {
-          const igtlioPointConverter::PointElement& point = points[controlPointIndex];
-          bool selected = (point.GroupName != "Unselected");
-
-          // Use the first encountered selected/unselected color and opacity for all points
-          if (selected && !selectedColorDefined)
-          {
-            selectedColor[0] = point.RGBA[0] / 255.0;
-            selectedColor[1] = point.RGBA[1] / 255.0;
-            selectedColor[2] = point.RGBA[2] / 255.0;
-            selectedColorDefined = true;
-          }
-          else if (!selected && !unselectedColorDefined)
-          {
-            unselectedColor[0] = point.RGBA[0] / 255.0;
-            unselectedColor[1] = point.RGBA[1] / 255.0;
-            unselectedColor[2] = point.RGBA[2] / 255.0;
-            unselectedColorDefined = true;
-          }
-
-          if (markupsNode->GetNumberOfControlPoints() <= controlPointIndex)
-          {
-            markupsNode->AddControlPoint(vtkVector3d(point.Position[0], point.Position[1], point.Position[2]), point.Name);
-          }
-          else
-          {
-            markupsNode->SetNthControlPointLabel(controlPointIndex, point.Name);
-            markupsNode->SetNthControlPointPosition(controlPointIndex, point.Position[0], point.Position[1], point.Position[2]);
-          }
-          markupsNode->SetNthControlPointSelected(controlPointIndex, selected);
-          markupsNode->SetNthControlPointVisibility(controlPointIndex, point.RGBA[3]>0);
-          // Note: we currently do not preserve point.Radius and point.Owner information
+          unselectedColor[0] = point.RGBA[0] / 255.0;
+          unselectedColor[1] = point.RGBA[1] / 255.0;
+          unselectedColor[2] = point.RGBA[2] / 255.0;
+          unselectedColorDefined = true;
         }
 
-        vtkMRMLMarkupsDisplayNode* displayNode = vtkMRMLMarkupsDisplayNode::SafeDownCast(markupsNode->GetDisplayNode());
-        if (displayNode)
+        if (markupsNode->GetNumberOfControlPoints() <= controlPointIndex)
         {
-          MRMLNodeModifyBlocker blocker(displayNode);
-          if (selectedColorDefined)
-          {
-            displayNode->SetSelectedColor(selectedColor);
-          }
-          if (unselectedColorDefined)
-          {
-            displayNode->SetColor(unselectedColor);
-          }
+          markupsNode->AddControlPoint(vtkVector3d(point.Position[0], point.Position[1], point.Position[2]), point.Name);
+        }
+        else
+        {
+          markupsNode->SetNthControlPointLabel(controlPointIndex, point.Name);
+          markupsNode->SetNthControlPointPosition(controlPointIndex, point.Position[0], point.Position[1], point.Position[2]);
+        }
+        markupsNode->SetNthControlPointSelected(controlPointIndex, selected);
+        markupsNode->SetNthControlPointVisibility(controlPointIndex, point.RGBA[3]>0);
+        // Note: we currently do not preserve point.Radius and point.Owner information
+      }
+
+      vtkMRMLMarkupsDisplayNode* displayNode = vtkMRMLMarkupsDisplayNode::SafeDownCast(markupsNode->GetDisplayNode());
+      if (displayNode)
+      {
+        MRMLNodeModifyBlocker blocker(displayNode);
+        if (selectedColorDefined)
+        {
+          displayNode->SetSelectedColor(selectedColor);
+        }
+        if (unselectedColorDefined)
+        {
+          displayNode->SetColor(unselectedColor);
         }
       }
     }
     else if (strcmp(deviceType.c_str(), "IMGMETA") == 0)
     {
       igtlioImageMetaDevice* imageMetaDevice = reinterpret_cast<igtlioImageMetaDevice*>(modifiedDevice);
-      if (strcmp(modifiedNode->GetName(), deviceName.c_str()) == 0)
+      vtkMRMLImageMetaListNode* imageMetaNode = vtkMRMLImageMetaListNode::SafeDownCast(modifiedNode);
+      imageMetaNode->ClearImageMetaElement();
+      igtlioImageMetaConverter::ImageMetaDataList imageMetaList = imageMetaDevice->GetContent().ImageMetaDataElements;
+      for (igtlioImageMetaConverter::ImageMetaDataList::iterator imageMetaIt = imageMetaList.begin(); imageMetaIt != imageMetaList.end(); ++imageMetaIt)
       {
-        vtkMRMLImageMetaListNode* imageMetaNode = vtkMRMLImageMetaListNode::SafeDownCast(modifiedNode);
-        imageMetaNode->ClearImageMetaElement();
-        igtlioImageMetaConverter::ImageMetaDataList imageMetaList = imageMetaDevice->GetContent().ImageMetaDataElements;
-        for (igtlioImageMetaConverter::ImageMetaDataList::iterator imageMetaIt = imageMetaList.begin(); imageMetaIt != imageMetaList.end(); ++imageMetaIt)
+        vtkMRMLImageMetaElement imageMetaElement;
+        imageMetaElement.DeviceName = imageMetaIt->DeviceName;
+        imageMetaElement.Modality = imageMetaIt->Modality;
+        imageMetaElement.Name = imageMetaIt->Name;
+        imageMetaElement.PatientID = imageMetaIt->PatientID;
+        imageMetaElement.PatientName = imageMetaIt->PatientName;
+        imageMetaElement.ScalarType = imageMetaIt->ScalarType;
+        for (int i = 0; i < 3; ++i)
         {
-          vtkMRMLImageMetaElement imageMetaElement;
-          imageMetaElement.DeviceName = imageMetaIt->DeviceName;
-          imageMetaElement.Modality = imageMetaIt->Modality;
-          imageMetaElement.Name = imageMetaIt->Name;
-          imageMetaElement.PatientID = imageMetaIt->PatientID;
-          imageMetaElement.PatientName = imageMetaIt->PatientName;
-          imageMetaElement.ScalarType = imageMetaIt->ScalarType;
-          for (int i = 0; i < 3; ++i)
-          {
-            imageMetaElement.Size[i] = imageMetaIt->Size[i];
-          }
-          imageMetaElement.TimeStamp = imageMetaIt->Timestamp;
-          imageMetaNode->AddImageMetaElement(imageMetaElement);
+          imageMetaElement.Size[i] = imageMetaIt->Size[i];
         }
+        imageMetaElement.TimeStamp = imageMetaIt->Timestamp;
+        imageMetaNode->AddImageMetaElement(imageMetaElement);
       }
     }
     else if (strcmp(deviceType.c_str(), "LBMETA") == 0)
     {
       igtlioLabelMetaDevice* labelMetaDevice = reinterpret_cast<igtlioLabelMetaDevice*>(modifiedDevice);
-      if (strcmp(modifiedNode->GetName(), deviceName.c_str()) == 0)
+      vtkMRMLLabelMetaListNode* labelMetaNode = vtkMRMLLabelMetaListNode::SafeDownCast(modifiedNode);
+      labelMetaNode->ClearLabelMetaElement();
+      igtlioLabelMetaConverter::LabelMetaDataList labelMetaList = labelMetaDevice->GetContent().LabelMetaDataElements;
+      for (igtlioLabelMetaConverter::LabelMetaDataList::iterator labelMetaIt = labelMetaList.begin(); labelMetaIt != labelMetaList.end(); ++labelMetaIt)
       {
-        vtkMRMLLabelMetaListNode* labelMetaNode = vtkMRMLLabelMetaListNode::SafeDownCast(modifiedNode);
-        labelMetaNode->ClearLabelMetaElement();
-        igtlioLabelMetaConverter::LabelMetaDataList labelMetaList = labelMetaDevice->GetContent().LabelMetaDataElements;
-        for (igtlioLabelMetaConverter::LabelMetaDataList::iterator labelMetaIt = labelMetaList.begin(); labelMetaIt != labelMetaList.end(); ++labelMetaIt)
+        vtkMRMLLabelMetaListNode::LabelMetaElement labelMetaElement;
+        labelMetaElement.DeviceName = labelMetaIt->DeviceName;
+        labelMetaElement.Label = labelMetaIt->Label;
+        labelMetaElement.Name = labelMetaIt->Name;
+        labelMetaElement.Owner = labelMetaIt->Owner;
+        for (int i = 0; i < 4; ++i)
         {
-          vtkMRMLLabelMetaListNode::LabelMetaElement labelMetaElement;
-          labelMetaElement.DeviceName = labelMetaIt->DeviceName;
-          labelMetaElement.Label = labelMetaIt->Label;
-          labelMetaElement.Name = labelMetaIt->Name;
-          labelMetaElement.Owner = labelMetaIt->Owner;
-          for (int i = 0; i < 4; ++i)
-          {
-            labelMetaElement.RGBA[i] = labelMetaIt->RGBA[i];
-          }
-          for (int i = 0; i < 3; ++i)
-          {
-            labelMetaElement.Size[i] = labelMetaIt->Size[i];
-          }
-          labelMetaNode->AddLabelMetaElement(labelMetaElement);
+          labelMetaElement.RGBA[i] = labelMetaIt->RGBA[i];
         }
+        for (int i = 0; i < 3; ++i)
+        {
+          labelMetaElement.Size[i] = labelMetaIt->Size[i];
+        }
+        labelMetaNode->AddLabelMetaElement(labelMetaElement);
       }
     }
     else if (strcmp(deviceType.c_str(), "TDATA") == 0)
     {
       igtlioTrackingDataDevice* tdataDevice = reinterpret_cast<igtlioTrackingDataDevice*>(modifiedDevice);
-      if (strcmp(modifiedNode->GetName(), deviceName.c_str()) == 0)
+      vtkMRMLIGTLTrackingDataBundleNode* tBundleNode = vtkMRMLIGTLTrackingDataBundleNode::SafeDownCast(modifiedNode);
+      if (tBundleNode)
       {
-        vtkMRMLIGTLTrackingDataBundleNode* tBundleNode = vtkMRMLIGTLTrackingDataBundleNode::SafeDownCast(modifiedNode);
-        if (tBundleNode)
+        int nElements = tBundleNode->GetNumberOfTransformNodes();
+        igtlioTrackingDataConverter::ContentData content = tdataDevice->GetContent();
+        for (auto iter = content.trackingDataElements.begin(); iter != content.trackingDataElements.end(); ++iter)
         {
-          int nElements = tBundleNode->GetNumberOfTransformNodes();
-          igtlioTrackingDataConverter::ContentData content = tdataDevice->GetContent();
-          for (auto iter = content.trackingDataElements.begin(); iter != content.trackingDataElements.end(); ++iter)
-          {
-            bool found(false);
-            vtkSmartPointer<vtkMatrix4x4> mat = vtkSmartPointer<vtkMatrix4x4>::New();
+          bool found(false);
+          vtkSmartPointer<vtkMatrix4x4> mat = vtkSmartPointer<vtkMatrix4x4>::New();
 
-            for (int i = 0; i < nElements; i++)
+          for (int i = 0; i < nElements; i++)
+          {
+            vtkMRMLLinearTransformNode* transformNode = tBundleNode->GetTransformNode(i);
+            if (iter->second.deviceName.compare(transformNode->GetName()) == 0)
             {
-              vtkMRMLLinearTransformNode* transformNode = tBundleNode->GetTransformNode(i);
-              if (iter->second.deviceName.compare(transformNode->GetName()) == 0)
-              {
-                // already exists, update transform
-                found = true;
-                mat->DeepCopy(iter->second.transform);
-                transformNode->SetMatrixTransformToParent(mat.GetPointer());
-                transformNode->Modified();
-                break;
-              }
+              // already exists, update transform
+              found = true;
+              mat->DeepCopy(iter->second.transform);
+              transformNode->SetMatrixTransformToParent(mat.GetPointer());
+              transformNode->Modified();
+              break;
             }
-            if (!found)
-            {
-              tBundleNode->UpdateTransformNode(iter->second.deviceName.c_str(), mat, iter->second.type);
-            }
+          }
+          if (!found)
+          {
+            tBundleNode->UpdateTransformNode(iter->second.deviceName.c_str(), mat, iter->second.type);
           }
         }
       }
@@ -670,6 +641,11 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::DeviceAboutToReceiveEvent(igtlioDevi
   {
     // Could not find node, create new node
     modifiedNode = this->CreateNewMRMLNodeForDevice(modifiedDevice);
+    if (modifiedNode)
+    {
+      //New device event needs to be forward with the MRMLNode to other objects, such as openigtlinkRemote. where the node will be processed to set name accordingly.
+      this->External->InvokeEvent(NewDeviceEvent, modifiedNode);
+    }
   }
   if (!modifiedNode)
   {
@@ -714,7 +690,9 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeForDevice(igtlioD
           break;
         }
       }
-      if (typeMatched && strcmp(node->GetName(), deviceName.c_str()) == 0)
+      //Node name can be modified by other module, it is not a concrete way to find the match to the device name
+      // OriginalNodeNameKey arrtribute was added during node creation.
+      if (typeMatched && strcmp(node->GetAttribute(OriginalNodeNameKey), deviceName.c_str()) == 0)
       {
         return node;
       }
@@ -804,6 +782,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::CreateNewMRMLNodeForDevice(i
       volumeNode = vtkSmartPointer<vtkMRMLScalarVolumeNode>::New();
     }
 #endif
+    volumeNode->SetIJKToRASMatrix(content.transform);
     volumeNode->SetAndObserveImageData(image);
     volumeNode->SetName(deviceName.c_str());
     this->External->GetScene()->SaveStateForUndo();
@@ -1929,6 +1908,7 @@ bool vtkMRMLIGTLConnectorNode::RegisterIncomingMRMLNode(vtkMRMLNode* node, IGTLD
     this->AddAndObserveNodeReferenceID(this->GetIncomingNodeReferenceRole(), node->GetID());
     this->Modified();
   }
+  node->SetAttribute(OriginalNodeNameKey, node->GetName());
   return true;
 
 }
