@@ -379,34 +379,38 @@ void qSlicerOpenIGTLinkRemoteQueryWidget::onNewDeviceAdded(vtkObject* vtkNotUsed
   Q_D(qSlicerOpenIGTLinkRemoteQueryWidget);
   // change the node name to match the full descriptive name from the ImageMetaList or LabelMetaList
   vtkMRMLScalarVolumeNode* imageNode = vtkMRMLScalarVolumeNode::SafeDownCast((vtkObject*)deviceNode);
-  vtkMRMLLabelMapVolumeNode* labelNode = vtkMRMLLabelMapVolumeNode::SafeDownCast((vtkObject*)deviceNode);
+  //vtkMRMLLabelMapVolumeNode* labelNode = vtkMRMLLabelMapVolumeNode::SafeDownCast((vtkObject*)deviceNode);
   std::string name;
   if (imageNode)
   {
-    if (d->imageDeviceNameToNodeNameMap.find(imageNode->GetName()) != d->imageDeviceNameToNodeNameMap.end())
+    if (d->typeButtonGroup.checkedId() == qSlicerOpenIGTLinkRemoteQueryWidgetPrivate::TYPE_IMAGE)
     {
-      name = d->imageDeviceNameToNodeNameMap[imageNode->GetName()];
+      if (d->imageDeviceNameToNodeNameMap.find(imageNode->GetName()) != d->imageDeviceNameToNodeNameMap.end())
+      {
+        name = d->imageDeviceNameToNodeNameMap[imageNode->GetName()];
+      }
     }
-  }
-  else if (labelNode)
-  {
-    if (d->labelDeviceNameToNodeNameMap.find(labelNode->GetName()) != d->labelDeviceNameToNodeNameMap.end())
+    else if (d->typeButtonGroup.checkedId() == qSlicerOpenIGTLinkRemoteQueryWidgetPrivate::TYPE_LABEL)
     {
-      name = d->labelDeviceNameToNodeNameMap[labelNode->GetName()];
+      if(d->labelDeviceNameToNodeNameMap.find(imageNode->GetName()) != d->labelDeviceNameToNodeNameMap.end())
+      {
+        name = d->labelDeviceNameToNodeNameMap[imageNode->GetName()];
+        //vtkMRMLLabelMapVolumeNode* labelVolumeNode = this->QueryLogic->CreateNewLabelVolumeFromVolume(imageNode);
+        //imageNode->SetHideFromEditors(true);
+      }
     }
+    // Rename the node (give a unique name if the node is retrieved already)
+    if (imageNode->GetScene())
+    {
+      name = imageNode->GetScene()->GetUniqueNameByString(name.c_str());
+    }
+    imageNode->SetName(name.c_str());
   }
   else
   {
     // node metadata not found
     return;
   }
-
-  // Rename the node (give a unique name if the node is retrieved already)
-  if (imageNode->GetScene())
-  {
-    name = imageNode->GetScene()->GetUniqueNameByString(name.c_str());
-  }
-  imageNode->SetName(name.c_str());
 }
 
 //------------------------------------------------------------------------------
