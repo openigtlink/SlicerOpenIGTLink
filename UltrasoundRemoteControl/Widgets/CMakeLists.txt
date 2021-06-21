@@ -14,12 +14,15 @@ set(${KIT}_SRCS
   qSlicerAbstractUltrasoundParameterWidget_p.h
   qSlicerUltrasoundDoubleParameterSlider.cxx
   qSlicerUltrasoundDoubleParameterSlider.h
+  qSlicerUltrasoundTGCParameterWidget.cxx
+  qSlicerUltrasoundTGCParameterWidget.h
   )
 
 set(${KIT}_MOC_SRCS
   qSlicerAbstractUltrasoundParameterWidget.h
   qSlicerAbstractUltrasoundParameterWidget_p.h
   qSlicerUltrasoundDoubleParameterSlider.h
+  qSlicerUltrasoundTGCParameterWidget.h
   )
 
 set(${KIT}_UI_SRCS
