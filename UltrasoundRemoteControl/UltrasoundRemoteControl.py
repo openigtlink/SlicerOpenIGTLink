@@ -108,6 +108,15 @@ class UltrasoundRemoteControlWidget(ScriptedLoadableModuleWidget):
     self.focusDepthSlider.setPageStep(10)
     ultrasoundParametersLayout.addRow("Focus Zone:", self.focusDepthSlider)
 
+    self.tgcSlider = slicer.qSlicerUltrasoundTGCParameterWidget()
+    self.tgcSlider.setParameterName("TimeGainCompensation")
+    self.tgcSlider.setSuffix("Db")
+    self.tgcSlider.setMinimum(0)
+    self.tgcSlider.setMaximum(30)
+    self.tgcSlider.setSingleStep(3)
+    self.tgcSlider.setPageStep(10)
+    ultrasoundParametersLayout.addRow("TGC:", self.tgcSlider)
+
     self.layout.addStretch(1)
 
     self.parameterWidgets = [
@@ -116,7 +125,8 @@ class UltrasoundRemoteControlWidget(ScriptedLoadableModuleWidget):
     self.frequencySlider,
     self.dynamicRangeSlider,
     self.powerSlider,
-    self.focusDepthSlider
+    self.focusDepthSlider,
+    self.tgcSlider
     ]
 
     self.connectorNodeSelector.connect("nodeActivated(vtkMRMLNode*)", self.onConnectorNodeSelected)
