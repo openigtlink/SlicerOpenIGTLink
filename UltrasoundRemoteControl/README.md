@@ -5,12 +5,14 @@ Implements a connection to Plus ultrasound devices using OpenIGTLink commands to
 
 Users
 --
-The "Ultrasound Remote Control" module allows users to modify the following imaging parameters:
+The "Ultrasound Remote Control" module allows users to modify the following imaging parameters (dependent on the parameter being supported by the selected US device in PLUS):
 - Depth (mm)
 - Gain (%)
 - Frequency (MHz)
 - Dynamic Range (dB)
 - Power (Db)
+- Focus (% of image depth)
+- TimeGainCompensation (Db)
 
 Developers
 --
