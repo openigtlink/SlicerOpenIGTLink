@@ -752,6 +752,12 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeForDevice(igtlioD
 //----------------------------------------------------------------------------
 vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::CreateNewMRMLNodeForDevice(igtlioDevice *device)
 {
+  vtkMRMLScene* scene = this->External->GetScene();
+  if (!scene)
+  {
+    return nullptr;
+  }
+
   const std::string deviceType = device->GetDeviceType();
   std::string deviceName = device->GetDeviceName();
   // Device name is empty, we will not be able to find a node in the scene
@@ -784,7 +790,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::CreateNewMRMLNodeForDevice(i
         this->External->RegisterIncomingMRMLNode(volumeNode, device);
         return volumeNode;
       }
-      volumeNode = vtkSmartPointer<vtkMRMLStreamingVolumeNode>::New();
+      volumeNode = vtkSmartPointer<vtkMRMLVolumeNode>::Take(vtkMRMLVolumeNode::SafeDownCast(scene->CreateNodeByClass("vtkMRMLStreamingVolumeNode")));
     }
     else
     {
@@ -796,7 +802,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::CreateNewMRMLNodeForDevice(i
           this->External->RegisterIncomingMRMLNode(volumeNode, device);
           return volumeNode;
         }
-        volumeNode = vtkSmartPointer<vtkMRMLVectorVolumeNode>::New();
+        volumeNode = vtkSmartPointer<vtkMRMLVolumeNode>::Take(vtkMRMLVolumeNode::SafeDownCast(scene->CreateNodeByClass("vtkMRMLVectorVolumeNode")));
       }
       else
       {
@@ -806,7 +812,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::CreateNewMRMLNodeForDevice(i
           this->External->RegisterIncomingMRMLNode(volumeNode, device);
           return volumeNode;
         }
-        volumeNode = vtkSmartPointer<vtkMRMLScalarVolumeNode>::New();
+        volumeNode = vtkSmartPointer<vtkMRMLVolumeNode>::Take(vtkMRMLVolumeNode::SafeDownCast(scene->CreateNodeByClass("vtkMRMLScalarVolumeNode")));
       }
     }
 #else
@@ -818,7 +824,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::CreateNewMRMLNodeForDevice(i
         this->External->RegisterIncomingMRMLNode(volumeNode, device);
         return volumeNode;
       }
-      volumeNode = vtkSmartPointer<vtkMRMLVectorVolumeNode>::New();
+      volumeNode = vtkSmartPointer<vtkMRMLVolumeNode>::Take(vtkMRMLVolumeNode::SafeDownCast(scene->CreateNodeByClass("vtkMRMLVectorVolumeNode")));
     }
     else
     {
@@ -828,7 +834,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::CreateNewMRMLNodeForDevice(i
         this->External->RegisterIncomingMRMLNode(volumeNode, device);
         return volumeNode;
       }
-      volumeNode = vtkSmartPointer<vtkMRMLScalarVolumeNode>::New();
+      volumeNode = vtkSmartPointer<vtkMRMLVolumeNode>::Take(vtkMRMLVolumeNode::SafeDownCast(scene->CreateNodeByClass("vtkMRMLScalarVolumeNode")));
     }
 #endif
     volumeNode->SetIJKToRASMatrix(content.transform);
@@ -844,11 +850,11 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::CreateNewMRMLNodeForDevice(i
     vtkSmartPointer<vtkMRMLVolumeDisplayNode> displayNode;
     if (scalarDisplayNodeRequired)
     {
-      displayNode = vtkSmartPointer<vtkMRMLScalarVolumeDisplayNode>::New();
+      displayNode = vtkSmartPointer<vtkMRMLScalarVolumeDisplayNode>::Take(vtkMRMLScalarVolumeDisplayNode::SafeDownCast(scene->CreateNodeByClass("vtkMRMLScalarVolumeDisplayNode")));
     }
     else
     {
-      displayNode = vtkSmartPointer<vtkMRMLVectorVolumeDisplayNode>::New();
+      displayNode = vtkSmartPointer<vtkMRMLVectorVolumeDisplayNode>::Take(vtkMRMLVectorVolumeDisplayNode::SafeDownCast(scene->CreateNodeByClass("vtkMRMLVectorVolumeDisplayNode")));
     }
 
     this->External->GetScene()->AddNode(displayNode);
@@ -889,18 +895,18 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::CreateNewMRMLNodeForDevice(i
 
     this->External->GetScene()->SaveStateForUndo();
     bool scalarDisplayNodeRequired = (numberOfComponents == 1);
-    streamingVolumeNode = vtkSmartPointer<vtkMRMLStreamingVolumeNode>::New();
+    streamingVolumeNode = vtkSmartPointer<vtkMRMLStreamingVolumeNode>::Take(vtkMRMLStreamingVolumeNode::SafeDownCast(scene->CreateNodeByClass("vtkMRMLStreamingVolumeNode")));
     streamingVolumeNode->SetName(deviceName.c_str());
     streamingVolumeNode->SetDescription("Received by OpenIGTLink");
     this->External->GetScene()->AddNode(streamingVolumeNode);
     vtkSmartPointer<vtkMRMLVolumeDisplayNode> displayNode;
     if (scalarDisplayNodeRequired)
     {
-      displayNode = vtkSmartPointer<vtkMRMLScalarVolumeDisplayNode>::New();
+      displayNode = vtkSmartPointer<vtkMRMLScalarVolumeDisplayNode>::Take(vtkMRMLScalarVolumeDisplayNode::SafeDownCast(scene->CreateNodeByClass("vtkMRMLScalarVolumeDisplayNode")));
     }
     else
     {
-      displayNode = vtkSmartPointer<vtkMRMLVectorVolumeDisplayNode>::New();
+      displayNode = vtkSmartPointer<vtkMRMLVectorVolumeDisplayNode>::Take(vtkMRMLVectorVolumeDisplayNode::SafeDownCast(scene->CreateNodeByClass("vtkMRMLVectorVolumeDisplayNode")));
     }
     this->External->GetScene()->AddNode(displayNode);
     if (scalarDisplayNodeRequired)
@@ -927,7 +933,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::CreateNewMRMLNodeForDevice(i
       return statusNode;
     }
 
-    statusNode = vtkSmartPointer<vtkMRMLIGTLStatusNode>::New();
+    statusNode = vtkSmartPointer<vtkMRMLIGTLStatusNode>::Take(vtkMRMLIGTLStatusNode::SafeDownCast(scene->CreateNodeByClass("vtkMRMLIGTLStatusNode")));
     statusNode->SetName(deviceName.c_str());
     statusNode->SetDescription("Received by OpenIGTLink");
     this->External->GetScene()->AddNode(statusNode);
@@ -960,7 +966,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::CreateNewMRMLNodeForDevice(i
       return transformNode;
     }
 
-    transformNode = vtkSmartPointer<vtkMRMLLinearTransformNode>::New();
+    transformNode = vtkSmartPointer<vtkMRMLLinearTransformNode>::Take(vtkMRMLLinearTransformNode::SafeDownCast(scene->CreateNodeByClass("vtkMRMLLinearTransformNode")));
     transformNode->SetName(deviceName.c_str());
     transformNode->SetDescription("Received by OpenIGTLink");
     vtkNew<vtkMatrix4x4> transform;
@@ -993,12 +999,12 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::CreateNewMRMLNodeForDevice(i
       }
       else
       {
-        modelNode = vtkSmartPointer<vtkMRMLModelNode>::New();
+        modelNode = vtkSmartPointer<vtkMRMLModelNode>::Take(vtkMRMLModelNode::SafeDownCast(scene->CreateNodeByClass("vtkMRMLModelNode")));
       }
     }
     else
     {
-      modelNode = vtkSmartPointer<vtkMRMLModelNode>::New();
+      modelNode = vtkSmartPointer<vtkMRMLModelNode>::Take(vtkMRMLModelNode::SafeDownCast(scene->CreateNodeByClass("vtkMRMLModelNode")));
     }
     modelNode->SetName(deviceName.c_str());
     modelNode->SetDescription("Received by OpenIGTLink");
@@ -1019,7 +1025,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::CreateNewMRMLNodeForDevice(i
     }
 
     igtlioStringDevice* modifiedDevice = reinterpret_cast<igtlioStringDevice*>(device);
-    textNode = vtkSmartPointer<vtkMRMLTextNode>::New();
+    textNode = vtkSmartPointer<vtkMRMLTextNode>::Take(vtkMRMLTextNode::SafeDownCast(scene->CreateNodeByClass("vtkMRMLTextNode")));
     textNode->SetEncoding(modifiedDevice->GetContent().encoding);
     textNode->SetText(modifiedDevice->GetContent().string_msg.c_str());
     textNode->SetName(deviceName.c_str());
@@ -1056,7 +1062,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::CreateNewMRMLNodeForDevice(i
     }
 
     igtlioImageMetaDevice* imageMetaDevice = reinterpret_cast<igtlioImageMetaDevice*>(device);
-    imageMetaNode = vtkSmartPointer<vtkMRMLImageMetaListNode>::New();
+    imageMetaNode = vtkSmartPointer<vtkMRMLImageMetaListNode>::Take(vtkMRMLImageMetaListNode::SafeDownCast(scene->CreateNodeByClass("vtkMRMLImageMetaListNode")));
     imageMetaNode->SetName(deviceName.c_str());
     imageMetaNode->SetDescription("Received by OpenIGTLink");
     igtlioImageMetaConverter::ImageMetaDataList imageMetaList = imageMetaDevice->GetContent().ImageMetaDataElements;
@@ -1091,7 +1097,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::CreateNewMRMLNodeForDevice(i
     }
 
     igtlioLabelMetaDevice* labelMetaDevice = reinterpret_cast<igtlioLabelMetaDevice*>(device);
-    labelMetaNode = vtkSmartPointer<vtkMRMLLabelMetaListNode>::New();
+    labelMetaNode = vtkSmartPointer<vtkMRMLLabelMetaListNode>::Take(vtkMRMLLabelMetaListNode::SafeDownCast(scene->CreateNodeByClass("vtkMRMLLabelMetaListNode")));
     labelMetaNode->SetName(deviceName.c_str());
     labelMetaNode->SetDescription("Received by OpenIGTLink");
     igtlioLabelMetaConverter::LabelMetaDataList labelMetaList = labelMetaDevice->GetContent().LabelMetaDataElements;
@@ -1133,7 +1139,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::CreateNewMRMLNodeForDevice(i
       this->External->RegisterIncomingMRMLNode(tdatanode, device);
       return tdatanode;
     }
-    tdatanode = vtkMRMLIGTLTrackingDataBundleNode::New();
+    tdatanode = vtkSmartPointer<vtkMRMLIGTLTrackingDataBundleNode>::Take(vtkMRMLIGTLTrackingDataBundleNode::SafeDownCast(scene->CreateNodeByClass("vtkMRMLIGTLTrackingDataBundleNode")));
     tdatanode->SetName(deviceName.c_str());
     tdatanode->SetDescription("Received by OpenIGTLink");
     for (auto iter = contentCopy.trackingDataElements.cbegin(); iter != contentCopy.trackingDataElements.cend(); ++iter)
