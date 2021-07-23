@@ -665,7 +665,7 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeForDevice(igtlioD
   if (!this->External->GetScene())
   {
     // No scene to add nodes to.
-    return NULL;
+    return nullptr;
   }
 
   const std::string deviceType = device->GetDeviceType();
@@ -692,15 +692,16 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetMRMLNodeForDevice(igtlioD
       }
       //Node name can be modified by other module, it is not a concrete way to find the match to the device name
       // OriginalNodeNameKey arrtribute was added during node creation.
-      if (typeMatched && strcmp(node->GetAttribute(OriginalNodeNameKey), deviceName.c_str()) == 0)
+      if (typeMatched && node->GetAttribute(OriginalNodeNameKey) && strcmp(node->GetAttribute(OriginalNodeNameKey), deviceName.c_str()) == 0)
       {
         return node;
       }
     }
   }
-  return NULL;
+  return nullptr;
 }
 
+//----------------------------------------------------------------------------
 vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::CreateNewMRMLNodeForDevice(igtlioDevice *device)
 {
   const std::string deviceType = device->GetDeviceType();
@@ -1913,7 +1914,7 @@ bool vtkMRMLIGTLConnectorNode::RegisterIncomingMRMLNode(vtkMRMLNode* node)
     device = this->Internal->IOConnector->GetDeviceFactory()->create(key.type, key.name);
   }
 
-  return this->RegisterIncomingMRMLNode(node, device);;
+  return this->RegisterIncomingMRMLNode(node, device);
 }
 
 //---------------------------------------------------------------------------
