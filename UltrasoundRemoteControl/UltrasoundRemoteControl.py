@@ -1,6 +1,7 @@
 import os.path, datetime
 from __main__ import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
+from slicer.util import VTKObservationMixin
 import logging
 
 #
@@ -189,3 +190,193 @@ class UltrasoundRemoteControlLogic(ScriptedLoadableModuleLogic):
   def __del__(self):
     # Clean up commands
     pass
+
+#
+# Abstract widget that can be used as a base class to create custom scripted ultrasound widgets.
+# TODO: In the future it would be better to make it so that we can override the virtual methods of qSlicerAbstractUltrasoundParameterWidget
+# in Python and use that as a base class instead.
+class AbstractScriptedUltrasoundWidget(qt.QWidget, VTKObservationMixin):
+  def __init__(self):
+    qt.QWidget.__init__(self)
+    VTKObservationMixin.__init__(self)
+    self._cmdSetParameter = None
+    self._cmdGetParameter = None
+    self._interactionInProgress = False
+    self._deviceID = ""
+    self._parameterName = ""
+    self._connectorNode = None
+    self._periodicParameterTimer = qt.QTimer()
+    self._periodicParameterTimer.connect("timeout()", self.sendGetUltrasoundParameterCommand)
+
+  def setInteractionInProgress(self, interactionStatus):
+    """
+    Returns True if the user is currently interacting with the widget.
+    Ex. Dragging a slider
+    """
+    self._interactionInProgress = interactionStatus
+
+  def interactionInProgress(self):
+    """
+    Returns True if the user is currently interacting with the widget.
+    Ex. Dragging a slider
+    """
+    return self._interactionInProgress
+
+  def connectorNode(self):
+    """
+    Get the connector node that will be connected to the ultrasound device.
+    """
+    return self.connectorNode
+
+  def setConnectorNode(self, node):
+    """
+    Set the connector node that will be connected to the ultrasound device.
+    """
+    self.removeObservers(self.onConnectionChanged)
+    if node:
+      self.addObserver(node, slicer.vtkMRMLIGTLConnectorNode.ConnectedEvent, self.onConnectionChanged)
+      self.addObserver(node, slicer.vtkMRMLIGTLConnectorNode.DisconnectedEvent, self.onConnectionChanged)
+    self._connectorNode = node
+    self.onConnectionChanged()
+
+  def onConnectionChanged(self, caller=None, event=None, callData=None):
+    """
+    Called when the connector node is changed, or if the device is (dis)connected.
+    """
+    if self._connectorNode and self._connectorNode.GetState() == slicer.vtkMRMLIGTLConnectorNode.StateConnected:
+      self.onConnected()
+      self.sendGetUltrasoundParameterCommand()
+      self._periodicParameterTimer.start(2000)
+    else:
+      self._periodicParameterTimer.stop()
+      self.onDisconnected()
+
+  def setDeviceID(self, deviceID):
+    """
+    Set the device id from the Plus config file that will be used to set/get the ultrasound parameters.
+    Ex. "VideoDevice"
+    """
+    self._deviceID = deviceID
+
+  def deviceID(self):
+    """
+    Get the device id from the Plus config file that will be used to set/get the ultrasound parameters.
+    Ex. "VideoDevice"
+    """
+    return self._deviceID
+
+  def sendSetUltrasoundParameterCommand(self):
+    """
+    Send a Set command to the ultrasound to request a change in parameter.
+    Calls onSetUltrasoundParameterCompleted when the command has completed.
+    """
+    if self._connectorNode is None or self._connectorNode.GetState() != slicer.vtkMRMLIGTLConnectorNode.StateConnected:
+      return
+    setUSParameterXML = """
+    <Command Name=\"SetUsParameter\" UsDeviceId=\"{deviceID}\">
+      <Parameter Name=\"{parameterName}\" Value=\"{parameterValue}\" />
+    </Command>
+    """.format(deviceID=self._deviceID, parameterName=self._parameterName, parameterValue=self.parameterValue())
+    self._cmdSetParameter = slicer.vtkSlicerOpenIGTLinkCommand()
+    self._cmdSetParameter.SetName("SetUsParameter")
+    self._cmdSetParameter.SetTimeoutSec(5.0)
+    self._cmdSetParameter.SetBlocking(False)
+    self._cmdSetParameter.SetCommandContent(setUSParameterXML)
+    self._cmdSetParameter.ClearResponseMetaData()
+    self.setInteractionInProgress(True)
+    self.removeObservers(self.onSetUltrasoundParameterCompleted)
+    self.addObserver(self._cmdSetParameter, slicer.vtkSlicerOpenIGTLinkCommand.CommandCompletedEvent, self.onSetUltrasoundParameterCompleted)
+    self._connectorNode.SendCommand(self._cmdSetParameter)
+
+  def onSetUltrasoundParameterCompleted(self, caller=None, event=None, callData=None):
+    """
+    Called when SetUsParameter has completed.
+    """
+    self._interactionInProgress = False
+    self.sendGetUltrasoundParameterCommand() # Confirm new value
+
+  def sendGetUltrasoundParameterCommand(self):
+    """
+    Send a Get command to the ultrasound requesting a parameter value.
+    Calls onGetUltrasoundParameterCompleted when the command has completed.
+    """
+    if self._connectorNode is None or self._connectorNode.GetState() != slicer.vtkMRMLIGTLConnectorNode.StateConnected:
+      return
+    if self._cmdGetParameter and self._cmdGetParameter.IsInProgress():
+      # Get command is already in progress
+      return
+    getUSParameterXML = """
+    <Command Name=\"GetUsParameter\" UsDeviceId=\"{deviceID}\">
+      <Parameter Name=\"{parameterName}\" />
+    </Command>
+    """.format(deviceID=self._deviceID, parameterName=self._parameterName)
+    self._cmdGetParameter = slicer.vtkSlicerOpenIGTLinkCommand()
+    self._cmdGetParameter.SetName("GetUsParameter")
+    self._cmdGetParameter.SetTimeoutSec(5.0)
+    self._cmdGetParameter.SetBlocking(False)
+    self._cmdGetParameter.SetCommandContent(getUSParameterXML)
+    self._cmdGetParameter.ClearResponseMetaData()
+    self.removeObservers(self.onGetUltrasoundParameterCompleted)
+    self.addObserver(self._cmdGetParameter, slicer.vtkSlicerOpenIGTLinkCommand.CommandCompletedEvent, self.onGetUltrasoundParameterCompleted)
+    self._connectorNode.SendCommand(self._cmdGetParameter)
+
+  def onGetUltrasoundParameterCompleted(self, caller=None, event=None, callData=None):
+    """
+    Called when GetUsParameter has completed.
+    """
+    if not self._cmdGetParameter.GetSuccessful():
+      return
+    if self._interactionInProgress or self._cmdGetParameter.IsInProgress():
+      # User is currently interacting with the widget or
+      # SetUSParameterCommand is currently in progress
+      # Don't update the current value
+      return
+    value = self._cmdGetParameter.GetResponseMetaDataElement(self._parameterName)
+    self.setParameterValue(value) # Set the value in the widget
+
+  def parameterName(self):
+    """
+    Get name of the ultrasound parameter being controlled.
+    Ex. "DepthMm"
+    """
+    return self.parameterName
+
+  def setParameterName(self, parameterName):
+    """
+    Set name of the ultrasound parameter being controlled.
+    Ex. "DepthMm"
+    """
+    self._parameterName = parameterName
+
+  def onConnected(self):
+    """
+    Called when a connection has been established.
+    Not required to override for widget to function.
+    """
+    pass
+
+  def onDisconnected(self):
+    """
+    Called when a device has been disconnected, or when the connection has not been set.
+    Not required to override for widget to function.
+    """
+    pass
+
+  ###################################################
+  # These methods should be overridden by subclasses.
+  def parameterValue(self):
+    """
+    Return the parameter value from the widget.
+    Ex. Slider/spinbox value, or any value set by widget.
+    Required to override for widget to function.
+    """
+    return ""
+
+  def setParameterValue(self, value):
+    """
+    Update the state of the widget to reflect the specified parameter value.
+    Ex. Slider/spinbox value, or any value set by widget.
+    Required to override for widget to function.
+    """
+    pass
+  ###################################################
