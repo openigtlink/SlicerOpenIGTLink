@@ -2575,21 +2575,13 @@ int vtkMRMLIGTLConnectorNode::Stop()
 //---------------------------------------------------------------------------
 void vtkMRMLIGTLConnectorNode::PeriodicProcess()
 {
-  qSlicerApplication* application = qSlicerApplication::application();
-  if (application)
-  {
-    application->pauseRender();
-  }
+  SlicerRenderBlocker renderBlocker;
 
   this->Internal->IOConnector->PeriodicProcess();
 
   while (!this->Internal->PendingNodeModifications.empty())
   {
     vtkInternal::NodeModification wasModifying = this->Internal->PendingNodeModifications.back();
-    if (wasModifying.Node->GetName())
-    {
-      //this->Internal->IncomingNodeClientIDMap[wasModifying.Node->GetName()] = wasModifying.Node->;
-    }
     wasModifying.Node->EndModify(wasModifying.Modifying);
     if (wasModifying.Node->GetName())
     {
@@ -2599,11 +2591,6 @@ void vtkMRMLIGTLConnectorNode::PeriodicProcess()
   }
 
   this->Internal->RemoveExpiredQueries();
-
-  if (application)
-  {
-    application->resumeRender();
-  }
 }
 
 //---------------------------------------------------------------------------
