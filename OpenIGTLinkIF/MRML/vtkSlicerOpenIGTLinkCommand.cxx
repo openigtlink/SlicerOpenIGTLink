@@ -165,6 +165,12 @@ void vtkSlicerOpenIGTLinkCommand::SetResponseMetaDataElement(std::string key, st
 }
 
 //---------------------------------------------------------------------------
+bool vtkSlicerOpenIGTLinkCommand::GetSuccessful()
+{
+  return this->Command->GetSuccessful();
+}
+
+//---------------------------------------------------------------------------
 void vtkSlicerOpenIGTLinkCommand::SetTimeoutSec(double timeoutSec)
 {
   this->Command->SetTimeoutSec(timeoutSec);
