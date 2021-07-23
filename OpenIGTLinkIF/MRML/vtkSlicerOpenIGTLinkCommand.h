@@ -84,6 +84,7 @@ public:
   std::map<std::string, std::pair<IANA_ENCODING_TYPE, std::string> > GetCommandMetaData();
   std::map<std::string, std::pair<IANA_ENCODING_TYPE, std::string> > GetResponseMetaData();
 
+  bool GetSuccessful();
 
   void SetTimeoutSec(double);
   double GetTimeoutSec();
@@ -93,9 +94,13 @@ public:
 
   void SetBlocking(bool);
   bool GetBlocking();
+  vtkBooleanMacro(Blocking, bool);
 
   int GetCommandStatus();
   void SetCommandStatus(int status);
+
+  bool IsInProgress() { return this->Command->IsInProgress(); };
+  bool IsCompleted() { return this->Command->IsCompleted(); };
 
   std::string GetErrorMessage();
   void SetErrorMessage(std::string);
