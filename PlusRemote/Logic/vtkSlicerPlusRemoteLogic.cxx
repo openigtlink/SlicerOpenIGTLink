@@ -51,6 +51,7 @@
 #include <vtkMRMLTextNode.h>
 #include <vtkMRMLVolumeNode.h>
 #include <vtkMRMLVolumeRenderingDisplayNode.h>
+#include <vtkMRMLMarkupsROINode.h>
 
 // OpenIGTLinkIF includes
 #include "vtkMRMLIGTLConnectorNode.h"
@@ -1018,10 +1019,15 @@ void vtkSlicerPlusRemoteLogic::ShowVolumeRendering(vtkMRMLVolumeNode * volumeNod
       volumeRenderingLogic->UpdateDisplayNodeFromVolumeNode(displayNode, volumeNode);
       volumeNode->AddAndObserveDisplayNodeID(displayNode->GetID());
 
-      vtkMRMLAnnotationROINode* roiNode = displayNode->GetROINode();
-      if (roiNode)
+      vtkMRMLAnnotationROINode* annotationROINode = displayNode->GetROINode();
+      if (annotationROINode)
       {
-        roiNode->SetDisplayVisibility(false);
+        annotationROINode->SetDisplayVisibility(false);
+      }
+      vtkMRMLMarkupsROINode* markupsROINode = displayNode->GetMarkupsROINode();
+      if (markupsROINode)
+      {
+        markupsROINode->SetDisplayVisibility(false);
       }
     }
   }
