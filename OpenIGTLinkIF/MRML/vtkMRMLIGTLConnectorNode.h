@@ -28,8 +28,14 @@
 #include <vtkCallbackCommand.h>
 #include <vtkWeakPointer.h>
 
+// OpenIGTLink includes
+#include "igtlOSUtil.h"
+
 // OpenIGTLinkIO includes
 #include <igtlioCommand.h>
+#include <igtlioConnector.h>
+#include <igtlioDeviceFactory.h>
+#include <igtlioStringDevice.h>
 
 // std includes
 #include <list>
@@ -336,6 +342,17 @@ protected:
   vtkGetStringMacro(OutgoingNodeReferenceRole);
   vtkSetStringMacro(OutgoingNodeReferenceMRMLAttributeName);
   vtkGetStringMacro(OutgoingNodeReferenceMRMLAttributeName);
+
+  //----------------------------------------------------------------
+  // Functions moved from vtkInternal to main node class to be able to override them from a subclass.
+  // Extension SlicerCollaboration needs to override these functions to interpret the TextNodes received
+  // that contain xml text. This text contains attributes of nodes that can not be sent directly through
+  // OpenIGTLink (display nodes or non-fiducial markups).
+  //----------------------------------------------------------------
+  virtual unsigned int AssignOutGoingNodeToDevice(vtkMRMLNode* node, igtlioDevicePointer device);
+  virtual vtkMRMLNode* CreateNewMRMLNodeForDevice(igtlioDevice* device);
+  virtual void ProcessIncomingDeviceModifiedEvent(vtkObject* caller, unsigned long event, igtlioDevice* modifiedDevice);
+  virtual vtkMRMLNode* GetMRMLNodeForDevice(igtlioDevice* device);
 
 private:
   class vtkInternal;
