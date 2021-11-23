@@ -358,14 +358,10 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
 
   const std::string deviceType = modifiedDevice->GetDeviceType();
   const std::string deviceName = modifiedDevice->GetDeviceName();
-
-  std::cout << deviceType << std::endl;
-  std::cout << deviceName << std::endl;
   int diff = strcmp(deviceType.c_str(), "NDARRAY");
-  std::cout << diff << std::endl;
+ 
   if (this->External->GetNodeTagFromDeviceType(deviceType.c_str()).size() > 0)
   {
-    std::cout << "anything" << std::endl;
     if (strcmp(deviceType.c_str(), "IMAGE") == 0)
     {
       igtlioImageDevice* imageDevice = reinterpret_cast<igtlioImageDevice*>(modifiedDevice);
@@ -426,15 +422,18 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ProcessIncomingDeviceModifiedEvent(
     }
     else if (strcmp(deviceType.c_str(), "NDARRAY") == 0)
     {
-        igtlioNDArrayDevice* ndArrayDevice = reinterpret_cast<igtlioNDArrayDevice*>(modifiedDevice);
-            if (strcmp(modifiedNode->GetName(), deviceName.c_str()) == 0)
-            {
-                vtkMRMLTableNode* tableNode = vtkMRMLTableNode::SafeDownCast(modifiedNode);
-                vtkDataArray* dataArray = vtkDataArray::SafeDownCast(tableNode->GetTable()->GetColumn(0));
-                dataArray->InsertTuple(0, 0, ndArrayDevice->GetContent().NDArray_msg);
-                dataArray->Modified();
-                tableNode->AddColumn(dataArray);
-                tableNode->Modified();
+       igtlioNDArrayDevice* ndarraydevice = reinterpret_cast<igtlioNDArrayDevice*>(modifiedDevice);
+       if (strcmp(modifiedNode->GetName(), deviceName.c_str()) == 0)
+       {
+          vtkMRMLTableNode* tablenode = vtkMRMLTableNode::SafeDownCast(modifiedNode);
+          vtkSmartPointer<vtkTable> table = vtkSmartPointer<vtkTable>::New();
+          vtkCollection* collectionRef = vtkCollection::SafeDownCast(ndarraydevice->GetContent().collection);
+          for (int i = 0; i < collectionRef->GetNumberOfItems(); ++i) {
+            vtkDataArray* collection = vtkDataArray::SafeDownCast(ndarraydevice->GetContent().collection->GetItemAsObject(i));
+            table->AddColumn(collection);
+            tablenode->SetAndObserveTable(table);
+            tablenode->Modified();
+          }  
         }
     }
     else if (strcmp(deviceType.c_str(), "TRANSFORM") == 0)
@@ -1454,20 +1453,6 @@ vtkMRMLNode* vtkMRMLIGTLConnectorNode::vtkInternal::CreateNewMRMLNodeForDevice(i
     // its contents will be updated later
     this->External->RegisterIncomingMRMLNode(markupsNode, device);
     return markupsNode;
-  }
-  else if (strcmp(device->GetDeviceType().c_str(), "NDARRAY") == 0)
-  {
-    vtkSmartPointer<vtkMRMLTableNode> tableNode = vtkMRMLTableNode::SafeDownCast(this->External->GetScene()->GetFirstNode(deviceName.c_str(), "vtkMRMLTableNode"));
-    if (tableNode)
-    {
-      this->External->RegisterIncomingMRMLNode(tableNode, device)
-      return tableNode;
-    }
-    igtlioNDArrayDevice* ndArrayDevice = reinterpret_cast<igtlioNDArrayDevice*>(device);
-    tableNode = vtkSmartPointer<vtkMRMLTableNode>::New();
-    tableNode->SetName(deviceName.c_str());
-    tableNode->SetDescription("Recieved by OpenIGTLink");
-    igtlioNDArrayConverter::ContentData content = ndArrayDevice->GetContent();
   }
   else if (strcmp(device->GetDeviceType().c_str(), "IMGMETA") == 0)
   {
