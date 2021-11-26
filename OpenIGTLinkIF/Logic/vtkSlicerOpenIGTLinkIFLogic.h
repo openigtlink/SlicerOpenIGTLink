@@ -24,7 +24,6 @@
 #include <vtkSlicerModuleLogic.h>
 
 // MRML includes
-#include <vtkMRMLFiducialListNode.h>
 #include <vtkMRMLScene.h>
 
 // OpenIGTLinkIF includes
