@@ -1019,7 +1019,7 @@ void vtkSlicerPlusRemoteLogic::ShowVolumeRendering(vtkMRMLVolumeNode * volumeNod
       volumeRenderingLogic->UpdateDisplayNodeFromVolumeNode(displayNode, volumeNode);
       volumeNode->AddAndObserveDisplayNodeID(displayNode->GetID());
 
-      vtkMRMLAnnotationROINode* annotationROINode = displayNode->GetROINode();
+      vtkMRMLAnnotationROINode* annotationROINode = displayNode->GetAnnotationROINode();
       if (annotationROINode)
       {
         annotationROINode->SetDisplayVisibility(false);
