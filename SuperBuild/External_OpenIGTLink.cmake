@@ -2,6 +2,11 @@ set(proj OpenIGTLink)
 
 # Set dependency list
 set(${proj}_DEPENDS "")
+if(DEFINED Slicer_SOURCE_DIR)
+  list(APPEND ${proj}_DEPENDS
+    ITK
+    )
+endif()
 if(SlicerOpenIGTLink_USE_VP9)
   list(APPEND ${proj}_DEPENDS VP9)
 endif()
