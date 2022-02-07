@@ -2,6 +2,11 @@ set(proj YASM)
 
 # Set dependency list
 set(${proj}_DEPENDS "")
+if(DEFINED Slicer_SOURCE_DIR)
+  list(APPEND ${proj}_DEPENDS
+    python
+    )
+endif()
 
 # Include dependent projects if any
 ExternalProject_Include_Dependencies(${proj} PROJECT_VAR proj DEPENDS_VAR ${proj}_DEPENDS)
@@ -66,7 +71,7 @@ if(NOT DEFINED YASM_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
       # Install directories
       -DYASM_INSTALL_BIN_DIR:STRING=bin
       # Options
-      -DBUILD_TESTING:BOOL=OFF 
+      -DBUILD_TESTING:BOOL=OFF
       -DBUILD_EXAMPLES:BOOL=OFF
       -DBUILD_SHARED_LIBS:BOOL=OFF
       # Dependencies
@@ -89,7 +94,7 @@ if(NOT DEFINED YASM_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
   # Launcher setting specific to install tree
 
   #  NA
-  
+
 else()
   ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
 endif()
