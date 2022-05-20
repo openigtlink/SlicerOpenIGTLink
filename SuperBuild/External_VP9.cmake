@@ -87,6 +87,7 @@ ExternalProject_Execute(${proj} \"build\" make)
     set(VP9_MSVC140_URL "${BASE_VP9_URL}msvc14.zip")
     set(VP9_MSVC141_URL "${BASE_VP9_URL}msvc15.zip")
     set(VP9_MSVC142_URL "${BASE_VP9_URL}msvc16.zip")
+    set(VP9_MSVC143_URL "${BASE_VP9_URL}msvc16.zip")
 
     if(NOT DEFINED VP9_MSVC${MSVC_TOOLSET_VERSION}_URL)
       message(FATAL_ERROR "There are no binaries available for Microsoft C++ compiler ${MSVC_VERSION}")
