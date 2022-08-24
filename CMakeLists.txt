@@ -41,6 +41,7 @@ add_subdirectory(OpenIGTLinkIF)
 add_subdirectory(OpenIGTLinkRemote)
 add_subdirectory(PlusRemote)
 add_subdirectory(UltrasoundRemoteControl)
+add_subdirectory(GenericSerialDeviceRemoteControl)
 ## NEXT_MODULE
 
 #-----------------------------------------------------------------------------
