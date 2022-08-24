@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <widget class="ctkCollapsibleButton" name="plusParametersCollapsibleButton">
+      <property name="text">
+       <string>Plus parameters</string>
+      </property>
+      <property name="collapsed">
+       <bool>false</bool>
+      </property>
+       <layout class="QFormLayout" name="formLayout">
+        <item row="0" column="1">
+         <widget class="qMRMLNodeComboBox" name="connectorNodeSelector"/>
+        </item>
+        <item row="1" column="1">
+         <widget class="QComboBox" name="deviceIdComboBox"/>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>Connector node:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>Device ID:</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="ctkCollapsibleButton" name="sendCommandCollapsibleButton">
+      <property name="text">
+       <string>Send Command</string>
+      </property>
+      <property name="collapsed">
+       <bool>false</bool>
+      </property>
+       <layout class="QFormLayout" name="formLayout_2">
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="sendCommandEdit"/>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>Input Text:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QPushButton" name="sendCommandButton">
+          <property name="text">
+           <string>Send Text</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QPushButton" name="sendGetCTSButton">
+          <property name="text">
+           <string>Get CTS</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QLineEdit" name="sendSetRTSEdit"/>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>Set RTS Value:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QPushButton" name="sendSetRTSButton">
+          <property name="text">
+           <string>Set RTS</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="1">
+         <widget class="QPushButton" name="sendGetRTSButton">
+          <property name="text">
+           <string>Get RTS</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="0">
+         <widget class="QLabel" name="commandResponseOutputLabel">
+          <property name="text">
+           <string>Output Response:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="1">
+         <widget class="QLabel" name="commandResponseOutput">
+         </widget>
+        </item>
+       </layout>
+     </widget>
+    </item>
+   </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ctkCollapsibleButton</class>
+   <extends>QWidget</extends>
+   <header>ctkCollapsibleButton.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>qMRMLNodeComboBox</class>
+   <extends>QWidget</extends>
+   <header>qMRMLNodeComboBox.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
