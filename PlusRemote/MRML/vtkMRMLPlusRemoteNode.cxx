@@ -194,7 +194,7 @@ bool vtkMRMLPlusRemoteNode::AddRecordedVolume(std::string volumeName)
 }
 
 //----------------------------------------------------------------------------
-vtkMRMLAnnotationROINode* vtkMRMLPlusRemoteNode::GetLiveReconstructionROINode()
+vtkMRMLDisplayableNode* vtkMRMLPlusRemoteNode::GetLiveReconstructionROINode()
 {
   if (!this->Scene)
   {
@@ -202,12 +202,12 @@ vtkMRMLAnnotationROINode* vtkMRMLPlusRemoteNode::GetLiveReconstructionROINode()
     return NULL;
   }
 
-  vtkMRMLAnnotationROINode* roiNode = vtkMRMLAnnotationROINode::SafeDownCast(this->GetNodeReference(ROI_REFERENCE_ROLE));
+  vtkMRMLDisplayableNode* roiNode = vtkMRMLDisplayableNode::SafeDownCast(this->GetNodeReference(ROI_REFERENCE_ROLE));
   return roiNode;
 }
 
 //----------------------------------------------------------------------------
-void vtkMRMLPlusRemoteNode::SetAndObserveLiveReconstructionROINode(vtkMRMLAnnotationROINode* node)
+void vtkMRMLPlusRemoteNode::SetAndObserveLiveReconstructionROINode(vtkMRMLDisplayableNode* node)
 {
   if (node && this->Scene != node->GetScene())
   {
@@ -215,8 +215,7 @@ void vtkMRMLPlusRemoteNode::SetAndObserveLiveReconstructionROINode(vtkMRMLAnnota
     return;
   }
 
-  vtkMRMLAnnotationROINode* oldNode = vtkMRMLAnnotationROINode::SafeDownCast(this->GetNodeReference(ROI_REFERENCE_ROLE));
-
+  vtkMRMLNode* oldNode = this->GetNodeReference(ROI_REFERENCE_ROLE);
   if (node == oldNode)
   {
     return;
@@ -238,15 +237,23 @@ void vtkMRMLPlusRemoteNode::SetAndObserveLiveReconstructionROINode(vtkMRMLAnnota
 //----------------------------------------------------------------------------
 void vtkMRMLPlusRemoteNode::OnROINodeModified(vtkObject* caller, unsigned long vtkNotUsed(eid), void* clientdata, void* vtkNotUsed(calldata))
 {
-  vtkSmartPointer<vtkMRMLAnnotationROINode> roiNode = vtkMRMLAnnotationROINode::SafeDownCast(caller);
-
   vtkMRMLPlusRemoteNode* self = reinterpret_cast<vtkMRMLPlusRemoteNode*>(clientdata);
 
   double roiCenter[3] = { 0.0, 0.0, 0.0 };
-  roiNode->GetXYZ(roiCenter);
-
   double roiRadius[3] = { 0.0, 0.0, 0.0 };
-  roiNode->GetRadiusXYZ(roiRadius);
+
+  vtkSmartPointer<vtkMRMLAnnotationROINode> annotationROINode = vtkMRMLAnnotationROINode::SafeDownCast(caller);
+  vtkSmartPointer<vtkMRMLMarkupsROINode> markupsROINode = vtkMRMLMarkupsROINode::SafeDownCast(caller);
+  if (annotationROINode)
+  {
+    annotationROINode->GetXYZ(roiCenter);
+    annotationROINode->GetRadiusXYZ(roiRadius);
+  }
+  else if (markupsROINode)
+  {
+    markupsROINode->GetXYZ(roiCenter);
+    markupsROINode->GetRadiusXYZ(roiRadius);
+  }
 
   double roiOrigin[3] = { 0.0, 0.0, 0.0 };
   for (int i = 0; i < 3; ++i)
@@ -268,7 +275,7 @@ void vtkMRMLPlusRemoteNode::OnROINodeModified(vtkObject* caller, unsigned long v
 //----------------------------------------------------------------------------
 void vtkMRMLPlusRemoteNode::SetLiveReconstructionDisplayROI(bool displayROI)
 {
-  vtkMRMLAnnotationROINode* roiNode = this->GetLiveReconstructionROINode();
+  vtkMRMLDisplayableNode* roiNode = this->GetLiveReconstructionROINode();
   if (roiNode)
   {
     roiNode->SetDisplayVisibility(displayROI);
@@ -332,26 +339,34 @@ void vtkMRMLPlusRemoteNode::SetLiveReconstructionROIDimensions(const int dimensi
     return;
   }
 
-  int wasModifying = this->StartModify();
+  MRMLNodeModifyBlocker blocker(this);
 
   for (int i = 0; i < 3; ++i)
   {
     this->LiveReconstructionROIDimensions[i] = dimensions[i];
   }
 
-  vtkMRMLAnnotationROINode* roiNode = this->GetLiveReconstructionROINode();
-  if (roiNode)
+  vtkMRMLAnnotationROINode* annotationROINode = vtkMRMLAnnotationROINode::SafeDownCast(this->GetLiveReconstructionROINode());
+  vtkMRMLMarkupsROINode* markupsROINode = vtkMRMLMarkupsROINode::SafeDownCast(vtkMRMLMarkupsROINode::SafeDownCast(this->GetLiveReconstructionROINode()));
+
+  double spacing = this->LiveReconstructionSpacing;
+  double radius[3] = { 0.0, 0.0, 0.0 };
+  for (int i = 0; i < 3; ++i)
   {
-    double spacing = this->LiveReconstructionSpacing;
-    double radius[3] = { 0.0, 0.0, 0.0 };
-    for (int i = 0; i < 3; ++i)
-    {
-      radius[i] = (dimensions[i] * spacing) / 2;
-    }
-    roiNode->SetRadiusXYZ(radius);
+    radius[i] = (dimensions[i] * spacing) / 2;
   }
+
+  if (annotationROINode)
+  {
+    annotationROINode->SetRadiusXYZ(radius);
+  }
+  else if (markupsROINode)
+  {
+
+    markupsROINode->SetRadiusXYZ(radius);
+  }
+
   this->Modified();
-  this->EndModify(wasModifying);
 }
 
 //----------------------------------------------------------------------------

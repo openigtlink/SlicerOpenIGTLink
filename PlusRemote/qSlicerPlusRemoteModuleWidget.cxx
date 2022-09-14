@@ -32,6 +32,7 @@
 // MRML includes
 #include <vtkMRMLAnnotationROINode.h>
 #include <vtkMRMLLinearTransformNode.h>
+#include <vtkMRMLMarkupsROINode.h>
 #include <vtkMRMLVolumeNode.h>
 
 // OpenIGTLinkIF includes
@@ -845,8 +846,9 @@ void qSlicerPlusRemoteModuleWidget::onLiveReconstructionStartStopButtonClicked()
 
   if (d->LiveReconstructionStartStopButton->isChecked())
   {
-    vtkMRMLAnnotationROINode* roiNode = d->ParameterNode->GetLiveReconstructionROINode();
-    if (roiNode)
+    vtkMRMLAnnotationROINode* annotationROINode = vtkMRMLAnnotationROINode::SafeDownCast(d->ParameterNode->GetLiveReconstructionROINode());
+    vtkMRMLMarkupsROINode* markupsROINode = vtkMRMLMarkupsROINode::SafeDownCast(d->ParameterNode->GetLiveReconstructionROINode());
+    if (annotationROINode || markupsROINode)
     {
       d->LiveReconstructionStatus->setPixmap(d->InformationPixmap);
       d->LiveReconstructionStatus->setToolTip("Live reconstruction in progress");

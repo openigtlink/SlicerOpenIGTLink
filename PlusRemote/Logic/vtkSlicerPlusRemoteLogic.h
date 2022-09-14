@@ -191,7 +191,7 @@ public:
   /// Returns the specified filename, modified to include the timestamp (Ex: filename.ext -> filename_YmD_HMS.ext
   static std::string AddTimestampToFilename(std::string filename);
   /// Sets the bounds of the ROI node to the bounds of the volume node
-  static void InitializeROIFromVolume(vtkMRMLAnnotationROINode* roiNode, vtkMRMLVolumeNode* volumeNode);
+  static void InitializeROIFromVolume(vtkMRMLNode* roiNode, vtkMRMLVolumeNode* volumeNode);
 
 protected:
 

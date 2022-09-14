@@ -26,6 +26,7 @@
 // MRML includes
 #include <vtkMRML.h>
 #include <vtkMRMLAnnotationROINode.h>
+#include <vtkMRMLMarkupsROINode.h>
 #include <vtkMRMLNode.h>
 
 // VTK includes
@@ -327,8 +328,8 @@ public:
   vtkMRMLLinearTransformNode* GetUpdatedTransformNode();
 
 
-  void SetAndObserveLiveReconstructionROINode(vtkMRMLAnnotationROINode* annotationNode);
-  vtkMRMLAnnotationROINode* GetLiveReconstructionROINode();
+  void SetAndObserveLiveReconstructionROINode(vtkMRMLDisplayableNode* annotationNode);
+  vtkMRMLDisplayableNode* GetLiveReconstructionROINode();
 
   vtkSetMacro(ResponseText, std::string);
   vtkGetMacro(ResponseText, std::string);
