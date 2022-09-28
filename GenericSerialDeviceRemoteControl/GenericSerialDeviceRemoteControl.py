@@ -249,7 +249,7 @@ class GenericSerialDeviceRemoteControlLogic(ScriptedLoadableModuleLogic, VTKObse
         """
         return self._deviceId
 
-    def _sendCommand(self, commandName, commandXML, callbackOnComplete, callbackOnExpire, callbackOnCancel, timeoutSeconds, blocking):
+    def _sendCommand(self, commandName, commandXML, callbackOnComplete, callbackOnExpire, callbackOnCancel, blocking, timeoutSeconds):
         """
         Set up a command and send it over the current connector node.
 
@@ -316,7 +316,7 @@ class GenericSerialDeviceRemoteControlLogic(ScriptedLoadableModuleLogic, VTKObse
         """
         logging.info("Sending GetCTS")
         commandXML = f"""<Command Name="SerialCommand" DeviceId="{self._deviceId}" CommandName="GetCTS" />"""
-        return self._sendCommand("SerialCommand", commandXML, callbackOnComplete, callbackOnExpire, callbackOnCancel, timeoutSeconds, blocking)
+        return self._sendCommand("SerialCommand", commandXML, callbackOnComplete, callbackOnExpire, callbackOnCancel, blocking, timeoutSeconds)
 
     def sendSetRTSCommand(self, set_value, callbackOnComplete=None, callbackOnExpire=None, callbackOnCancel=None, blocking=False, timeoutSeconds=5.0):
         """
@@ -326,7 +326,7 @@ class GenericSerialDeviceRemoteControlLogic(ScriptedLoadableModuleLogic, VTKObse
         """
         logging.info("Sending SetRTS")
         commandXML = f"""<Command Name="SerialCommand" DeviceId="{self._deviceId}" CommandName="SetRTS" CommandValue="{set_value}"/>"""
-        return self._sendCommand("SerialCommand", commandXML, callbackOnComplete, callbackOnExpire, callbackOnCancel, timeoutSeconds, blocking)
+        return self._sendCommand("SerialCommand", commandXML, callbackOnComplete, callbackOnExpire, callbackOnCancel, blocking, timeoutSeconds)
 
     def sendGetRTSCommand(self, callbackOnComplete, callbackOnExpire=None, callbackOnCancel=None, blocking=False, timeoutSeconds=5.0):
         """
@@ -336,7 +336,7 @@ class GenericSerialDeviceRemoteControlLogic(ScriptedLoadableModuleLogic, VTKObse
         """
         logging.info("Sending GetRTS")
         commandXML = f"""<Command Name="SerialCommand" DeviceId="{self._deviceId}" CommandName="GetRTS" />"""
-        return self._sendCommand("SerialCommand", commandXML, callbackOnComplete, callbackOnExpire, callbackOnCancel, timeoutSeconds, blocking)
+        return self._sendCommand("SerialCommand", commandXML, callbackOnComplete, callbackOnExpire, callbackOnCancel, blocking, timeoutSeconds)
 
     def onConnected(self):
         """
