@@ -41,7 +41,6 @@
 #include <list>
 
 class vtkMRMLIGTLQueryNode;
-class vtkMutexLock;
 class vtkSlicerOpenIGTLinkCommand;
 
 typedef void* IGTLDevicePointer;
@@ -234,7 +233,7 @@ public:
   // and they will be Invoked in the main thread.
   // Use a weak pointer to make sure we don't try to access the query node after it is deleted from the scene.
   QueryListType QueryWaitingQueue;
-  vtkMutexLock* QueryQueueMutex;
+  std::mutex    QueryQueueMutex;
 
   //----------------------------------------------------------------
   // For controling remote devices

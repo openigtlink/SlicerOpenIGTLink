@@ -59,7 +59,6 @@ Version:   $Revision: 1.2 $
 #include <vtkImageData.h>
 #include <vtkMatrix3x3.h>
 #include <vtkMatrix4x4.h>
-#include <vtkMutexLock.h>
 #include <vtkPolyData.h>
 #include <vtkTimerLog.h>
 #include <vtkWeakPointer.h>
@@ -1113,7 +1112,7 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::ReceiveCommandResponse(igtlioCommand
 vtkMRMLIGTLQueryNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetPendingQueryNodeForDevice(igtlioDevice* device)
 {
   vtkMRMLIGTLQueryNode* queryNode = nullptr;
-  this->External->QueryQueueMutex->Lock();
+  this->External->QueryQueueMutex.lock();
   for (QueryListType::iterator igtlQueryIt = this->External->QueryWaitingQueue.begin();
     igtlQueryIt != this->External->QueryWaitingQueue.end(); ++igtlQueryIt)
   {
@@ -1125,7 +1124,7 @@ vtkMRMLIGTLQueryNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetPendingQueryNode
       break;
     }
   }
-  this->External->QueryQueueMutex->Unlock();
+  this->External->QueryQueueMutex.unlock();
 
   return queryNode;
 }
@@ -1133,7 +1132,7 @@ vtkMRMLIGTLQueryNode* vtkMRMLIGTLConnectorNode::vtkInternal::GetPendingQueryNode
 //----------------------------------------------------------------------------
 bool vtkMRMLIGTLConnectorNode::vtkInternal::RemovePendingQueryNode(vtkMRMLIGTLQueryNode* queryNode)
 {
-  this->External->QueryQueueMutex->Lock();
+  this->External->QueryQueueMutex.lock();
   QueryListType::iterator queryIt = std::find(this->External->QueryWaitingQueue.begin(), this->External->QueryWaitingQueue.end(), queryNode);
   if (queryIt == this->External->QueryWaitingQueue.end())
   {
@@ -1141,7 +1140,7 @@ bool vtkMRMLIGTLConnectorNode::vtkInternal::RemovePendingQueryNode(vtkMRMLIGTLQu
     return false;
   }
   this->External->QueryWaitingQueue.erase(queryIt);
-  this->External->QueryQueueMutex->Unlock();
+  this->External->QueryQueueMutex.unlock();
   return true;
 }
 
@@ -1149,7 +1148,7 @@ bool vtkMRMLIGTLConnectorNode::vtkInternal::RemovePendingQueryNode(vtkMRMLIGTLQu
 void vtkMRMLIGTLConnectorNode::vtkInternal::RemoveExpiredQueries()
 {
   QueryListType expiredQueries;
-  this->External->QueryQueueMutex->Lock();
+  this->External->QueryQueueMutex.lock();
   expiredQueries.remove(nullptr); // Weak pointers could be set to nullptr if references are removed
   for (QueryListType::iterator queryIt = this->External->QueryWaitingQueue.begin(); queryIt != this->External->QueryWaitingQueue.end(); ++queryIt)
   {
@@ -1181,7 +1180,7 @@ void vtkMRMLIGTLConnectorNode::vtkInternal::RemoveExpiredQueries()
       expiredQueries.push_back(queryNode);
     }
   }
-  this->External->QueryQueueMutex->Unlock();
+  this->External->QueryQueueMutex.unlock();
 
   for (QueryListType::iterator queryIt = expiredQueries.begin(); queryIt != expiredQueries.end(); ++queryIt)
   {
@@ -1198,7 +1197,6 @@ vtkMRMLIGTLConnectorNode::vtkMRMLIGTLConnectorNode()
   this->Internal = new vtkInternal(this);
   this->HideFromEditors = false;
   this->UseStreamingVolume = false;
-  this->QueryQueueMutex = vtkMutexLock::New();
   this->ConnectEvents();
 
   this->IncomingNodeReferenceRole = NULL;
@@ -1236,11 +1234,6 @@ vtkMRMLIGTLConnectorNode::vtkMRMLIGTLConnectorNode()
 //----------------------------------------------------------------------------
 vtkMRMLIGTLConnectorNode::~vtkMRMLIGTLConnectorNode()
 {
-  if (this->QueryQueueMutex)
-  {
-    this->QueryQueueMutex->Delete();
-  }
-
   delete this->Internal;
   this->Internal = NULL;
 }
@@ -2303,12 +2296,12 @@ int vtkMRMLIGTLConnectorNode::PushQuery(vtkMRMLIGTLQueryNode* node)
   }
 
   this->Internal->IOConnector->SendMessage(key, prefix);
-  this->QueryQueueMutex->Lock();
+  this->QueryQueueMutex.lock();
   node->SetTimeStamp(vtkTimerLog::GetUniversalTime());
   node->SetQueryStatus(vtkMRMLIGTLQueryNode::STATUS_WAITING);
   node->SetConnectorNodeID(this->GetID());
   this->QueryWaitingQueue.push_back(node);
-  this->QueryQueueMutex->Unlock();
+  this->QueryQueueMutex.unlock();
   return 0;
 }
 
@@ -2332,10 +2325,10 @@ void vtkMRMLIGTLConnectorNode::CancelQuery(vtkMRMLIGTLQueryNode* node)
     vtkErrorMacro("vtkMRMLIGTLConnectorNode::CancelQuery failed: invalid input node");
     return;
   }
-  this->QueryQueueMutex->Lock();
+  this->QueryQueueMutex.lock();
   this->QueryWaitingQueue.remove(node);
   node->SetConnectorNodeID("");
-  this->QueryQueueMutex->Unlock();
+  this->QueryQueueMutex.unlock();
 }
 
 //---------------------------------------------------------------------------
