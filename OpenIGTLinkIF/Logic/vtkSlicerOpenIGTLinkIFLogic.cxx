@@ -17,7 +17,6 @@
 #include <vtkSlicerColorLogic.h>
 
 // OpenIGTLinkIF MRML includes
-#include "vtkIGTLCircularBuffer.h"
 #include "vtkMRMLIGTLConnectorNode.h"
 #include "vtkMRMLImageMetaListNode.h"
 #include "vtkMRMLLabelMetaListNode.h"
