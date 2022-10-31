@@ -26,10 +26,9 @@
 
 // STD includes
 #include <string>
+#include <mutex>
 
 #define IGTLCB_CIRC_BUFFER_SIZE    3
-
-class vtkMutexLock;
 
 class vtkIGTLCircularBuffer : public vtkObject
 {
@@ -57,8 +56,7 @@ protected:
   virtual ~vtkIGTLCircularBuffer();
 
 protected:
-
-  vtkMutexLock*      Mutex;
+  std::mutex         Mutex;
   int                Last;        // updated by connector thread
   int                InPush;      // updated by connector thread
   int                InUse;       // updated by main thread

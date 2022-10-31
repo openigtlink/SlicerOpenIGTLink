@@ -14,7 +14,6 @@
 
 // VTK includes
 #include <vtkObjectFactory.h>
-#include <vtkMutexLock.h>
 #include <vtkIGTLCircularBuffer.h>
 
 // VTKSYS includes
@@ -32,8 +31,7 @@ vtkStandardNewMacro(vtkIGTLCircularBuffer);
 //---------------------------------------------------------------------------
 vtkIGTLCircularBuffer::vtkIGTLCircularBuffer()
 {
-  this->Mutex = vtkMutexLock::New();
-  this->Mutex->Lock();
+  this->Mutex.lock();
   // Allocate Circular buffer for the new device
   this->InUse = -1;
   this->Last  = -1;
@@ -47,17 +45,17 @@ vtkIGTLCircularBuffer::vtkIGTLCircularBuffer()
   }
 
   this->UpdateFlag = 0;
-  this->Mutex->Unlock();
+  this->Mutex.unlock();
 }
 
 
 //---------------------------------------------------------------------------
 vtkIGTLCircularBuffer::~vtkIGTLCircularBuffer()
 {
-  this->Mutex->Lock();
+  this->Mutex.lock();
   this->InUse = -1;
   this->Last  = -1;
-  this->Mutex->Unlock();
+  this->Mutex.unlock();
 
   for (int i = 0; i < IGTLCB_CIRC_BUFFER_SIZE; i ++)
   {
@@ -66,7 +64,6 @@ vtkIGTLCircularBuffer::~vtkIGTLCircularBuffer()
       delete this->Data[i];
     }
   }
-  this->Mutex->Delete();
 }
 
 
@@ -90,13 +87,13 @@ void vtkIGTLCircularBuffer::PrintSelf(ostream& os, vtkIndent indent)
 //---------------------------------------------------------------------------
 int vtkIGTLCircularBuffer::StartPush()
 {
-  this->Mutex->Lock();
+  this->Mutex.lock();
   this->InPush = (this->Last + 1) % IGTLCB_CIRC_BUFFER_SIZE;
   if (this->InPush == this->InUse)
   {
     this->InPush = (this->Last + 1) % IGTLCB_CIRC_BUFFER_SIZE;
   }
-  this->Mutex->Unlock();
+  this->Mutex.unlock();
 
   return this->InPush;
 }
@@ -110,10 +107,10 @@ igtl::MessageBase::Pointer vtkIGTLCircularBuffer::GetPushBuffer()
 //---------------------------------------------------------------------------
 void vtkIGTLCircularBuffer::EndPush()
 {
-  this->Mutex->Lock();
+  this->Mutex.lock();
   this->Last = this->InPush;
   this->UpdateFlag = 1;
-  this->Mutex->Unlock();
+  this->Mutex.unlock();
 }
 
 
@@ -129,10 +126,10 @@ void vtkIGTLCircularBuffer::EndPush()
 //---------------------------------------------------------------------------
 int vtkIGTLCircularBuffer::StartPull()
 {
-  this->Mutex->Lock();
+  this->Mutex.lock();
   this->InUse = this->Last;
   this->UpdateFlag = 0;
-  this->Mutex->Unlock();
+  this->Mutex.unlock();
   return this->Last;   // return -1 if it is not available
 }
 
@@ -147,7 +144,7 @@ igtl::MessageBase::Pointer vtkIGTLCircularBuffer::GetPullBuffer()
 //---------------------------------------------------------------------------
 void vtkIGTLCircularBuffer::EndPull()
 {
-  this->Mutex->Lock();
+  this->Mutex.lock();
   this->InUse = -1;
-  this->Mutex->Unlock();
+  this->Mutex.unlock();
 }
