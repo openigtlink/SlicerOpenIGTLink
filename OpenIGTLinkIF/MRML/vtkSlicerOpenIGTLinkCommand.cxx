@@ -52,6 +52,12 @@ vtkSlicerOpenIGTLinkCommand::~vtkSlicerOpenIGTLinkCommand()
 }
 
 //---------------------------------------------------------------------------
+void vtkSlicerOpenIGTLinkCommand::SetCommand(igtlioCommand* command)
+{
+  this->Command = command;
+}
+
+//---------------------------------------------------------------------------
 void vtkSlicerOpenIGTLinkCommand::ClearCommand()
 {
   if (this->Command)

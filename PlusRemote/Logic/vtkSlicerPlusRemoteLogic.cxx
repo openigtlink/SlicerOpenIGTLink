@@ -55,6 +55,7 @@
 
 // OpenIGTLinkIF includes
 #include "vtkMRMLIGTLConnectorNode.h"
+#include "vtkSlicerOpenIGTLinkCommand.h"
 
 // OpenIGTLinkIO includes
 #include "igtlioDevice.h"
@@ -2048,7 +2049,7 @@ vtkMRMLIGTLConnectorNode* vtkSlicerPlusRemoteLogic::GetOrAddConnectorNode(std::s
 //---------------------------------------------------------------------------
 void vtkSlicerPlusRemoteLogic::OnLauncherCommandReceived(vtkObject * caller, unsigned long vtkNotUsed(eid), void* clientdata, void* calldata)
 {
-  igtlioCommand* command = static_cast<igtlioCommand*>(calldata);
+  vtkSlicerOpenIGTLinkCommand* command = vtkSlicerOpenIGTLinkCommand::SafeDownCast(static_cast<vtkObject*>(calldata));
   if (!command)
   {
     return;

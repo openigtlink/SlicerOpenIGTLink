@@ -64,6 +64,8 @@ public:
 public:
   void SendCommand(vtkMRMLIGTLConnectorNode* connectorNode);
 
+  void SetCommand(igtlioCommand* command);
+
   virtual void SetName(std::string);
   std::string GetName();
 

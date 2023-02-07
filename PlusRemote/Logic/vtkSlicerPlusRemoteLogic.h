@@ -38,9 +38,6 @@
 #include <vtkMRMLNode.h>
 #include <vtkMRMLScene.h>
 
-// OpenIGTLinkIF includes
-#include "igtlioCommand.h"
-
 // For referencing own MRML node
 class vtkCollection;
 class vtkMRMLAnnotationROINode;

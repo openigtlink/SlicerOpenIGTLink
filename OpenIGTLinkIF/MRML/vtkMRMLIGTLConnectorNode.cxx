@@ -1481,7 +1481,9 @@ void vtkMRMLIGTLConnectorNode::ProcessIOCommandEvents(vtkObject* caller, unsigne
   igtlioCommand* command = static_cast<igtlioCommand*>(callData);
   if (command)
   {
-    this->InvokeEvent(mrmlEvent, command);
+    vtkNew<vtkSlicerOpenIGTLinkCommand> slicerCommand;
+    slicerCommand->SetCommand(command);
+    this->InvokeEvent(mrmlEvent, slicerCommand);
   }
 }
 
