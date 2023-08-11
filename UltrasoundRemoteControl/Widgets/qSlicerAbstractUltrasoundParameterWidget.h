@@ -43,11 +43,12 @@ class qSlicerAbstractUltrasoundParameterWidgetPrivate;
 /// \ingroup Slicer_QtModules_UltrasoundRemoteControl
 class Q_SLICER_MODULE_ULTRASOUNDREMOTECONTROL_WIDGETS_EXPORT qSlicerAbstractUltrasoundParameterWidget : public qMRMLWidget
 {
-  Q_OBJECT
-  QVTK_OBJECT
+  Q_OBJECT;
+  QVTK_OBJECT;
 
-  Q_PROPERTY(const char* parameterName READ parameterName WRITE setParameterName)
-  Q_PROPERTY(const char* deviceID READ deviceID WRITE setDeviceID)
+  Q_PROPERTY(const char* parameterName READ parameterName WRITE setParameterName);
+  Q_PROPERTY(const char* deviceID READ deviceID WRITE setDeviceID);
+  Q_PROPERTY(bool pushOnConnect READ pushOnConnect WRITE setPushOnConnect);
 
 protected:
   typedef qMRMLWidget Superclass;
@@ -73,6 +74,9 @@ public slots:
 
   virtual void setUltrasoundParameter();
   virtual void getUltrasoundParameter();
+
+  virtual bool pushOnConnect();
+  virtual void setPushOnConnect(bool);
 
   void setInteractionInProgress(bool);
   void interactionInProgressOn() { this->setInteractionInProgress(true); };

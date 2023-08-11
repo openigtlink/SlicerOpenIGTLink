@@ -37,15 +37,16 @@ protected:
   qSlicerAbstractUltrasoundParameterWidget* const q_ptr;
 
 public:
-  vtkWeakPointer<vtkMRMLIGTLConnectorNode> ConnectorNode;
+  vtkWeakPointer<vtkMRMLIGTLConnectorNode> ConnectorNode{ nullptr };
 
-  std::string           ParameterName;
-  std::string           DeviceID;
+  std::string           ParameterName{ "" };
+  std::string           DeviceID{ "" };
+  bool                  PushOnConnect{ false };
 
-  igtlioCommandPointer  CmdSetParameter;
-  igtlioCommandPointer  CmdGetParameter;
+  igtlioCommandPointer  CmdSetParameter{ nullptr };
+  igtlioCommandPointer  CmdGetParameter{ nullptr };
 
-  bool                  InteractionInProgress;
+  bool                  InteractionInProgress{ false };
 
   QTimer                PeriodicParameterTimer;
 };
