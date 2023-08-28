@@ -247,7 +247,6 @@ std::string qSlicerUltrasoundTGCParameterWidget::getParameterValue()
   std::string midVal = vtkVariant(d->midGainSlider->value()).ToString();
   std::string bottomVal = vtkVariant(d->bottomGainSlider->value()).ToString();
   std::string val = topVal + " " + midVal + " " + bottomVal;
-  std::cout << "getParameterValue(): " << val << std::endl;
   return val;
 }
 
@@ -255,15 +254,11 @@ std::string qSlicerUltrasoundTGCParameterWidget::getParameterValue()
 void qSlicerUltrasoundTGCParameterWidget::setParameterValue(std::string expectedParameterString)
 {
   Q_D(qSlicerUltrasoundTGCParameterWidget);
-
-  std::cout << "expectedParameterString: " << expectedParameterString << std::endl;
-
   std::stringstream ss;
   ss.str(expectedParameterString);
   std::vector<double> gains((std::istream_iterator<double>(ss)), std::istream_iterator<double>());
   if (gains.size() != 3)
   {
-    std::cout << "setParameterValue() failed to parse string" << std::endl;
     return;
   }
 
