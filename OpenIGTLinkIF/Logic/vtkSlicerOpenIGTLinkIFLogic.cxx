@@ -329,7 +329,7 @@ void vtkSlicerOpenIGTLinkIFLogic::CallConnectorTimerHander()
   for (iter = nodes.begin(); iter != nodes.end(); iter ++)
   {
     vtkMRMLIGTLConnectorNode* connector = vtkMRMLIGTLConnectorNode::SafeDownCast(*iter);
-    if (connector == NULL)
+    if (!connector || connector->GetState() != vtkMRMLIGTLConnectorNode::StateConnected)
     {
       continue;
     }
