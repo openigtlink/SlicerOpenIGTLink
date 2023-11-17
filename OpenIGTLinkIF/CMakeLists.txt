@@ -50,21 +50,6 @@ set(MODULE_MOC_SRCS
   qSlicerOpenIGTLinkIFModule.h
   )
 
-  if (Slicer_VERSION VERSION_LESS "4.11.0")
-    #TODO: When the stable version of Slicer includes the Texts module/widgets, they can be removed from SlicerOpenIGTLink
-    list(APPEND MODULE_SRCS
-      qSlicerTextFileReader.cxx
-      qSlicerTextFileReader.h
-      )
-    list(APPEND MODULE_MOC_SRCS
-      qSlicerTextFileReader.h
-      )
-    list(APPEND MODULE_INCLUDE_DIRECTORIES  
-      ${vtkSlicer${MODULE_NAME}ModuleMRML_SOURCE_DIR}/Text
-      ${vtkSlicer${MODULE_NAME}ModuleMRML_BINARY_DIR}/Text
-      )
-  endif()
-
 set(MODULE_UI_SRCS
 )
 

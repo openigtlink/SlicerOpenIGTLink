@@ -25,14 +25,6 @@ set(${KIT}_TARGET_LIBRARIES
   qSlicerVolumeRenderingModuleWidgets
   )
 
-if (Slicer_VERSION VERSION_LESS "4.11.0")
-  #TODO: When the stable version of Slicer includes the Texts module/widgets, they can be removed from SlicerOpenIGTLink
-  list(APPEND ${KIT}_INCLUDE_DIRECTORIES
-    ${vtkSlicerOpenIGTLinkIFModuleMRML_SOURCE_DIR}/Text
-    )
-endif()
-
-
 #-----------------------------------------------------------------------------
 SlicerMacroBuildModuleLogic(
   NAME ${KIT}

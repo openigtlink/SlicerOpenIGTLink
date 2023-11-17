@@ -27,7 +27,6 @@
 // OpenIGTLinkIF includes
 #include "qSlicerOpenIGTLinkIFModule.h"
 #include "qSlicerOpenIGTLinkIFModuleWidget.h"
-#include "qSlicerTextFileReader.h"
 
 // OpenIGTLinkIF Logic includes
 #include "vtkSlicerOpenIGTLinkIFLogic.h"
