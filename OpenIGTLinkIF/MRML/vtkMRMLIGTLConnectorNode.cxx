@@ -573,11 +573,14 @@ void vtkMRMLIGTLConnectorNode::ProcessIncomingDeviceModifiedEvent(
       {
         int nElements = tBundleNode->GetNumberOfTransformNodes();
         igtlioTrackingDataConverter::ContentData content = tdataDevice->GetContent();
-        for (auto iter = content.trackingDataElements.begin(); iter != content.trackingDataElements.end(); ++iter)
+
+        // We read the TDATA elements in the reverse order so that only the first occurrence
+        // of each transform name is used if duplicates are present.
+        // See https://discourse.slicer.org/t/unexpected-behavior-in-transforms-module-and-igt-reslicedriver/42828/8
+        for (auto iter = content.trackingDataElements.rbegin(); iter != content.trackingDataElements.rend(); ++iter)
         {
           bool found(false);
           vtkSmartPointer<vtkMatrix4x4> mat = vtkSmartPointer<vtkMatrix4x4>::New();
-
           for (int i = 0; i < nElements; i++)
           {
             vtkMRMLLinearTransformNode* transformNode = tBundleNode->GetTransformNode(i);
