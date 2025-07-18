@@ -73,6 +73,11 @@ Version:   $Revision: 1.2 $
 #define MRMLNodeNameKey "MRMLNodeName"
 #define OriginalNodeNameKey "OriginalNodeName"
 
+// The macro SendMessage in winuser.h clashes with the method name in igtlioConnector.
+// A simple workaround is to undefine this macro to avoid name conflict (https://stackoverflow.com/a/69041270)
+#pragma push_macro("SendMessage")
+#undef SendMessage
+
 //------------------------------------------------------------------------------
 vtkMRMLNodeNewMacro(vtkMRMLIGTLConnectorNode);
 
@@ -2679,3 +2684,5 @@ bool vtkMRMLIGTLConnectorNode::GetCheckCRC()
 {
   return (this->Internal->IOConnector->GetCheckCRC() != 0);
 }
+
+#pragma pop_macro("SendMessage")
