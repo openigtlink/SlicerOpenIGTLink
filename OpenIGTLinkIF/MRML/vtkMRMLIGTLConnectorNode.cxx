@@ -586,6 +586,11 @@ void vtkMRMLIGTLConnectorNode::ProcessIncomingDeviceModifiedEvent(
         {
           bool found(false);
           vtkSmartPointer<vtkMatrix4x4> mat = vtkSmartPointer<vtkMatrix4x4>::New();
+          // if a new tracking data is added, its name is in the key of the tBundleNode TrackingDataList,
+          // the tBundleNode element will be nElements + 1, but nElements is still not changed, resulting in
+          // the searching not completed.  the found flag will be false though the transformnode is there in the
+          // tBundleNode. resulting the Node->Delete() in UpdateTransformNode() function call.
+          // In the TrackingDataList of type std::map, the position of the element is determined by the key’s sorted order, not by when you insert it. For example "Instruement"< "Pointer"<"Reference", Instruement will be at first position.
           for (int i = 0; i < nElements; i++)
           {
             vtkMRMLLinearTransformNode* transformNode = tBundleNode->GetTransformNode(i);
@@ -602,6 +607,7 @@ void vtkMRMLIGTLConnectorNode::ProcessIncomingDeviceModifiedEvent(
           if (!found)
           {
             tBundleNode->UpdateTransformNode(iter->second.deviceName.c_str(), mat, iter->second.type);
+            nElements = tBundleNode->GetNumberOfTransformNodes(); // update of the number of transformnode in tBundleNode when new node added.
           }
         }
       }
