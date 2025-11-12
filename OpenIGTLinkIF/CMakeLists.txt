@@ -1,8 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
-
-if(POLICY CMP0048)
-  cmake_policy(SET CMP0048 NEW) # CMake 3.0.0
-endif()
+cmake_minimum_required(VERSION 3.20.6...3.22.6 FATAL_ERROR)
 
 set(MODULE_NAME "OpenIGTLinkIF")
 set(MODULE_TITLE "OpenIGTLinkIF")
