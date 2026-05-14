@@ -52,12 +52,6 @@
 static const double UPDATE_PLUS_REMOTE_NODES_PERIOD_SEC = 0.2;
 
 //-----------------------------------------------------------------------------
-#if (QT_VERSION < QT_VERSION_CHECK(5, 0, 0))
-  #include <QtPlugin>
-  Q_EXPORT_PLUGIN2(qSlicerPlusRemoteModule, qSlicerPlusRemoteModule);
-#endif
-
-//-----------------------------------------------------------------------------
 /// \ingroup Slicer_QtModules_ToolPlusRemote
 class qSlicerPlusRemoteModulePrivate
 {

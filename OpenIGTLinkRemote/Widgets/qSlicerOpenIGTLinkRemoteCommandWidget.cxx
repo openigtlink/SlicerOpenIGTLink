@@ -74,13 +74,8 @@ void qSlicerOpenIGTLinkRemoteCommandWidget::setup()
 
   for (int c = 0; c < d->tableWidget_metaData->horizontalHeader()->count(); ++c)
   {
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     d->tableWidget_metaData->horizontalHeader()->setSectionResizeMode(c, QHeaderView::Stretch);
     d->tableWidget_responseMetaData->horizontalHeader()->setSectionResizeMode(c, QHeaderView::Stretch);
-#else
-    d->tableWidget_metaData->horizontalHeader()->setResizeMode(c, QHeaderView::Stretch);
-    d->tableWidget_responseMetaData->horizontalHeader()->setResizeMode(c, QHeaderView::Stretch);
-#endif
   }
   connect(d->pushButton_addMetaData, SIGNAL(clicked()), this, SLOT(onAddMetaDataClicked()));
   connect(d->pushButton_removeMetaData, SIGNAL(clicked()), this, SLOT(onRemoveMetaDataClicked()));
