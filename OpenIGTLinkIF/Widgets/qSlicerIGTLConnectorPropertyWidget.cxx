@@ -80,13 +80,12 @@ void qSlicerIGTLConnectorPropertyWidget::setMRMLIGTLConnectorNode(vtkMRMLIGTLCon
   qvtkReconnect(d->IGTLConnectorNode, connectorNode, vtkCommand::ModifiedEvent,
                 this, SLOT(onMRMLNodeModified()));
 
-  foreach (int evendId, QList<int>()
-           << vtkMRMLIGTLConnectorNode::ActivatedEvent
-           << vtkMRMLIGTLConnectorNode::ConnectedEvent
-           << vtkMRMLIGTLConnectorNode::DisconnectedEvent
-           << vtkMRMLIGTLConnectorNode::DeactivatedEvent)
+  for (int eventId : {(int)vtkMRMLIGTLConnectorNode::ActivatedEvent,
+                      (int)vtkMRMLIGTLConnectorNode::ConnectedEvent,
+                      (int)vtkMRMLIGTLConnectorNode::DisconnectedEvent,
+                      (int)vtkMRMLIGTLConnectorNode::DeactivatedEvent})
   {
-    qvtkReconnect(d->IGTLConnectorNode, connectorNode, evendId,
+    qvtkReconnect(d->IGTLConnectorNode, connectorNode, eventId,
                   this, SLOT(onMRMLNodeModified()));
   }
 

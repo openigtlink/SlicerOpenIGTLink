@@ -254,15 +254,14 @@ void qSlicerOpenIGTLinkRemoteCommandWidget::onRemoveMetaDataClicked()
   QList<QTableWidgetItem*> items = d->tableWidget_metaData->selectedItems();
 
   QSet<int> selectedRows;
-  QTableWidgetItem* item;
-  foreach (item, items)
+  for (QTableWidgetItem* item : items)
   {
     selectedRows.insert(item->row());
   }
   QList<int> rows = selectedRows.values();
   std::sort(rows.begin(), rows.end());
 
-  foreach (int row, rows)
+  for (int row : rows)
   {
     d->tableWidget_metaData->removeRow(row);
   }
