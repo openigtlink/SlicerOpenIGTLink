@@ -128,7 +128,7 @@ void qSlicerOpenIGTLinkRemoteQueryWidgetPrivate::init()
   QObject::connect(this->connectorNodeSelector, SIGNAL(currentNodeChanged(vtkMRMLNode*)), q, SLOT(setConnectorNode(vtkMRMLNode*)));
   QObject::connect(this->updateButton, SIGNAL(clicked()), q, SLOT(queryRemoteList()));
   QObject::connect(this->getSelectedItemButton, SIGNAL(clicked()), q, SLOT(querySelectedItem()));
-  QObject::connect(&typeButtonGroup, SIGNAL(buttonClicked(int)), q, SLOT(onQueryTypeChanged(int)));
+  QObject::connect(&typeButtonGroup, SIGNAL(idClicked(int)), q, SLOT(onQueryTypeChanged(int)));
   QObject::connect(this->trackingSTTButton, SIGNAL(clicked()), q, SLOT(startTracking()));
   QObject::connect(this->trackingSTPButton, SIGNAL(clicked()), q, SLOT(stopTracking()));
   QObject::connect(this->remoteDataListTable, SIGNAL(itemSelectionChanged()), q, SLOT(onRemoteDataListSelectionChanged()));

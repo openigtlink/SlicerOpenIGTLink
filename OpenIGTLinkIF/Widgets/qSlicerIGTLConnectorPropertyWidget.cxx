@@ -47,7 +47,7 @@ void qSlicerIGTLConnectorPropertyWidgetPrivate::init()
                    q, SLOT(updateIGTLConnectorNode()));
   QObject::connect(this->ConnectorPortEdit, SIGNAL(editingFinished()),
                    q, SLOT(updateIGTLConnectorNode()));
-  QObject::connect(&this->ConnectorTypeButtonGroup, SIGNAL(buttonClicked(int)),
+  QObject::connect(&this->ConnectorTypeButtonGroup, SIGNAL(idClicked(int)),
                    q, SLOT(updateIGTLConnectorNode()));
   QObject::connect(this->UseStreamingVolumeCheckBox, SIGNAL(toggled(bool)),
                    q, SLOT(updateIGTLConnectorNode()));
