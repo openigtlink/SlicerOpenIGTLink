@@ -264,7 +264,7 @@ void qSlicerOpenIGTLinkRemoteCommandWidget::onRemoveMetaDataClicked()
   {
     selectedRows.insert(item->row());
   }
-  QList<int> rows = selectedRows.toList();
+  QList<int> rows = selectedRows.values();
   std::sort(rows.begin(), rows.end());
 
   foreach (int row, rows)
