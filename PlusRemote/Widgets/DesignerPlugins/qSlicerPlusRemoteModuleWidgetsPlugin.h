@@ -21,14 +21,8 @@
 #ifndef __qSlicerPlusRemoteModuleWidgetsPlugin_h
 #define __qSlicerPlusRemoteModuleWidgetsPlugin_h
 
-#include "vtkSlicerConfigure.h" // For Slicer_HAVE_QT5
-
 // Qt includes
-#ifdef Slicer_HAVE_QT5
-  #include <QtUiPlugin/QDesignerCustomWidgetCollectionInterface>
-#else
-  #include <QDesignerCustomWidgetCollectionInterface>
-#endif
+#include <QtUiPlugin/QDesignerCustomWidgetCollectionInterface>
 
 // PlusRemote includes
 #include "qSlicerPlusRemoteModuleWidgetsPluginsExport.h"

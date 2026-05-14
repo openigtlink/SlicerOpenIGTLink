@@ -23,8 +23,6 @@
 
 #include <QtGlobal>
 
-#include "vtkSlicerConfigure.h" // For Slicer_HAVE_QT5
-
 // PlusRemote includes
 #include "qSlicerPlusRemoteModuleWidgetsPluginsExport.h"
 #include "qSlicerPlusRemoteModuleWidgetsAbstractPlugin.h"
