@@ -21,7 +21,6 @@
 // Qt includes
 #include <QDir>
 #include <QPointer>
-#include <QSound>
 #include <QTimer>
 #include <QtPlugin>
 
