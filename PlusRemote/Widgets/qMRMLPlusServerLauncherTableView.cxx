@@ -231,7 +231,7 @@ void qMRMLPlusServerLauncherTableView::updateWidgetFromLauncherMRML()
     for (int j = 0; j < LastColumn; ++j)
     {
       QTableWidgetItem* item = new QTableWidgetItem();
-      item->setData(ItemTypeServerNodeId, serverNode->GetID());
+      item->setData(ItemTypeServerNodeId, QString(serverNode->GetID()));
       item->setFlags(item->flags() & ~Qt::ItemIsEditable);
       d->PlusServerLauncherTable->setItem(row, j, item);
     }
@@ -350,7 +350,7 @@ int qMRMLPlusServerLauncherTableView::getRowForServer(vtkMRMLPlusServerNode* ser
     {
       QVariant rowData = item->data(ItemTypeServerNodeId);
       QString rowString = rowData.toString();
-      if (rowData == serverNode->GetID())
+      if (rowString == QString(serverNode->GetID()))
       {
         return i;
       }
