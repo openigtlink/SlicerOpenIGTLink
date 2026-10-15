@@ -25,7 +25,6 @@
 
 // MRML includes
 #include <vtkMRML.h>
-#include <vtkMRMLAnnotationROINode.h>
 #include <vtkMRMLMarkupsROINode.h>
 #include <vtkMRMLNode.h>
 

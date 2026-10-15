@@ -31,7 +31,7 @@
 #include "qMRMLSceneIGTLConnectorModel.h"
 
 // qMRMLWidgets includes
-#include <qMRMLSceneDisplayableModel.h>
+#include <qMRMLSceneModel.h>
 
 // OpenIGTLinkIF MRML includes
 #include "vtkMRMLIGTLConnectorNode.h"
@@ -39,7 +39,6 @@
 // MRML includes
 #include <vtkMRMLScene.h>
 #include <vtkMRMLNode.h>
-#include <vtkMRMLDisplayableHierarchyNode.h>
 #include <vtkMRMLDisplayableNode.h>
 
 // VTK includes
@@ -47,7 +46,7 @@
 
 //------------------------------------------------------------------------------
 qMRMLSceneIGTLConnectorModel::qMRMLSceneIGTLConnectorModel(QObject* vparent)
-  : qMRMLSceneDisplayableModel(vparent)
+  : qMRMLSceneModel(vparent)
 {
   this->setIDColumn(-1);
   this->setHorizontalHeaderLabels(
@@ -87,7 +86,7 @@ void qMRMLSceneIGTLConnectorModel::updateNodeFromItemData(vtkMRMLNode* node, QSt
   {
     return;
   }
-  this->qMRMLSceneDisplayableModel::updateNodeFromItemData(node, item);
+  this->Superclass::updateNodeFromItemData(node, item);
 
   switch (item->column())
   {
@@ -186,7 +185,7 @@ void qMRMLSceneIGTLConnectorModel::updateItemDataFromNode(QStandardItem* item, v
 //------------------------------------------------------------------------------
 QFlags<Qt::ItemFlag> qMRMLSceneIGTLConnectorModel::nodeFlags(vtkMRMLNode* node, int column)const
 {
-  QFlags<Qt::ItemFlag> flags = this->qMRMLSceneDisplayableModel::nodeFlags(node, column);
+  QFlags<Qt::ItemFlag> flags = this->Superclass::nodeFlags(node, column);
   // remove the ItemIsEditable flag from any possible item (typically at column 0)
   flags = flags & ~Qt::ItemIsEditable;
   // and set it to the right column
@@ -200,51 +199,6 @@ QFlags<Qt::ItemFlag> qMRMLSceneIGTLConnectorModel::nodeFlags(vtkMRMLNode* node, 
   }
   return flags;
 }
-
-//------------------------------------------------------------------------------
-vtkMRMLNode* qMRMLSceneIGTLConnectorModel::parentNode(vtkMRMLNode* node)const
-{
-  if (node == NULL)
-  {
-    return 0;
-  }
-
-  // MRML Displayable nodes (inherits from transformable)
-  vtkMRMLDisplayableNode* displayableNode = vtkMRMLDisplayableNode::SafeDownCast(node);
-  vtkMRMLDisplayableHierarchyNode* displayableHierarchyNode = NULL;
-  if (displayableNode &&
-      displayableNode->GetScene() &&
-      displayableNode->GetID())
-  {
-    // get the displayable hierarchy node associated with this displayable node
-    displayableHierarchyNode = vtkMRMLDisplayableHierarchyNode::GetDisplayableHierarchyNode(displayableNode->GetScene(), displayableNode->GetID());
-
-    if (displayableHierarchyNode)
-    {
-      if (displayableHierarchyNode->GetHideFromEditors())
-      {
-        // this is a hidden hierarchy node, so we do not want to display it
-        // instead, we will return the parent of the hidden hierarchy node
-        // to be used as the parent for the displayableNode
-        return displayableHierarchyNode->GetParentNode();
-      }
-      return displayableHierarchyNode;
-    }
-  }
-  if (displayableHierarchyNode == NULL)
-  {
-    // the passed in node might have been a hierarchy node instead, try to
-    // cast it
-    displayableHierarchyNode = vtkMRMLDisplayableHierarchyNode::SafeDownCast(node);
-  }
-  if (displayableHierarchyNode)
-  {
-    // return it's parent
-    return displayableHierarchyNode->GetParentNode();
-  }
-  return 0;
-}
-
 
 //-----------------------------------------------------------------------------
 /// Set and observe the logic

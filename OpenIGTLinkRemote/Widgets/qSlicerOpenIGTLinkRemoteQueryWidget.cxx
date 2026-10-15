@@ -35,8 +35,6 @@
 #include "vtkMRMLImageMetaListNode.h"
 #include "vtkMRMLLabelMetaListNode.h"
 //#include "vtkMRMLPointMetaListNode.h" TODO: fix this by not relying on vtkMRMLPointMetaListNode
-#include "vtkMRMLAnnotationHierarchyNode.h"
-#include "vtkMRMLAnnotationFiducialNode.h"
 #include "vtkMRMLLabelMapVolumeNode.h"
 #include "vtkMRMLScalarVolumeNode.h"
 #include "vtkMRMLNode.h"

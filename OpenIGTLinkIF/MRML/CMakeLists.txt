@@ -40,7 +40,6 @@ set(${KIT}_TARGET_LIBRARIES
   ${OpenIGTLinkIO_LIBRARIES}
   ${MRML_LIBRARIES}
   SlicerBaseLogic
-  vtkSlicerAnnotationsModuleMRML
   vtkSlicerMarkupsModuleMRML
   )
 

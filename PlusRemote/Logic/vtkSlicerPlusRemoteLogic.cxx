@@ -42,7 +42,6 @@
 #include <vtkSlicerVolumeRenderingLogic.h>
 
 // MRML includes
-#include <vtkMRMLAnnotationROINode.h>
 #include <vtkMRMLDisplayNode.h>
 #include <vtkMRMLLinearTransformNode.h>
 #include <vtkMRMLMarkupsROINode.h>
@@ -730,18 +729,12 @@ void vtkSlicerPlusRemoteLogic::StartLiveVolumeReconstruction(vtkMRMLPlusRemoteNo
     filename = vtkSlicerPlusRemoteLogic::AddTimestampToFilename(filename);
   }
 
-  vtkMRMLAnnotationROINode* annotationROINode = vtkMRMLAnnotationROINode::SafeDownCast(parameterNode->GetLiveReconstructionROINode());
   vtkMRMLMarkupsROINode* markupsROINode = vtkMRMLMarkupsROINode::SafeDownCast(parameterNode->GetLiveReconstructionROINode());
 
   double roiCenter[3] = { 0.0, 0.0, 0.0 };
   double roiRadius[3] = { 0.0, 0.0, 0.0 };
 
-  if (annotationROINode)
-  {
-    annotationROINode->GetXYZ(roiCenter);
-    annotationROINode->GetRadiusXYZ(roiRadius);
-  }
-  else if (markupsROINode)
+  if (markupsROINode)
   {
     markupsROINode->GetXYZ(roiCenter);
     markupsROINode->GetRadiusXYZ(roiRadius);
@@ -1031,11 +1024,6 @@ void vtkSlicerPlusRemoteLogic::ShowVolumeRendering(vtkMRMLVolumeNode * volumeNod
       volumeRenderingLogic->UpdateDisplayNodeFromVolumeNode(displayNode, volumeNode);
       volumeNode->AddAndObserveDisplayNodeID(displayNode->GetID());
 
-      vtkMRMLAnnotationROINode* annotationROINode = displayNode->GetAnnotationROINode();
-      if (annotationROINode)
-      {
-        annotationROINode->SetDisplayVisibility(false);
-      }
       vtkMRMLMarkupsROINode* markupsROINode = displayNode->GetMarkupsROINode();
       if (markupsROINode)
       {
@@ -1141,18 +1129,11 @@ void vtkSlicerPlusRemoteLogic::InitializeROIFromVolume(vtkMRMLNode * roiNode, vt
   }
 
   vtkMRMLMarkupsROINode* markupsROINode = vtkMRMLMarkupsROINode::SafeDownCast(roiNode);
-  vtkMRMLAnnotationROINode* annotationROINode = vtkMRMLAnnotationROINode::SafeDownCast(roiNode);
   if (markupsROINode)
   {
     markupsROINode->SetXYZ(roiCenter[0], roiCenter[1], roiCenter[2]);
     markupsROINode->SetRadiusXYZ(roiRadius[0], roiRadius[1], roiRadius[2]);
     markupsROINode->SetAndObserveTransformNodeID(volumeNode->GetTransformNodeID());
-  }
-  else if (annotationROINode)
-  {
-    annotationROINode->SetXYZ(roiCenter[0], roiCenter[1], roiCenter[2]);
-    annotationROINode->SetRadiusXYZ(roiRadius[0], roiRadius[1], roiRadius[2]);
-    annotationROINode->SetAndObserveTransformNodeID(volumeNode->GetTransformNodeID());
   }
 }
 
@@ -1613,9 +1594,8 @@ void vtkSlicerPlusRemoteLogic::OnScoutVolumeReconstructedFinalize(vtkObject * ca
   }
   connectorNode->RemoveObserver(callback);
 
-  vtkSmartPointer<vtkMRMLAnnotationROINode> annotationROINode = vtkMRMLAnnotationROINode::SafeDownCast(parameterNode->GetLiveReconstructionROINode());
   vtkSmartPointer<vtkMRMLMarkupsROINode> markupsROINode = vtkMRMLMarkupsROINode::SafeDownCast(parameterNode->GetLiveReconstructionROINode());
-  if (!annotationROINode && !markupsROINode)
+  if (!markupsROINode)
   {
     markupsROINode = vtkMRMLMarkupsROINode::SafeDownCast(self->GetMRMLScene()->AddNewNodeByClass("vtkMRMLMarkupsROINode"));
     markupsROINode->SetDisplayVisibility(parameterNode->GetLiveReconstructionDisplayROI());
@@ -1629,14 +1609,7 @@ void vtkSlicerPlusRemoteLogic::OnScoutVolumeReconstructedFinalize(vtkObject * ca
   }
 
   // Create and initialize ROI after scout scan because low resolution scout scan is used to set a smaller ROI for the live high resolution reconstruction
-  if (annotationROINode)
-  {
-    self->InitializeROIFromVolume(annotationROINode, scoutScanVolume);
-  }
-  else if (markupsROINode)
-  {
-    self->InitializeROIFromVolume(markupsROINode, scoutScanVolume);
-  }
+  self->InitializeROIFromVolume(markupsROINode, scoutScanVolume);
 
   if (parameterNode->GetScoutScanShowResultOnCompletion())
   {

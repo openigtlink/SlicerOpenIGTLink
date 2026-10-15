@@ -40,7 +40,6 @@
 
 // For referencing own MRML node
 class vtkCollection;
-class vtkMRMLAnnotationROINode;
 class vtkMRMLDisplayableNode;
 class vtkMRMLIGTLConnectorNode;
 class vtkMRMLPlusRemoteNode;
