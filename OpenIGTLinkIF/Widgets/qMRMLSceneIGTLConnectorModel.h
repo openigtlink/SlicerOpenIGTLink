@@ -22,7 +22,7 @@
 #define __qMRMLSceneIGTLConnectorModel_h
 
 // qMRMLWidgets includes
-#include "qMRMLSceneDisplayableModel.h"
+#include "qMRMLSceneModel.h"
 
 // OpenIGTLinkIF GUI includes
 #include "qSlicerOpenIGTLinkIFModuleWidgetsExport.h"
@@ -34,11 +34,12 @@
 class vtkMRMLNode;
 
 /// \ingroup Slicer_QtModules_OpenIGTLink
-class Q_SLICER_MODULE_OPENIGTLINKIF_WIDGETS_EXPORT qMRMLSceneIGTLConnectorModel : public qMRMLSceneDisplayableModel
+class Q_SLICER_MODULE_OPENIGTLINKIF_WIDGETS_EXPORT qMRMLSceneIGTLConnectorModel : public qMRMLSceneModel
 {
   Q_OBJECT
 
 public:
+  typedef qMRMLSceneModel Superclass;
   qMRMLSceneIGTLConnectorModel(QObject* parent = 0);
   virtual ~qMRMLSceneIGTLConnectorModel();
 
@@ -62,8 +63,6 @@ public:
   virtual QStandardItem* insertNode(vtkMRMLNode* node, QStandardItem* parent, int row);
 
 protected:
-
-  virtual vtkMRMLNode* parentNode(vtkMRMLNode* node)const;
 
   virtual void updateNodeFromItemData(vtkMRMLNode* node, QStandardItem* item);
 

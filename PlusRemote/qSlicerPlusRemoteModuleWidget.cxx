@@ -30,7 +30,6 @@
 #include "ui_qSlicerPlusRemoteModuleWidget.h"
 
 // MRML includes
-#include <vtkMRMLAnnotationROINode.h>
 #include <vtkMRMLLinearTransformNode.h>
 #include <vtkMRMLMarkupsROINode.h>
 #include <vtkMRMLVolumeNode.h>
@@ -846,9 +845,8 @@ void qSlicerPlusRemoteModuleWidget::onLiveReconstructionStartStopButtonClicked()
 
   if (d->LiveReconstructionStartStopButton->isChecked())
   {
-    vtkMRMLAnnotationROINode* annotationROINode = vtkMRMLAnnotationROINode::SafeDownCast(d->ParameterNode->GetLiveReconstructionROINode());
     vtkMRMLMarkupsROINode* markupsROINode = vtkMRMLMarkupsROINode::SafeDownCast(d->ParameterNode->GetLiveReconstructionROINode());
-    if (annotationROINode || markupsROINode)
+    if (markupsROINode)
     {
       d->LiveReconstructionStatus->setPixmap(d->InformationPixmap);
       d->LiveReconstructionStatus->setToolTip("Live reconstruction in progress");

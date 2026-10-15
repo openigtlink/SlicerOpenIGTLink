@@ -26,7 +26,6 @@
 #include "qMRMLIGTLIOModel.h"
 
 // MRML includes
-#include <vtkMRMLDisplayableHierarchyNode.h>
 #include <vtkMRMLDisplayableNode.h>
 #include <vtkMRMLDisplayNode.h>
 #include <vtkMRMLScene.h>

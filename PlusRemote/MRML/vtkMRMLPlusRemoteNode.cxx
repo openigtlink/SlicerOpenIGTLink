@@ -242,14 +242,8 @@ void vtkMRMLPlusRemoteNode::OnROINodeModified(vtkObject* caller, unsigned long v
   double roiCenter[3] = { 0.0, 0.0, 0.0 };
   double roiRadius[3] = { 0.0, 0.0, 0.0 };
 
-  vtkSmartPointer<vtkMRMLAnnotationROINode> annotationROINode = vtkMRMLAnnotationROINode::SafeDownCast(caller);
   vtkSmartPointer<vtkMRMLMarkupsROINode> markupsROINode = vtkMRMLMarkupsROINode::SafeDownCast(caller);
-  if (annotationROINode)
-  {
-    annotationROINode->GetXYZ(roiCenter);
-    annotationROINode->GetRadiusXYZ(roiRadius);
-  }
-  else if (markupsROINode)
+  if (markupsROINode)
   {
     markupsROINode->GetXYZ(roiCenter);
     markupsROINode->GetRadiusXYZ(roiRadius);
@@ -346,8 +340,7 @@ void vtkMRMLPlusRemoteNode::SetLiveReconstructionROIDimensions(const int dimensi
     this->LiveReconstructionROIDimensions[i] = dimensions[i];
   }
 
-  vtkMRMLAnnotationROINode* annotationROINode = vtkMRMLAnnotationROINode::SafeDownCast(this->GetLiveReconstructionROINode());
-  vtkMRMLMarkupsROINode* markupsROINode = vtkMRMLMarkupsROINode::SafeDownCast(vtkMRMLMarkupsROINode::SafeDownCast(this->GetLiveReconstructionROINode()));
+  vtkMRMLMarkupsROINode* markupsROINode = vtkMRMLMarkupsROINode::SafeDownCast(this->GetLiveReconstructionROINode());
 
   double spacing = this->LiveReconstructionSpacing;
   double radius[3] = { 0.0, 0.0, 0.0 };
@@ -356,11 +349,7 @@ void vtkMRMLPlusRemoteNode::SetLiveReconstructionROIDimensions(const int dimensi
     radius[i] = (dimensions[i] * spacing) / 2;
   }
 
-  if (annotationROINode)
-  {
-    annotationROINode->SetRadiusXYZ(radius);
-  }
-  else if (markupsROINode)
+  if (markupsROINode)
   {
 
     markupsROINode->SetRadiusXYZ(radius);
