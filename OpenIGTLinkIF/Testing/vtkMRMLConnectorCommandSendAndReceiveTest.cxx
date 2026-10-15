@@ -5,6 +5,7 @@
 
 // IF module includes
 #include "vtkMRMLIGTLConnectorNode.h"
+#include "vtkSlicerOpenIGTLinkCommand.h"
 
 // VTK includes
 #include <vtkTimerLog.h>
@@ -34,7 +35,8 @@ public:
 
   void onCommandReceivedEventFunc(vtkObject* caller, unsigned long eid, void* calldata)
   {
-    igtlioCommand* command = reinterpret_cast<igtlioCommand*>(calldata);
+    // The connector node passes the received command as vtkSlicerOpenIGTLinkCommand
+    vtkSlicerOpenIGTLinkCommand* command = reinterpret_cast<vtkSlicerOpenIGTLinkCommand*>(calldata);
     command->SetResponseContent(ResponseString.c_str());
     ConnectorNode->SendCommandResponse(command);
     std::cout << "*** COMMAND received from client:" << std::endl;
@@ -45,7 +47,7 @@ public:
   void onCommandResponseReceivedEventFunc(vtkObject* caller, unsigned long eid,  void* calldata)
   {
     std::cout << "*** COMMAND response received from server:" << std::endl;
-    igtlioCommand* command = reinterpret_cast<igtlioCommand*>(calldata);
+    vtkSlicerOpenIGTLinkCommand* command = reinterpret_cast<vtkSlicerOpenIGTLinkCommand*>(calldata);
     std::cout << command->GetResponseContent() << std::endl;
     if (ResponseString.compare(command->GetResponseContent()) == 0)
     {
